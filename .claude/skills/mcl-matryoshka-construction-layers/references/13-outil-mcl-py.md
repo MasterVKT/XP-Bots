@@ -7,7 +7,9 @@ journal du gate, gel/défigeage, statut, rapport).
 
 Invocation : `python3 <chemin-du-skill>/scripts/mcl.py [--racine .] [--dossier mcl] <commande> [options]`.
 Codes de sortie : **0** succès ; **1** échec de contrôle (violation stricte, gate rouge, gel refusé,
-divergence à l'analyse) ; **2** erreur d'usage ou de configuration.
+divergence à l'analyse) ; **2** erreur d'usage ou de configuration. Une `carte.json` mal formée (racine non
+objet, `id` manquant ou non textuel, profondeur non entière, liste écrite comme un texte…) est refusée avec un
+message explicite (code 2), jamais interprétée silencieusement.
 
 ## Sommaire
 1. Fichiers d'état

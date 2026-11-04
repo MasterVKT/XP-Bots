@@ -183,6 +183,63 @@ def lettres(i):
     return s
 
 
+# --------------------------------------------------------------------------- schema de la carte
+
+def _texte(v):
+    return isinstance(v, str) and v.strip() != ""
+
+
+def _liste_textes(v):
+    return isinstance(v, list) and all(isinstance(x, str) for x in v)
+
+
+def controler_schema(c):
+    """Controle de forme de carte.json : message clair plutot qu'une trace Python."""
+    if not isinstance(c, dict):
+        raise ErreurMCL("carte.json : la racine doit etre un objet JSON")
+    for cle in ("couches", "unites", "externes"):
+        v = c.get(cle, [])
+        if not isinstance(v, list) or not all(isinstance(x, dict) for x in v):
+            raise ErreurMCL("carte.json : '%s' doit etre une liste d'objets" % cle)
+    for cle in ("sources", "exclure"):
+        if cle in c and not _liste_textes(c[cle]):
+            raise ErreurMCL("carte.json : '%s' doit etre une liste de textes" % cle)
+    lg = c.get("langage")
+    if lg is not None and not (_texte(lg) or (_liste_textes(lg) and lg)):
+        raise ErreurMCL("carte.json : 'langage' doit etre un texte ou une liste de textes")
+    if "regles" in c and not isinstance(c["regles"], dict):
+        raise ErreurMCL("carte.json : 'regles' doit etre un objet {regle: strict|warn|off}")
+    if "artefact" in c and not isinstance(c["artefact"], dict):
+        raise ErreurMCL("carte.json : 'artefact' doit etre un objet")
+    pas = c.get("checkpoint_tous_les", 2)
+    if isinstance(pas, bool) or not isinstance(pas, int) or pas < 1:
+        raise ErreurMCL("carte.json : 'checkpoint_tous_les' doit etre un entier >= 1")
+    for i, x in enumerate(c.get("couches", [])):
+        if not _texte(x.get("id")):
+            raise ErreurMCL("carte.json : couche n.%d sans 'id' texte non vide" % (i + 1))
+        p = x.get("profondeur")
+        if isinstance(p, bool) or not isinstance(p, int) or p < 0:
+            raise ErreurMCL("couche %s : 'profondeur' entier >= 0 obligatoire" % x["id"])
+        for cle in ("chemins", "imports", "contrats"):
+            if cle in x and not _liste_textes(x[cle]):
+                raise ErreurMCL("couche %s : '%s' doit etre une liste de textes" % (x["id"], cle))
+    for i, u in enumerate(c.get("unites", [])):
+        if not _texte(u.get("id")):
+            raise ErreurMCL("carte.json : unite n.%d sans 'id' texte non vide" % (i + 1))
+        if "depend_de" in u and not _liste_textes(u["depend_de"]):
+            raise ErreurMCL("unite %s : 'depend_de' doit etre une liste d'identifiants" % u["id"])
+        if u.get("couche") is not None and not _texte(u["couche"]):
+            raise ErreurMCL("unite %s : 'couche' doit etre l'id texte d'une couche" % u["id"])
+        if "responsabilite" in u and not isinstance(u["responsabilite"], str):
+            raise ErreurMCL("unite %s : 'responsabilite' doit etre un texte" % u["id"])
+    for i, e in enumerate(c.get("externes", [])):
+        if not _texte(e.get("id")):
+            raise ErreurMCL("carte.json : frontiere externe n.%d sans 'id' texte non vide" % (i + 1))
+        for cle in ("imports", "couches_autorisees"):
+            if cle in e and not _liste_textes(e[cle]):
+                raise ErreurMCL("externe %s : '%s' doit etre une liste de textes" % (e["id"], cle))
+
+
 # --------------------------------------------------------------------------- contexte
 
 class Contexte:
@@ -205,6 +262,7 @@ class Contexte:
 
     def _valider_carte(self):
         c = self._carte
+        controler_schema(c)
         c.setdefault("couches", [])
         c.setdefault("unites", [])
         c.setdefault("externes", [])

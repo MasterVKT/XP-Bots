@@ -2,7 +2,9 @@
 
 > Document de travail de la méthode MCL (Matryoshka Construction Layers). Versionné avec le code,
 > à côté de `carte.json` (carte des couches) et `journal.jsonl` (traces : gates, gels, défigeages,
-> checkpoints, baseline). Remplir les sections dans l'ordre ; ne rien construire avant la section 7.
+> checkpoints, baseline). Remplir les sections dans l'ordre. Aucun code d'implémentation avant la section 9
+> (étape 7) : seules l'esquisse des interfaces (section 7) et les doublures des frontières externes
+> (section 8) la précèdent.
 
 ## 0. Périmètre de l'artefact
 

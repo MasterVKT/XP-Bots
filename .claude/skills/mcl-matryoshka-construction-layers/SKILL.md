@@ -68,7 +68,9 @@ l'échelle application).
 ## Flux de travail
 
 Chemin de l'outil : `M="python3 <répertoire du skill>/scripts/mcl.py"` (exécuté depuis la racine du projet
-cible). Consigner chaque sortie dans `mcl/PLAN-MCL.md` (gabarit copié par `init`).
+cible). Dès la phase 0 (échelle composant ou application), lancer `$M init --nom … --langage … --sources …`,
+qui crée `mcl/` et le plan `mcl/PLAN-MCL.md` ; y consigner la sortie de chaque phase. À l'échelle tâche, le plan
+peut tenir dans la réponse.
 
 ### Phase 0 — Périmètre, échelle, applicabilité
 1. Désigner l'**artefact** et son **échelle** (tâche/tranche, composant, application). Ne pas décider *quoi*
@@ -93,7 +95,7 @@ Lire : `references/02-applicabilite.md` ; composite : `references/09-stacks-comp
    part ; cycles brisés par interface (préférable) ou condensés en une couche.
 4. **Étape 4** : carte des couches (0 = noyau … N = enveloppe), couches parallèles subdivisées (1a, 1b…) et
    **signalées** comme constructibles simultanément.
-Outil : `$M init --nom … --langage … --sources …`, renseigner `unites`/`externes` dans `mcl/carte.json`,
+Outil : renseigner `unites`/`externes` dans `mcl/carte.json`,
 `$M analyser --ecrire`, compléter `chemins`/`imports`/`contrats`, puis `$M analyser` jusqu'à **zéro divergence**.
 Lire : `references/03-cartographie.md` (illustrations, heuristiques bornées, cycles, systèmes non-flux).
 
