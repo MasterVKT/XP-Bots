@@ -64,18 +64,20 @@ une recommandation de mise en œuvre, non un texte du document de référence.
 
 | Écosystème | Outil (cité par le document) | Génération `mcl.py exporter --outil …` | Points d'attention |
 |---|---|---|---|
-| Java | ArchUnit | `archunit` → classe JUnit 5 `MclCouchesTest.java` : `layeredArchitecture().consideringOnlyDependenciesInLayers()`, une couche ArchUnit par couche MCL, `whereLayer(X).mayOnlyAccessLayers(couches plus internes)`, `mayNotAccessAnyLayer()` pour la profondeur 0, règle `slices().beFreeOfCycles()`, règles `noClasses()` pour les frontières externes | Champ `imports` = paquet Java de chaque couche ; ArchUnit 1.x |
+| Java | ArchUnit | `archunit` → classe JUnit 5 `MclCouchesTest.java` : `layeredArchitecture().consideringOnlyDependenciesInLayers().withOptionalLayers(true)` (couches externes encore absentes tolérées), une couche ArchUnit par couche MCL, `whereLayer(X).mayOnlyAccessLayers(couches plus internes)`, `mayNotAccessAnyLayer()` pour la profondeur 0, règle `slices().beFreeOfCycles()`, règles `noClasses()` pour les frontières externes (`allowEmptyShould(true)`) | Champ `imports` = paquet Java de chaque couche ; ArchUnit 1.x ; dépendances de test `archunit-junit5` + `junit-jupiter` |
 | Kotlin | Konsist, detekt | (non généré) | Écrire l'équivalent : chaque couche ne dépend que de couches plus internes ; vérifier la sémantique exacte des assertions de l'outil dans sa documentation ; à défaut `mcl.py verifier` (Kotlin pris en charge) |
 | PHP | Deptrac | `deptrac` → `deptrac.yaml` (collecteurs `directory`, `ruleset` listant pour chaque couche toutes les couches plus internes ; `~` pour la profondeur 0) | Champ `chemins` obligatoire |
 | .NET | NetArchTest | `netarchtest` → classe xUnit, un test par couche : `ResideInNamespace(couche).ShouldNot().HaveDependencyOnAny(couches plus externes et parallèles)` | Remplacer `TypeAncre` par un type public de l'assembly (`--ancre`) |
 | JS / TS | dependency-cruiser | `depcruise` → `.dependency-cruiser.cjs` : règles `forbidden` par couche (invariant, parallèles), frontières externes vers `node_modules/<paquet>/`, règle `circular` | En TypeScript : installer `typescript` dans le projet et, si des alias de chemins existent, ajouter `options.tsConfig.fileName` (sinon aucun module n'est analysé) |
-| Python | import-linter | `importlinter` → `.importlinter` : contrat `layers` listé de l'enveloppe au noyau, couches parallèles sur une même ligne séparées par `|` (indépendantes), contrats `forbidden` pour les frontières externes avec `include_external_packages = True` | Lancer `lint-imports` depuis un répertoire où le paquet racine est importable (souvent `src/`) |
+| Python | import-linter | `importlinter` → `.importlinter` : contrat `layers` listé de l'enveloppe au noyau, chaque couche entre parenthèses (optionnelle : tolérée tant qu'elle n'existe pas), couches parallèles sur une même ligne séparées par `|` (indépendantes) ; contrats `forbidden` par frontière externe : source = paquet racine, `ignore_imports` pour la seule couche autorisée, `unmatched_ignore_imports_alerting = none`, `include_external_packages = True` | import-linter ≥ 2.0 ; déclarer les `imports` externes par leur nom de paquet de premier niveau ; lancer `lint-imports` depuis un répertoire où le paquet racine est importable (souvent `src/`) |
 | Go, Rust, Dart/Flutter, mobile natif | aucun outil mûr dédié | — | Convention de modules + **lint personnalisé** + revue de code : utiliser `mcl.py verifier` en CI (Go, Rust et Dart pris en charge) |
 
-Les exports produits par `mcl.py` pour import-linter et dependency-cruiser ont été vérifiés contre les outils
-réels (contrats tenus sur un projet conforme ; violations d'invariant, de parallèles, de frontière externe et
-de cycles signalées sur un projet fautif). Les autres exports suivent la syntaxe documentée des outils :
-compiler et exécuter le test une première fois sur un cas fautif volontaire pour confirmer qu'il casse.
+Les exports produits par `mcl.py` pour import-linter (2.15), dependency-cruiser (16.10), ArchUnit (1.3.0)
+et Deptrac (2.0.7) ont été vérifiés contre les outils réels, dans les trois phases que traverse une
+construction MCL : couche 0 seule (couches externes absentes : aucune erreur), projet complet conforme
+(contrats tenus), projet fautif (violations d'invariant, de parallèles, de frontière externe et de cycles
+signalées). L'export NetArchTest suit la syntaxe documentée de l'outil sans avoir été exécuté : le compiler et
+l'exécuter une première fois sur un cas fautif volontaire pour confirmer qu'il casse.
 
 `mcl.py verifier` reste utile **même avec un outil natif** : il vérifie aussi la **divergence** (dépendance
 réelle entre couches non justifiée par la carte des unités), les **contrats figés** (empreintes) et la

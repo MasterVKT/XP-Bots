@@ -177,8 +177,9 @@ Engagement : résultats publiés positifs et négatifs.
 - Quatre campagnes documentaires adversariales (13 affirmations ; Google Scholar, ACM DL, IEEE Xplore, arXiv,
   Semantic Scholar, sources praticiennes, sources primaires de Martin, Palermo, Cockburn, Meyer, Beck) =
   **réplication corrélée**, pas quatre preuves indépendantes. Angle mort constaté et corrigé : *On Lisp* (1993).
-  La confiance repose sur des sources nommées contrôlables une à une. Une affirmation (A13, pédagogique) a été
-  réfutée ; son détail relève de la Partie IV, absente de la source.
+  La confiance repose sur des sources nommées contrôlables une à une. Une seule des treize affirmations, A13
+  (liée à l'évidence en éducation), a été démentie par les campagnes ; selon le document, c'est sans
+  conséquence sur l'argument pédagogique réel. Son détail relève de la Partie IV, absente de la source.
 - Frontières : voir `02-applicabilite.md`, section 9.
 - Agenda (six questions) : valeur de l'intégration (le paquet fait-il mieux que ses éléments épars ? design N2
   avec bras partiels) ; efficacité propre du composite ; seuil de dilution des doublures ; forme réelle de la

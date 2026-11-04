@@ -56,6 +56,11 @@ structure est connaissable. Exclure MCL au motif que l'entreprise cherche encore
 Verdict : **oui, oui, non** (structure connaissable, contrats stabilisables, pas besoin de construire pour
 comprendre) → appliquer le protocole. **Une seule réponse défavorable** → l'artefact est **exploratoire**.
 
+Note de lecture : le document formule ce verdict « trois oui → appliquer ; un non → exploratoire ». Pour la
+question 3, posée sous forme de risque, la réponse favorable est « non, il ne faut pas construire pour
+comprendre ». Lire donc « trois réponses favorables » ; un « oui » à la question 3 rend l'artefact
+exploratoire.
+
 ## 4. Exemples de calibrage (issus du document)
 
 - La tranche « export CSV » d'un produit en pleine découverte est **applicable** : l'artefact décidé est banal,

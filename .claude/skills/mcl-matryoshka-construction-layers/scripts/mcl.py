@@ -1303,19 +1303,29 @@ def exporter_importlinter(ctx, args):
     for x in couches:
         par_p.setdefault(x["profondeur"], []).append(noms[x["id"]])
     for p in sorted(par_p, reverse=True):
-        lignes.append("    " + " | ".join(par_p[p]))
+        # parentheses = couche optionnelle : les couches externes n'existent pas encore
+        # pendant la construction des couches internes (sinon import-linter echoue)
+        lignes.append("    " + " | ".join("(%s)" % m for m in par_p[p]))
     for e in ctx.carte["externes"]:
         if not e["imports"]:
             continue
-        sources = [noms[x["id"]] for x in couches if x["id"] not in e["couches_autorisees"]]
-        if not sources:
+        if not [x for x in couches if x["id"] not in e["couches_autorisees"]]:
             continue
+        # Source = paquet(s) racine, imports ignores pour les seules couches autorisees : forme qui
+        # tolere les couches pas encore construites (un module source absent ferait echouer l'outil).
         lignes += ["", "[importlinter:contract:mcl-externe-%s]" % re.sub(r"\W+", "-", e["id"]),
                    "name = MCL - frontiere externe %s confinee a la couche d'infrastructure" % e["id"],
                    "type = forbidden", "source_modules ="]
-        lignes += ["    %s" % s for s in sources]
+        lignes += ["    %s" % r for r in racines]
         lignes.append("forbidden_modules =")
         lignes += ["    %s" % m for m in e["imports"]]
+        autorises = [noms[cid] for cid in e["couches_autorisees"]]
+        if autorises:
+            lignes.append("ignore_imports =")
+            for mod in autorises:
+                for m in e["imports"]:
+                    lignes += ["    %s -> %s" % (mod, m), "    %s.** -> %s" % (mod, m)]
+            lignes.append("unmatched_ignore_imports_alerting = none")
     return "\n".join(lignes) + "\n", ".importlinter"
 
 
@@ -1395,7 +1405,10 @@ def exporter_archunit(ctx, args):
          "",
          "    @ArchTest",
          "    static final ArchRule invariant_mcl = layeredArchitecture()",
-         "            .consideringOnlyDependenciesInLayers()"]
+         "            .consideringOnlyDependenciesInLayers()",
+         "            // couches optionnelles : en MCL les couches externes n'existent pas encore",
+         "            // pendant la construction des couches internes",
+         "            .withOptionalLayers(true)"]
     for x in couches:
         l.append('            .layer("%s").definedBy("%s..")' % (_ident(x["id"]), paquets[x["id"]]))
     for x in couches:
@@ -1408,7 +1421,7 @@ def exporter_archunit(ctx, args):
     l[-1] += ";"
     l += ["",
           "    @ArchTest",
-          '    static final ArchRule sans_cycles = slices().matching("%s.(*)..").should().beFreeOfCycles();'
+          '    static final ArchRule sans_cycles = slices().matching("%s.(*)..").should().beFreeOfCycles().allowEmptyShould(true);'
           % racine]
     for e in ctx.carte["externes"]:
         interdites = [paquets[x["id"]] for x in couches if x["id"] not in e["couches_autorisees"]]
@@ -1418,7 +1431,8 @@ def exporter_archunit(ctx, args):
                   "    static final ArchRule externe_%s = com.tngtech.archunit.lang.syntax.ArchRuleDefinition"
                   ".noClasses()" % re.sub(r"\W", "_", e["id"]),
                   "            .that().resideInAnyPackage(%s)" % ", ".join('"%s.."' % p for p in interdites),
-                  "            .should().dependOnClassesThat().resideInAnyPackage(%s);"
+                  "            .should().dependOnClassesThat().resideInAnyPackage(%s)"
+                  "\n            .allowEmptyShould(true);"
                   % ", ".join('"%s.."' % m for m in e["imports"])]
     l.append("}")
     return "\n".join(l) + "\n", "MclCouchesTest.java"
