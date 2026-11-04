@@ -29,7 +29,7 @@ Les résultats invalides et les versions anciennes ne servent jamais de réglage
 
 Pour récupérer un élément, lire son chemin dans le manifeste, copier uniquement cet élément depuis l'archive et vérifier son SHA-256. Placer les prix et résultats bruts dans un emplacement exclu par `.gitignore`, ou utiliser un dossier de recherche séparé. Ne pas réexécuter les anciens générateurs dans la racine nettoyée : ils ciblent l'ancienne arborescence et peuvent rétablir des documents dépassés.
 
-## État distant vérifié
+## État distant vérifié au début du nettoyage
 
 Une récupération des références distantes a été effectuée sans modifier la branche locale :
 
@@ -43,7 +43,7 @@ Les trois nouveaux commits distants ajoutent **20 fichiers** dans `.claude/skill
 
 Les différences locales et distantes sont contrôlées dans un index Git temporaire par `python tools/verify_project.py --git`. Le contrôle inclut les nouveaux fichiers non encore ajoutés à Git, recherche aussi les collisions fichier/dossier et vérifie que tous les ajouts distants restent identiques dans l'arbre combiné. Il laisse la branche, l'index réel et les fichiers de travail en place.
 
-## Merge ultérieur
+## Préparation initiale du merge
 
 Le nettoyage laisse les modifications locales à examiner et à enregistrer. Il n'a effectué ni commit, ni merge, ni push. Les suppressions des deux anciens générateurs et de la conversation brute sont intentionnelles ; les deux spécifications existantes sont des mises à jour au même chemin.
 
@@ -52,3 +52,11 @@ Après revue et commit des modifications locales, le merge prévu est un merge G
 Le `.gitignore` laisse les skills distants suivables, y compris leur ZIP. Aucun `reset --hard`, nettoyage forcé, renormalisation globale ou push forcé n'est nécessaire pour cette organisation.
 
 Les deux fichiers de paramètres figés et la référence utilisateur conservent leurs octets d'origine grâce à des règles ciblées de `.gitattributes`. Les autres fichiers texte utilisent LF. Les conversions automatiques Windows ne doivent pas invalider les empreintes lors d'un clone du dépôt.
+
+## Fusion des apports locaux et distants
+
+À la demande suivante de l'utilisateur, les ressources locales ont été enregistrées dans le commit `140074a`, puis réunies avec `origin/master` au commit distant `d9e02d133fae13361dba9a0ca2317208cd5bbe21` par une fusion Git ordinaire. Les deux historiques sont conservés. Les 20 fichiers ajoutés à distance sont présents dans `.claude/skills/` et `livrables/skills/` ; aucun arbitrage de contenu n'a été nécessaire.
+
+Le README décrit désormais l'arborescence réunie. La publication utilise un push ordinaire de `master`, sans réécriture de l'historique. La concordance finale se contrôle en comparant le commit annoncé par GitHub, `HEAD`, `origin/master`, les arbres Git et les octets des fichiers suivis. Les archives de recherche et données privées exclues du dépôt restent locales.
+
+Le rapport `docs/validation/verification_projet.json` reste la copie datée de l'audit du nettoyage initial. Les contrôles après fusion et la preuve de synchronisation sont conservés localement dans `.local/reports/` ; ces sorties générées ne sont pas ajoutées aux sources du projet.

@@ -1,0 +1,40 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "facturation",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": "Exemple du document de reference (III.2, seconde illustration) : parser_lignes -> calculer_taxes -> appliquer_remise -> generer_facture, orchestre par facturer."
+  },
+  "langage": "python",
+  "sources": ["src"],
+  "exclure": [],
+  "couches": [
+    {"id": "0", "profondeur": 0, "nom": "noyau", "chemins": ["src/facturation/c0_noyau"], "imports": ["facturation.c0_noyau"], "contrats": ["mcl/contrats/couche-0.md", "tests/c0/**/*.py"]},
+    {"id": "1a", "profondeur": 1, "nom": "parser", "chemins": ["src/facturation/c1a_parser"], "imports": ["facturation.c1a_parser"], "contrats": ["mcl/contrats/couche-1a.md", "tests/c1a/**/*.py"]},
+    {"id": "1b", "profondeur": 1, "nom": "taxes", "chemins": ["src/facturation/c1b_taxes"], "imports": ["facturation.c1b_taxes"], "contrats": ["mcl/contrats/couche-1b.md", "tests/c1b/**/*.py"]},
+    {"id": "1c", "profondeur": 1, "nom": "remise", "chemins": ["src/facturation/c1c_remise"], "imports": ["facturation.c1c_remise"], "contrats": ["mcl/contrats/couche-1c.md", "tests/c1c/**/*.py"]},
+    {"id": "1d", "profondeur": 1, "nom": "generation", "chemins": ["src/facturation/c1d_generation"], "imports": ["facturation.c1d_generation"], "contrats": ["mcl/contrats/couche-1d.md", "tests/c1d/**/*.py"]},
+    {"id": "2", "profondeur": 2, "nom": "enveloppe", "chemins": ["src/facturation/c2_enveloppe"], "imports": ["facturation.c2_enveloppe"], "contrats": ["mcl/contrats/couche-2.md", "tests/c2/**/*.py"]}
+  ],
+  "unites": [
+    {"id": "LigneCommande", "couche": "0", "responsabilite": "Representer une ligne de commande (produit, quantite, prix unitaire).", "depend_de": []},
+    {"id": "Facture", "couche": "0", "responsabilite": "Representer une facture (lignes, montants hors taxes, taxes, remise, total).", "depend_de": []},
+    {"id": "regles_tarifaires", "couche": "0", "responsabilite": "Fournir le bareme des taux de taxe et des seuils de remise.", "depend_de": []},
+    {"id": "parser_lignes", "couche": "1a", "responsabilite": "Transformer un texte de commande en liste de LigneCommande.", "depend_de": ["LigneCommande"]},
+    {"id": "calculer_taxes", "couche": "1b", "responsabilite": "Calculer les taxes de chaque LigneCommande selon les regles tarifaires.", "depend_de": ["LigneCommande", "regles_tarifaires"]},
+    {"id": "appliquer_remise", "couche": "1c", "responsabilite": "Appliquer la remise prevue par les regles tarifaires au montant des lignes.", "depend_de": ["LigneCommande", "regles_tarifaires"]},
+    {"id": "generer_facture", "couche": "1d", "responsabilite": "Assembler une Facture a partir des lignes, taxes et remise calculees.", "depend_de": ["LigneCommande", "Facture"]},
+    {"id": "facturer", "couche": "2", "responsabilite": "Orchestrer parser, taxes, remise et generation dans l'ordre du flux.", "depend_de": ["parser_lignes", "calculer_taxes", "appliquer_remise", "generer_facture"]}
+  ],
+  "externes": [],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "warn",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}

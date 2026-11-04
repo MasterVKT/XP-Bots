@@ -50,4 +50,4 @@ Cette simulation utilise un index temporaire et conserve l'index réel, la branc
 
 Le [registre de nettoyage et de merge](docs/maintenance/NETTOYAGE_ET_MERGE.md) décrit les éléments écartés, leur sauvegarde récupérable et les ajouts distants identifiés. Les anciens ZIP, générateurs et résultats volumineux ne font plus partie des ressources actives. Les caches, secrets et sorties d'exécution sont exclus par `.gitignore`.
 
-Les ajouts distants `.claude/skills/` et `livrables/skills/` seront apportés par le futur merge. Leurs chemins sont préservés. Aucun merge, commit ou push n'est réalisé par le nettoyage ni par l'outil de vérification.
+Les apports du distant sont intégrés dans `.claude/skills/` et `livrables/skills/`, avec leurs chemins et leur historique d'origine. Le registre distingue le nettoyage initial de la fusion réalisée ensuite. L'outil de vérification reste une simulation : il ne crée ni commit, ni merge, ni push.
