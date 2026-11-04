@@ -1,0 +1,37 @@
+{
+  "created_utc": "2026-11-04T09:44:03.160281+00:00",
+  "design_sha256": "dab01fb40d1180363423612e1e443cae17c1e06681dcd5f0d8dfcdc527724c05",
+  "research_diagnostic": "Setup count and minimum-exposure feasibility only; no PnL, portfolio, actual fills, news or fundamental history.",
+  "data_cache": {
+    "EURUSD": {
+      "workspace_relative_path": ".codex-artifact-work/market_cache/EURUSD_m1.parquet",
+      "sha256": "8d253ea13588e375887381c1eac7665683a9a112ced11edfb2fdc6c9c6f7435b",
+      "bytes": 4854001
+    },
+    "GBPUSD": {
+      "workspace_relative_path": ".codex-artifact-work/market_cache/GBPUSD_m1.parquet",
+      "sha256": "e94861c76f4a099beb70ced46200d09237126ce47c80cc0da48f237154eea888",
+      "bytes": 4826073
+    },
+    "XAUUSD": {
+      "workspace_relative_path": ".codex-artifact-work/market_cache/XAUUSD_m1.parquet",
+      "sha256": "c7e8d446fc66b6b90335d2903b2e2487cd14b8417a64036a85da787140739fb1",
+      "bytes": 6845681
+    }
+  },
+  "upstream_raw_manifest": {
+    "original_workspace_relative_path": "livrables/enrichissement_m15/manifest_donnees.json",
+    "sha256": "f387feb37264e15933126535c199a315ac130ec08fc3d464ed3334c9b668586e",
+    "note": "Prior public HTTP archive download; file hashes identify bytes and do not authenticate source."
+  },
+  "runtime": {
+    "python": "3.13.0",
+    "numpy": "2.4.1",
+    "pandas": "3.0.0",
+    "pyarrow": "25.0.0",
+    "tzdata": "2025.3"
+  },
+  "raw_prices_included_in_archive": false,
+  "broker_conditions_confirmed": false,
+  "strategy_profitability_validated": false
+}

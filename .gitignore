@@ -1,0 +1,49 @@
+# Secrets et configuration privée
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+
+# Python, éditeurs et outils locaux
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.code-review-graph/
+.codex-artifact-work/
+.local/
+.DS_Store
+Thumbs.db
+
+# Données, traces, états et exports générés
+data/raw/
+data/cache/
+data/private/
+runtime/
+logs/
+reports/
+exports/
+*.parquet
+*.bi5
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.db
+*.db-wal
+*.db-shm
+*.log
+*.ex4
+*.ex5
+
+# Anciennes distributions de recherche ; les skills distants restent suivables
+/livrables/Deux_Strategies_M15_*.zip
+/livrables/enrichissement_m15/
+/livrables/strategies_m15_v3/

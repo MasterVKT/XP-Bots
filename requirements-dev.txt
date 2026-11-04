@@ -1,0 +1,4 @@
+# Dépendances des contrôles techniques synthétiques ; aucun SDK LLM requis.
+numpy==2.4.1
+pandas==3.0.0
+tzdata==2025.3

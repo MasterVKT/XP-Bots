@@ -1,0 +1,86 @@
+{
+  "url": "https://deriv.com/trading-specifications",
+  "retrieved_utc": "2026-11-04T09:04:23.439477+00:00",
+  "raw_page_sha256": "d45ae4dccb274b3a3256c87c8a7783662987364e53b59f8c3d2d3d5568c540d4",
+  "rows": {
+    "EURUSD": {
+      "name": "EURUSD",
+      "contract-size": "100000",
+      "base-currency": "EUR",
+      "min-size": "0.01",
+      "vol-limit": "100",
+      "min-spread": "0.00011",
+      "target-spread-in": "0.01%",
+      "max-effective-leverage": "1:1000",
+      "margin-required": "0.10%",
+      "swap-long-pts": "-11.42",
+      "swap-short-pts": "2.66"
+    },
+    "EURUSDmicro": {
+      "name": "EURUSDmicro",
+      "contract-size": "1000",
+      "base-currency": "EUR",
+      "min-size": "0.1",
+      "vol-limit": "100",
+      "min-spread": "0.00007",
+      "target-spread-in": "0.01%",
+      "max-effective-leverage": "1:1000",
+      "margin-required": "0.10%",
+      "swap-long-pts": "-11.42",
+      "swap-short-pts": "2.66"
+    },
+    "GBPUSD": {
+      "name": "GBPUSD",
+      "contract-size": "100000",
+      "base-currency": "GBP",
+      "min-size": "0.01",
+      "vol-limit": "100",
+      "min-spread": "0.0001",
+      "target-spread-in": "0.01%",
+      "max-effective-leverage": "1:1000",
+      "margin-required": "0.10%",
+      "swap-long-pts": "-5.43",
+      "swap-short-pts": "-4.13"
+    },
+    "GBPUSDmicro": {
+      "name": "GBPUSDmicro",
+      "contract-size": "1000",
+      "base-currency": "GBP",
+      "min-size": "0.1",
+      "vol-limit": "100",
+      "min-spread": "0.00007",
+      "target-spread-in": "0.01%",
+      "max-effective-leverage": "1:1000",
+      "margin-required": "0.10%",
+      "swap-long-pts": "-5.43",
+      "swap-short-pts": "-4.13"
+    },
+    "XAUUSD": {
+      "name": "XAUUSD",
+      "contract-size": "100",
+      "base-currency": "XAU",
+      "min-size": "0.01",
+      "vol-limit": "30",
+      "min-spread": "0.16",
+      "target-spread-in": "0.00%",
+      "max-effective-leverage": "1:800",
+      "margin-required": "0.13%",
+      "swap-long-pts": "-45.00",
+      "swap-short-pts": "20.00"
+    },
+    "XAUUSDmicro": {
+      "name": "XAUUSDmicro",
+      "contract-size": "1",
+      "base-currency": "XAU",
+      "min-size": "0.1",
+      "vol-limit": "100",
+      "min-spread": "0.27",
+      "target-spread-in": "0.01%",
+      "max-effective-leverage": "1:800",
+      "margin-required": "0.13%",
+      "swap-long-pts": "-45.00",
+      "swap-short-pts": "20.00"
+    }
+  },
+  "warning": "Public cross-jurisdiction table. Account eligibility, lot step and historical costs not established. Selected public fields only."
+}

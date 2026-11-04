@@ -1,0 +1,17 @@
+# Prévenir les changements de lignes dus au système de l'éditeur.
+*.md text eol=lf
+*.py text eol=lf
+*.json text eol=lf
+*.txt text eol=lf
+*.example text eol=lf
+/.gitattributes text eol=lf
+/.gitignore text eol=lf
+# Ces ressources ont une empreinte sur leurs octets d'origine.
+# -text préserve leurs fins de ligne sans désactiver les diff/merge textuels.
+/config/parametres_figes_v3.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/config/parametres_IA_integration_v1.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/references/IA_Generative_Forex_Scalping_M15_v2.md -text
+*.zip binary
+*.png binary
+*.jpg binary
+*.pdf binary

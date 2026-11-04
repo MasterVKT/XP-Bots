@@ -1,0 +1,65 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "fx-text-extraction-v1"
+      ]
+    },
+    "item_id": {
+      "type": "string"
+    },
+    "event_class": {
+      "type": "string",
+      "enum": [
+        "MONETARY_DECISION",
+        "CENTRAL_BANK_SPEECH",
+        "ECONOMIC_DATA",
+        "OTHER",
+        "UNCLEAR"
+      ]
+    },
+    "temporal_status": {
+      "type": "string",
+      "enum": [
+        "ANNOUNCED_NOW",
+        "HISTORICAL",
+        "CONDITIONAL",
+        "UNCLEAR"
+      ]
+    },
+    "policy_actor": {
+      "type": "string",
+      "enum": [
+        "FED",
+        "ECB",
+        "BOE",
+        "OTHER",
+        "UNCLEAR"
+      ]
+    },
+    "stance": {
+      "type": "string",
+      "enum": [
+        "TIGHTENING",
+        "EASING",
+        "UNCHANGED",
+        "UNCLEAR"
+      ]
+    },
+    "evidence_quote": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "item_id",
+    "event_class",
+    "temporal_status",
+    "policy_actor",
+    "stance",
+    "evidence_quote"
+  ]
+}

@@ -1,0 +1,284 @@
+{
+  "schema": "xp-bots-project-audit-v1",
+  "created_utc": "2026-11-04T22:38:23.382822+00:00",
+  "status": "PASS",
+  "model_inference_calls": 0,
+  "broker_orders": 0,
+  "financial_validation": false,
+  "scope": "Resource preservation, offline reference tests and optional Git preparation; not a production robot or profitability validation.",
+  "resources": {
+    "files_reviewed": 33,
+    "bytes_reviewed": 402751,
+    "relative_links_checked": 44,
+    "missing_links": [],
+    "initial_audit_copy_pending": false,
+    "archive_manifest_sha256": "ec38492a081ac46ec6ceaf1310805341cd58286a207e1abd14fb3c9aaffc0ae4"
+  },
+  "test_suites": {
+    "check_llm.py": {
+      "status": "PASS",
+      "integration_digest": "3ee67132e9b6b431f821409036e33b139d07ef92b055a420cc145c5918b7fa90",
+      "checks_total": 140,
+      "passes": {
+        "1": 41,
+        "2": 77,
+        "3": 22
+      },
+      "scope": "Documents and deterministic reference contracts only; no model inference, broker order, compiled EA, semantic accuracy or financial validation.",
+      "network_inference_calls": 0,
+      "test_source_sha256": "e64b3cfb9086f1558d81113c580b91fd2b2d4232e16a0378bd7345cdcfaf63ae"
+    },
+    "check_technical.py": {
+      "status": "PASS",
+      "scope": "Documents, indicator/detector arithmetic and prefix causality, and truthfulness of feasibility reporting. Not a broker robot backtest or financial validation.",
+      "checks_total": 148,
+      "passes": {
+        "1": 32,
+        "2": 62,
+        "3": 54
+      },
+      "design_sha256": "dab01fb40d1180363423612e1e443cae17c1e06681dcd5f0d8dfcdc527724c05",
+      "test_source_sha256": "b75c41a3661f2d42dc7b0ce1a8f4c7d30d921389d02ffc2d5ca9f098e783ef8f"
+    }
+  },
+  "git": {
+    "status": "PASS",
+    "local_head": "9dc1b163542517441c30531828543c3b38fa2a23",
+    "fetched_origin_master": "d9e02d133fae13361dba9a0ca2317208cd5bbe21",
+    "common_ancestor": "9dc1b163542517441c30531828543c3b38fa2a23",
+    "local_changed_paths": 36,
+    "remote_changed_paths": 20,
+    "path_collisions": [],
+    "remote_paths_preserved": [
+      ".claude/skills/mcl-matryoshka-construction-layers/SKILL.md",
+      ".claude/skills/mcl-matryoshka-construction-layers/assets/gabarits/PLAN-MCL.md",
+      ".claude/skills/mcl-matryoshka-construction-layers/assets/gabarits/carte.exemple.json",
+      ".claude/skills/mcl-matryoshka-construction-layers/assets/gabarits/contrat-couche.md",
+      ".claude/skills/mcl-matryoshka-construction-layers/assets/gabarits/defigeage-adr.md",
+      ".claude/skills/mcl-matryoshka-construction-layers/references/01-socle-commun.md",
+      ".claude/skills/mcl-matryoshka-construction-layers/references/02-applicabilite.md",
+      ".claude/skills/mcl-matryoshka-construction-layers/references/03-cartographie.md",
+      ".claude/skills/mcl-matryoshka-construction-layers/references/04-encodage-carte.md",
+      ".claude/skills/mcl-matryoshka-construction-layers/references/05-contrats-frontieres.md",
+      ".claude/skills/mcl-matryoshka-construction-layers/references/06-boucle-construction.md",
+      ".claude/skills/mcl-matryoshka-construction-layers/references/07-diagnostic-correction.md",
+      ".claude/skills/mcl-matryoshka-construction-layers/references/08-gate-gouvernance-parallelisme.md",
+      ".claude/skills/mcl-matryoshka-construction-layers/references/09-stacks-composite-positionnement.md",
+      ".claude/skills/mcl-matryoshka-construction-layers/references/10-adoption-benefices-conditions.md",
+      ".claude/skills/mcl-matryoshka-construction-layers/references/11-fondements-scientifiques.md",
+      ".claude/skills/mcl-matryoshka-construction-layers/references/12-exemples-travailles.md",
+      ".claude/skills/mcl-matryoshka-construction-layers/references/13-outil-mcl-py.md",
+      ".claude/skills/mcl-matryoshka-construction-layers/scripts/mcl.py",
+      "livrables/skills/mcl-matryoshka-construction-layers.zip"
+    ],
+    "real_index_unchanged": true,
+    "merge_performed": false,
+    "commit_created": false,
+    "push_performed": false,
+    "scope": "The fetched remote reference and the current intended local tree, including untracked, non-ignored files."
+  },
+  "project_checks_total": 39,
+  "project_passes": {
+    "1": 28,
+    "2": 2,
+    "3": 9
+  },
+  "reference_checks_total": 288,
+  "checks": [
+    {
+      "pass": 1,
+      "name": "Canonical resource exists: livrables/strategies_m15/01_Triple_EMA_RSI_Repli_M15_Specification_IA.md",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "Canonical resource exists: livrables/strategies_m15/02_London_Breakout_M15_Specification_IA.md",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "Canonical resource exists: docs/decisions/00_Decision_Conception_et_Faisabilite_V3.md",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "Canonical resource exists: docs/data/03_Donnees_Historiques_Requises_et_Validation.md",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "Canonical resource exists: docs/architecture/04_Integration_LLM_API_Choix_Couts_Validation.md",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "Canonical resource exists: config/parametres_figes_v3.json",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "Canonical resource exists: config/parametres_IA_integration_v1.json",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "Canonical resource exists: schemas/schema_extraction_LLM_v1.json",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "Canonical resource exists: schemas/schema_notes_IA_v1.json",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "Canonical resource exists: prompts/prompts_IA_v1.json",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "Canonical resource exists: docs/validation/diagnostic_faisabilite_v3.json",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "Canonical resource exists: docs/validation/snapshot_public_Deriv_2026-11-04.json",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "Canonical resource exists: docs/validation/provenance_diagnostic_v3.json",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "Canonical resource exists: docs/validation/provenance_IA_v1.json",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "Original bytes preserved: config/parametres_figes_v3.json",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "Original bytes preserved: config/parametres_IA_integration_v1.json",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "Original bytes preserved: docs/references/IA_Generative_Forex_Scalping_M15_v2.md",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "ema: complete normative document body preserved",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "london: complete normative document body preserved",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "Function bodies preserved: reference/technical.py",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "Function bodies preserved: reference/llm_contracts.py",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "All active JSON resources parse strictly",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "Relative document links resolve (apart from initial audit output)",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "No obsolete active generator or raw conversation",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "No parallel obsolete strategy distributions",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "New repository resources are below one MiB each",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "No recognizable API key or private key in active text resources",
+      "ok": true
+    },
+    {
+      "pass": 1,
+      "name": "LLM reference provenance points to preserved context source",
+      "ok": true
+    },
+    {
+      "pass": 2,
+      "name": "check_llm.py: all current checks pass",
+      "ok": true
+    },
+    {
+      "pass": 2,
+      "name": "check_technical.py: all current checks pass",
+      "ok": true
+    },
+    {
+      "pass": 3,
+      "name": "Tracked diff contains no whitespace errors",
+      "ok": true
+    },
+    {
+      "pass": 3,
+      "name": "Private/generated paths ignored and remote skill paths retained",
+      "ok": true
+    },
+    {
+      "pass": 3,
+      "name": "Local and remote changes have no path or file/directory overlap",
+      "ok": true
+    },
+    {
+      "pass": 3,
+      "name": "Three-way index simulation contains no unresolved entry",
+      "ok": true
+    },
+    {
+      "pass": 3,
+      "name": "Every remote changed path is preserved in the combined tree",
+      "ok": true
+    },
+    {
+      "pass": 3,
+      "name": "Every local changed path is preserved in the combined tree",
+      "ok": true
+    },
+    {
+      "pass": 3,
+      "name": "Prospective commit diff contains no whitespace errors",
+      "ok": true
+    },
+    {
+      "pass": 3,
+      "name": "Real Git index byte-for-byte unchanged",
+      "ok": true
+    },
+    {
+      "pass": 3,
+      "name": "Current branch commit unchanged",
+      "ok": true
+    }
+  ]
+}

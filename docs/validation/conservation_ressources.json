@@ -1,0 +1,50 @@
+{
+  "schema": "xp-bots-resource-preservation-v1",
+  "cleanup_date": "2026-11-04",
+  "archive_local_hint": "D:\\PROJETS\\XP-Bots-archives\\2026-11-04_organisation",
+  "archive_manifest_sha256": "ec38492a081ac46ec6ceaf1310805341cd58286a207e1abd14fb3c9aaffc0ae4",
+  "source_reference_sha256": "23a8f7651a96f009c81f0bfa2ab580988ec5606060f3356155be10158fd13d73",
+  "frozen_technical_file_sha256": "2c9ebdec53d88be51fb6019961593754148ac6f55d6044164fbe14a1138a4321",
+  "frozen_ai_file_sha256": "4b478bff558c01e843c1099e891764a2deba18e7b32d193f04a2ec3e091ae69d",
+  "preserved_sections": {
+    "ema": {
+      "method_sha256": "cea56d74765a5b27453ce10bd58440f7f4d94c23e83b77e00f88cdf35f4c6a82",
+      "common_sha256": "398d238e37aead6c203a8ebbdbc81904c8409648d2dff8a0d0d8ce296fbba41e",
+      "source_document_sha256": "5701b083cd65641166b2485b32f7fff62cee520667ddad767738cdfb59a11804",
+      "complete_normative_body_sha256": "83073aca2968b2c7e6e7e54e42e0d716f23e75d6a89adb46ba644b992b8d3c5f"
+    },
+    "london": {
+      "method_sha256": "651772631186e4ab76e1f20e74b2d0363ca6bc7673c0ebe23d0669d35051edeb",
+      "common_sha256": "398d238e37aead6c203a8ebbdbc81904c8409648d2dff8a0d0d8ce296fbba41e",
+      "source_document_sha256": "243f39ea180daf9ea133599bae1211800efd35677cf8218aec25689d2752982d",
+      "complete_normative_body_sha256": "01e70ad8d136518a1b01ffcba32857e0221f9bd5fc9f2d8cb7e067ec8a53f857"
+    }
+  },
+  "promotions": {
+    "01_Triple_EMA_RSI_Repli_M15_V3_IA.md": "livrables/strategies_m15/01_Triple_EMA_RSI_Repli_M15_Specification_IA.md",
+    "02_London_Breakout_M15_V3_IA.md": "livrables/strategies_m15/02_London_Breakout_M15_Specification_IA.md",
+    "00_Decision_Conception_et_Faisabilite_V3.md": "docs/decisions/00_Decision_Conception_et_Faisabilite_V3.md",
+    "03_Donnees_Historiques_Requises_et_Validation.md": "docs/data/03_Donnees_Historiques_Requises_et_Validation.md",
+    "04_Integration_LLM_API_Choix_Couts_Validation.md": "docs/architecture/04_Integration_LLM_API_Choix_Couts_Validation.md",
+    "parametres_figes_v3.json": "config/parametres_figes_v3.json",
+    "parametres_IA_integration_v1.json": "config/parametres_IA_integration_v1.json",
+    "schema_extraction_LLM_v1.json": "schemas/schema_extraction_LLM_v1.json",
+    "schema_notes_IA_v1.json": "schemas/schema_notes_IA_v1.json",
+    "prompts_IA_v1.json": "prompts/prompts_IA_v1.json",
+    "diagnostic_faisabilite_v3.json": "docs/validation/diagnostic_faisabilite_v3.json",
+    "snapshot_public_Deriv_2026-11-04.json": "docs/validation/snapshot_public_Deriv_2026-11-04.json",
+    "provenance_diagnostic_v3.json": "docs/validation/provenance_diagnostic_v3.json",
+    "provenance_IA_v1.json": "docs/validation/provenance_IA_v1.json"
+  },
+  "reference_function_ast_sha256": {
+    "reference/technical.py": "f501ebb8728aade1e09d363fde32f7899d3d074412acc84b56209959b150b297",
+    "reference/llm_contracts.py": "37ddab3c90ab5b5ba4c0d68a6496d210fa061871de11ad5eabc95fb78b9185e6"
+  },
+  "archive_verification": {
+    "status": "PASS",
+    "files_preserved": 1679,
+    "bytes_preserved": 185106150,
+    "all_file_sha256_verified_after_move": true,
+    "note": "All 1679 original files were verified individually after the guarded PowerShell move, before resource promotion."
+  }
+}

@@ -1,0 +1,247 @@
+{
+  "design_sha256": "dab01fb40d1180363423612e1e443cae17c1e06681dcd5f0d8dfcdc527724c05",
+  "run_utc": "2026-11-04T09:38:37.891730+00:00",
+  "evaluation_start_inclusive": "2026-05-11T00:00:00Z",
+  "evaluation_end_exclusive": "2026-11-04T00:00:00Z",
+  "type": "TECHNICAL_SETUP_AND_MINIMUM_EXPOSURE_DIAGNOSTIC_NOT_A_BACKTEST",
+  "profit_parameter_search_count": 0,
+  "frequency_design_iterations": 2,
+  "design_revision_reason": "Initial draft: range 00-07 and fresh crossing. Frequency probe exposed sparse London setups. Final: range 02-07 and no fresh-cross requirement. No trade PnL computed or selected.",
+  "fundamental_bias_applied": false,
+  "historical_news_applied": false,
+  "owned_position_and_daily_fill_counters_applied": false,
+  "portfolio_and_trade_pnl_computed": false,
+  "costs": "Observed Dukascopy Bid/Ask; fixed strategy spread caps; ATR slippage risk reserve. Commission excluded: capital estimates are lower bounds.",
+  "broker_eligibility": "STANDARD_GENERIC hypotheses; MICRO_PUBLIC_EXPOSURE from public Deriv table, not confirmed on user Standard account. Lot step unused: minimum exposure only.",
+  "data_transport": "Previously cached HTTP historical archive. Hashes identify bytes, not authentication.",
+  "rows": [
+    {
+      "strategy": "EMA_V3",
+      "symbol": "EURUSD",
+      "profile": "STANDARD_GENERIC",
+      "minimum_exposure_units_or_ounces": 1000,
+      "potential_technical_setups_before_fill_counters": 234,
+      "quote_and_price_eligible_setups": 234,
+      "quote_rejections": {
+        "missing_exact_minute": 0,
+        "invalid_quote": 0,
+        "spread_cap": 0,
+        "entry_gap": 0,
+        "invalid_stop": 0
+      },
+      "potentially_feasible_at_100_before_fees_and_portfolio": 37,
+      "minimum_equity_median_lower_bound_usd": 144.85291422942225,
+      "minimum_equity_p80_lower_bound_usd": 200.89960202995942,
+      "median_executable_stop_distance_price": 0.0006799999999997919
+    },
+    {
+      "strategy": "EMA_V3",
+      "symbol": "EURUSD",
+      "profile": "MICRO_PUBLIC_EXPOSURE",
+      "minimum_exposure_units_or_ounces": 100,
+      "potential_technical_setups_before_fill_counters": 234,
+      "quote_and_price_eligible_setups": 234,
+      "quote_rejections": {
+        "missing_exact_minute": 0,
+        "invalid_quote": 0,
+        "spread_cap": 0,
+        "entry_gap": 0,
+        "invalid_stop": 0
+      },
+      "potentially_feasible_at_100_before_fees_and_portfolio": 234,
+      "minimum_equity_median_lower_bound_usd": 14.485291422942227,
+      "minimum_equity_p80_lower_bound_usd": 20.089960202995943,
+      "median_executable_stop_distance_price": 0.0006799999999997919
+    },
+    {
+      "strategy": "LONDON_V3",
+      "symbol": "EURUSD",
+      "profile": "STANDARD_GENERIC",
+      "minimum_exposure_units_or_ounces": 1000,
+      "potential_technical_setups_before_fill_counters": 121,
+      "quote_and_price_eligible_setups": 121,
+      "quote_rejections": {
+        "missing_exact_minute": 0,
+        "invalid_quote": 0,
+        "spread_cap": 0,
+        "entry_gap": 0,
+        "invalid_stop": 0
+      },
+      "potentially_feasible_at_100_before_fees_and_portfolio": 12,
+      "minimum_equity_median_lower_bound_usd": 163.19001197994024,
+      "minimum_equity_p80_lower_bound_usd": 210.07725414650696,
+      "median_executable_stop_distance_price": 0.0007800000000000029
+    },
+    {
+      "strategy": "LONDON_V3",
+      "symbol": "EURUSD",
+      "profile": "MICRO_PUBLIC_EXPOSURE",
+      "minimum_exposure_units_or_ounces": 100,
+      "potential_technical_setups_before_fill_counters": 121,
+      "quote_and_price_eligible_setups": 121,
+      "quote_rejections": {
+        "missing_exact_minute": 0,
+        "invalid_quote": 0,
+        "spread_cap": 0,
+        "entry_gap": 0,
+        "invalid_stop": 0
+      },
+      "potentially_feasible_at_100_before_fees_and_portfolio": 121,
+      "minimum_equity_median_lower_bound_usd": 16.319001197994027,
+      "minimum_equity_p80_lower_bound_usd": 21.007725414650697,
+      "median_executable_stop_distance_price": 0.0007800000000000029
+    },
+    {
+      "strategy": "EMA_V3",
+      "symbol": "GBPUSD",
+      "profile": "STANDARD_GENERIC",
+      "minimum_exposure_units_or_ounces": 1000,
+      "potential_technical_setups_before_fill_counters": 251,
+      "quote_and_price_eligible_setups": 249,
+      "quote_rejections": {
+        "missing_exact_minute": 0,
+        "invalid_quote": 0,
+        "spread_cap": 1,
+        "entry_gap": 1,
+        "invalid_stop": 0
+      },
+      "potentially_feasible_at_100_before_fees_and_portfolio": 3,
+      "minimum_equity_median_lower_bound_usd": 198.43792064690481,
+      "minimum_equity_p80_lower_bound_usd": 278.44861893312094,
+      "median_executable_stop_distance_price": 0.0009300000000000974
+    },
+    {
+      "strategy": "EMA_V3",
+      "symbol": "GBPUSD",
+      "profile": "MICRO_PUBLIC_EXPOSURE",
+      "minimum_exposure_units_or_ounces": 100,
+      "potential_technical_setups_before_fill_counters": 251,
+      "quote_and_price_eligible_setups": 249,
+      "quote_rejections": {
+        "missing_exact_minute": 0,
+        "invalid_quote": 0,
+        "spread_cap": 1,
+        "entry_gap": 1,
+        "invalid_stop": 0
+      },
+      "potentially_feasible_at_100_before_fees_and_portfolio": 249,
+      "minimum_equity_median_lower_bound_usd": 19.84379206469048,
+      "minimum_equity_p80_lower_bound_usd": 27.844861893312096,
+      "median_executable_stop_distance_price": 0.0009300000000000974
+    },
+    {
+      "strategy": "LONDON_V3",
+      "symbol": "GBPUSD",
+      "profile": "STANDARD_GENERIC",
+      "minimum_exposure_units_or_ounces": 1000,
+      "potential_technical_setups_before_fill_counters": 164,
+      "quote_and_price_eligible_setups": 164,
+      "quote_rejections": {
+        "missing_exact_minute": 0,
+        "invalid_quote": 0,
+        "spread_cap": 0,
+        "entry_gap": 0,
+        "invalid_stop": 0
+      },
+      "potentially_feasible_at_100_before_fees_and_portfolio": 2,
+      "minimum_equity_median_lower_bound_usd": 222.59670780774724,
+      "minimum_equity_p80_lower_bound_usd": 275.53342594235403,
+      "median_executable_stop_distance_price": 0.0010500000000002174
+    },
+    {
+      "strategy": "LONDON_V3",
+      "symbol": "GBPUSD",
+      "profile": "MICRO_PUBLIC_EXPOSURE",
+      "minimum_exposure_units_or_ounces": 100,
+      "potential_technical_setups_before_fill_counters": 164,
+      "quote_and_price_eligible_setups": 164,
+      "quote_rejections": {
+        "missing_exact_minute": 0,
+        "invalid_quote": 0,
+        "spread_cap": 0,
+        "entry_gap": 0,
+        "invalid_stop": 0
+      },
+      "potentially_feasible_at_100_before_fees_and_portfolio": 164,
+      "minimum_equity_median_lower_bound_usd": 22.259670780774723,
+      "minimum_equity_p80_lower_bound_usd": 27.553342594235403,
+      "median_executable_stop_distance_price": 0.0010500000000002174
+    },
+    {
+      "strategy": "EMA_V3",
+      "symbol": "XAUUSD",
+      "profile": "STANDARD_GENERIC",
+      "minimum_exposure_units_or_ounces": 1,
+      "potential_technical_setups_before_fill_counters": 259,
+      "quote_and_price_eligible_setups": 62,
+      "quote_rejections": {
+        "missing_exact_minute": 0,
+        "invalid_quote": 0,
+        "spread_cap": 197,
+        "entry_gap": 0,
+        "invalid_stop": 0
+      },
+      "potentially_feasible_at_100_before_fees_and_portfolio": 0,
+      "minimum_equity_median_lower_bound_usd": 1967.001299482688,
+      "minimum_equity_p80_lower_bound_usd": 3156.6678919620626,
+      "median_executable_stop_distance_price": 9.050000000000182
+    },
+    {
+      "strategy": "EMA_V3",
+      "symbol": "XAUUSD",
+      "profile": "MICRO_PUBLIC_EXPOSURE",
+      "minimum_exposure_units_or_ounces": 0.1,
+      "potential_technical_setups_before_fill_counters": 259,
+      "quote_and_price_eligible_setups": 62,
+      "quote_rejections": {
+        "missing_exact_minute": 0,
+        "invalid_quote": 0,
+        "spread_cap": 197,
+        "entry_gap": 0,
+        "invalid_stop": 0
+      },
+      "potentially_feasible_at_100_before_fees_and_portfolio": 0,
+      "minimum_equity_median_lower_bound_usd": 196.7001299482688,
+      "minimum_equity_p80_lower_bound_usd": 315.66678919620625,
+      "median_executable_stop_distance_price": 9.050000000000182
+    },
+    {
+      "strategy": "LONDON_V3",
+      "symbol": "XAUUSD",
+      "profile": "STANDARD_GENERIC",
+      "minimum_exposure_units_or_ounces": 1,
+      "potential_technical_setups_before_fill_counters": 126,
+      "quote_and_price_eligible_setups": 36,
+      "quote_rejections": {
+        "missing_exact_minute": 0,
+        "invalid_quote": 0,
+        "spread_cap": 90,
+        "entry_gap": 0,
+        "invalid_stop": 0
+      },
+      "potentially_feasible_at_100_before_fees_and_portfolio": 0,
+      "minimum_equity_median_lower_bound_usd": 2396.9106794362974,
+      "minimum_equity_p80_lower_bound_usd": 3155.4488571075494,
+      "median_executable_stop_distance_price": 11.148499999999785
+    },
+    {
+      "strategy": "LONDON_V3",
+      "symbol": "XAUUSD",
+      "profile": "MICRO_PUBLIC_EXPOSURE",
+      "minimum_exposure_units_or_ounces": 0.1,
+      "potential_technical_setups_before_fill_counters": 126,
+      "quote_and_price_eligible_setups": 36,
+      "quote_rejections": {
+        "missing_exact_minute": 0,
+        "invalid_quote": 0,
+        "spread_cap": 90,
+        "entry_gap": 0,
+        "invalid_stop": 0
+      },
+      "potentially_feasible_at_100_before_fees_and_portfolio": 0,
+      "minimum_equity_median_lower_bound_usd": 239.69106794362978,
+      "minimum_equity_p80_lower_bound_usd": 315.54488571075495,
+      "median_executable_stop_distance_price": 11.148499999999785
+    }
+  ]
+}

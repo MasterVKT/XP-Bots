@@ -1,0 +1,74 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "fx-advisory-v1"
+      ]
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "BRIEFING",
+        "JOURNAL",
+        "WEEKLY_REVIEW"
+      ]
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "evidence_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "text",
+          "evidence_ids"
+        ]
+      }
+    },
+    "uncertainties": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "hypotheses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "statement": {
+            "type": "string"
+          },
+          "validation_plan": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "statement",
+          "validation_plan"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "observations",
+    "uncertainties",
+    "hypotheses"
+  ]
+}

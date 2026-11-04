@@ -1,0 +1,38 @@
+{
+  "input": {
+    "input_file": "docs/references/IA_Generative_Forex_Scalping_M15_v2.md",
+    "input_sha256": "23a8f7651a96f009c81f0bfa2ab580988ec5606060f3356155be10158fd13d73",
+    "original_files": {
+      "00_Decision_Conception_et_Faisabilite_V3.md": "26f15c264e9187c15b8cf4433549f170575ac03bfb04390f4319b3dfaac7005f",
+      "01_Triple_EMA_RSI_Repli_M15_V3_IA.md": "4a803c2a933a4287b47048d533bb8a77d9a754c83455be4b04395dc267c870af",
+      "02_London_Breakout_M15_V3_IA.md": "53402ef659dc2d77bd49936d8ffd2ac80d5214b6d41114b22c3960f9bded8b93",
+      "03_Donnees_Historiques_Requises_et_Validation.md": "f91ec34c950e01865fa21771d55635f1ff1f897a74aec99ff821714650494444",
+      "parametres_figes_v3.json": "2c9ebdec53d88be51fb6019961593754148ac6f55d6044164fbe14a1138a4321",
+      "empreintes_livrables_v3.json": "d24d2aec371d0b37a1366c80540aaaae6b66eb9c0347975c91d11ab196f359c2"
+    },
+    "local_models_user_excluded": true,
+    "original_input_file": "docs/IA_Generative_Forex_Scalping_M15_v2.md"
+  },
+  "integration_digest": "3ee67132e9b6b431f821409036e33b139d07ef92b055a420cc145c5918b7fa90",
+  "review_date": "2026-11-04",
+  "inference_calls_performed": 0,
+  "model_quality_test_performed": false,
+  "financial_gain_validated": false,
+  "source_runtime_checks": {
+    "FED_RSS": "HTTP_200_XML",
+    "ECB_RSS": "HTTP_200_XML",
+    "BOE_RSS": "HTTP_403"
+  },
+  "source_urls": [
+    "https://console.groq.com/docs/rate-limits",
+    "https://console.groq.com/docs/structured-outputs",
+    "https://ai.google.dev/gemini-api/docs/pricing",
+    "https://developers.openai.com/api/docs/pricing",
+    "https://developers.openai.com/api/docs/models/gpt-6-luna",
+    "https://api-docs.deepseek.com/quick_start/pricing/",
+    "https://arxiv.org/abs/2510.02209",
+    "https://arxiv.org/abs/2512.23847",
+    "https://www.snb.ch/en/publications/research/working-papers/2025/working_paper_2025_11"
+  ],
+  "organisation_note": "Path relocation only; evidence, models, pricing review date and validation flags unchanged."
+}
