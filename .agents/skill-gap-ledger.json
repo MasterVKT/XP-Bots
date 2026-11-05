@@ -13,6 +13,18 @@
       ],
       "decision": "consignee",
       "skill": null
+    },
+    {
+      "id": "integration-continue-github-actions-du-robot-workflow-robot-ci",
+      "label": "Intégration continue GitHub Actions du robot (workflow robot-ci)",
+      "occurrences": 1,
+      "first_seen": "2026-11-05",
+      "last_seen": "2026-11-05",
+      "evidence": [
+        "2026-11-05 : création de .github/workflows/robot-ci.yml, gate du squelette du robot 1 (phase 1)"
+      ],
+      "decision": "consignee",
+      "skill": null
     }
   ]
 }
