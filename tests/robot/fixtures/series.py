@@ -40,10 +40,12 @@ def bougies_directes(symbole: str, debut_ms: int, nb: int, graine: int = 3) -> l
     return bougies
 
 
-def bougies_tendances(symbole: str, debut_ms: int, nb: int, graine: int = 1) -> list[Bougie]:
+def bougies_tendances(symbole: str, debut_ms: int, nb: int, graine: int = 1, pointes: float = 0.0) -> list[Bougie]:
     """Bougies valides consécutives à régimes de tendance (dérive haussière, baissière ou nulle), au quantum.
 
-    Série synthétique pour exercer la méthode S01 (armements, replis, reprises) ; aucun prix réel.
+    Série synthétique pour exercer la méthode S01 (armements, replis, reprises) ; aucun prix réel. `pointes` :
+    probabilité d'une mèche extrême (150 à 300 quanta) sur une bougie, pour produire des stops trop larges ; à 0,
+    la série est inchangée (aucun tirage supplémentaire).
     """
     alea = random.Random(graine)
     c, bougies, derive, reste = Decimal('1.10000'), [], 0, 0
@@ -55,6 +57,11 @@ def bougies_tendances(symbole: str, debut_ms: int, nb: int, graine: int = 1) -> 
         c = o + QUANTUM * (derive + alea.randint(-40, 40))
         h = max(o, c) + QUANTUM * alea.randint(0, 25)
         l = min(o, c) - QUANTUM * alea.randint(0, 25)  # noqa: E741
+        if pointes and alea.random() < pointes:
+            if alea.random() < 0.5:
+                l -= QUANTUM * alea.randint(150, 300)  # noqa: E741
+            else:
+                h += QUANTUM * alea.randint(150, 300)
         bougies.append(Bougie(symbole, M15 // 1000, debut_ms + i * M15, o, h, l, c, 4, True))
     return bougies
 
