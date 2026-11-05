@@ -1,11 +1,12 @@
 # Plan d'implémentation intégrale du robot 2 — London Breakout M15 (`LONDON_V3`)
 
-> Plan directeur, version **1.3.0** du **5 novembre 2026**. Statut : **validé par l'utilisateur le
+> Plan directeur, version **1.4.0** du **5 novembre 2026**. Statut : **validé par l'utilisateur le
 > 05/11/2026** ; couverture vérifiée mécaniquement par `python tools/verifier_plan_london.py`
-> ([document 06](06_verification_exhaustive.md)). Toutes les décisions de conception et les douze arbitrages de spécification sont arrêtés ; il
-> ne reste que des **actions humaines** datées par phase (§5). Aucune ligne de code du robot n'existe encore.
-> Ce plan organise la construction ; il n'ajoute, ne retire et ne modifie aucune règle métier, aucun seuil et
-> aucun coût.
+> ([document 06](06_verification_exhaustive.md)). Toutes les décisions de conception et les douze arbitrages de
+> spécification sont arrêtés. Les phases 0 à 12 s'exécutent entièrement dans le conteneur de développement, sans
+> autre action humaine que la demande de passage à la phase suivante ; les autres **actions humaines** (§5) sont
+> regroupées dans la phase 13. Aucune ligne de code du robot n'existe encore. Ce plan organise la construction ;
+> il n'ajoute, ne retire et ne modifie aucune règle métier, aucun seuil et aucun coût.
 
 ## 0. Autorité, portée et lecture
 
@@ -44,6 +45,7 @@
 | [05 — Expert, risques, traçabilité](05_expert_risques_tracabilite.md) | Lecture d'expert M15, registre des risques, coûts et garanties MCL, matrice spécification → plan |
 | [06 — Vérification exhaustive](06_verification_exhaustive.md) | Rattachement de chaque paramètre (163 clés), de chaque exigence (155 lignes, 46 sections) et de chaque consigne d'expert (71) à un emplacement du plan ; contrôle de codifiabilité ; application étape par étape de la skill de planification ; manques trouvés et corrigés |
 | [07 — Procédures humaines](07_procedures_humaines.md) | Procédure détaillée, critère de vérification et comportement prévu en cas d'absence pour chacune des douze actions réservées à l'humain (H-01 à H-12) |
+| [08 — Contrats des frontières externes](08_contrats_frontieres.md) | Contrats finalisés tôt de chaque frontière, contre lesquels l'infrastructure est construite dans le conteneur : API `MetaTrader5` 5.0.6231 (fonctions, interdits, constantes, champs, requêtes, codes de retour, erreurs), dossier d'échange, exports MQL5, table horaire, fichiers de ticks, journaux, état SQLite, rapports ; vérification réelle prévue pour chacun |
 
 ## 1. Règle d'exécution par phases (demande explicite de l'utilisateur)
 
@@ -56,8 +58,8 @@
 3. L'agent ne commence la phase suivante **que sur demande explicite** de l'humain (par exemple « passe à la
    phase 3 »). Aucune anticipation : seule la préparation du contrat de la couche suivante est permise
    **à l'intérieur** d'une même phase (tuilage MCL).
-4. Une phase qui attend une action humaine (§5) s'arrête sur une question explicite, avec le marqueur de
-   blocage du cycle de gouvernance.
+4. Une sous-étape de la phase 13 qui attend une action humaine (§5) s'arrête sur une question explicite, avec
+   le marqueur de blocage du cycle de gouvernance. Aucune phase de 0 à 12 n'en attend.
 5. À l'intérieur d'une phase, chaque couche suit la boucle MCL complète : contrat finalisé → implémentation →
    tests de catégorie 1 → validation → intégration → tests de catégorie 2 → régression intégrale → gel.
 
@@ -77,7 +79,8 @@
   calendrier et des horaires de séance, un **dossier d'échange JSON** pour les permissions du module fondamental
   externe, un stockage d'état SQLite, un journal C09 rejouable, un lecteur du snapshot IA.
 - Un simulateur d'exécution C10 (référence et stress), un moteur de rejeu, les métriques et le bootstrap de
-  C10/A13, les rapports A11, et le moteur V1 London porté pour la seule comparaison de rétention.
+  C10/A13, les rapports A11, le convertisseur des exports de ticks historiques et le moteur V1 London porté pour
+  la seule comparaison de rétention.
 - Le service IA partagé (A04–A11), processus séparé, facultatif pour le cœur et nécessaire au bras IA de
   `PAPER_AB`.
 - Les composants partagés (noyau, données, coordinateur, contrôles, orchestration) sont conçus pour recevoir
@@ -114,11 +117,13 @@ ticks Bid/Ask ──► donnees-temps (C03) ──► moteur-london (S02) ──
 | 8 | Lecteur du contexte IA (A07, A10, A12) | `contexte-ia` | — | Oui |
 | 9 | Orchestration : moteur de décision événementiel, bras A/B | `orchestration` | — | Oui |
 | 10 | Simulateur C10, rejeu, métriques, bootstrap, rapports | `journal-rejeu` | — | Oui |
-| 11 | Infrastructure réelle (MT5, export MQL5, dossier d'échange, convertisseurs de ticks, SQLite, journaux) et points d'entrée | `infrastructure`, `points-entree`, service MQL5 | H-02 à H-07 | Oui |
-| 12 | Service IA partagé (A04–A11) | `service-ia` | H-08 | Oui |
-| 13 | Qualification et validation (sous-étapes 13.1 à 13.7) | `moteur-london-v1` en 13.4 | H-09 à H-12 | Oui, à chaque sous-étape |
+| 11 | Infrastructure réelle (MT5, dossier d'échange, exports MQL5, SQLite, journaux), construite contre les contrats du document 08 avec un faux module `MetaTrader5` ; source du service MQL5 ; points d'entrée ; répétition générale `PAPER` | `infrastructure`, `points-entree`, service MQL5 (source) | — | Oui |
+| 12 | Service IA partagé (A04–A11), construit et testé hors ligne | `service-ia` | — | Oui |
+| 13 | Qualification et validation (sous-étapes 13.1 à 13.7) : poste et compte démo, sondes et tests de contrat, données, V1, rejeux C10, IA réelle, collecte prospective | `donnees-historiques` en 13.3, `moteur-london-v1` en 13.4 | H-02 à H-12 | Oui, à chaque sous-étape |
 
-Les phases 0 à 10 ne requièrent aucune action humaine autre que la demande de passage à la phase suivante (H-01).
+Les phases 0 à 12 se déroulent entièrement dans le conteneur de développement et ne requièrent aucune action
+humaine autre que la demande de passage à la phase suivante (H-01). Les gestes réservés à l'humain (poste,
+compte, terminal, données, autorisation des API, annotation, mise en service) sont tous en phase 13.
 
 ### 2.4 Complétude du plan
 
@@ -134,13 +139,21 @@ Le plan est complet au sens suivant, et chaque point est vérifiable :
    ([document 06](06_verification_exhaustive.md)).
 4. **Chaque phase est exécutable** : objectif, prérequis, ordre des couches, tests clés, coutures, livrables,
    critères de sortie et point d'arrêt ([document 04](04_phases.md)).
-5. **Chaque action humaine est spécifiée** : procédure, vérification et comportement prévu en son absence
+5. **Les phases 0 à 12 sont exécutables par l'agent seul**, dans le conteneur : chacune de leurs entrées est
+   dans le dépôt ou dans ce plan. Les frontières externes sont construites contre des contrats finalisés tôt
+   ([document 08](08_contrats_frontieres.md)), établis par l'examen du paquet officiel `MetaTrader5` ; chacun est
+   confronté au réel en phase 13, un écart ouvrant un défigeage « correction » tracé de la seule couche concernée.
+6. **Chaque action humaine est spécifiée** : procédure, vérification et comportement prévu en son absence
    ([document 07](07_procedures_humaines.md)). Ce sont des gestes que les règles du projet réservent à l'humain
    (compte, identifiants, poste, données privées, annotation, mise en service), pas des inconnues de conception.
-6. **Ce que le plan ne peut pas contenir d'avance**, par nature : résultats des sondes S-01 à S-10, contenu des
-   données privées, règles V1 conservées dans l'archive locale. Chacun est produit à une étape précise, avec un
-   comportement prévu s'il manque. Construire maintenant le service MQL5 ou le moteur V1 contredirait la règle
-   d'exécution par phases (§1).
+7. **Ce que le plan ne peut pas contenir d'avance**, par nature : résultats des sondes S-01 à S-10, contenu des
+   données privées, règles V1 conservées dans l'archive locale. Chacun est produit à une sous-étape précise de la
+   phase 13, avec un comportement prévu s'il manque. Le convertisseur des exports de ticks ne s'écrit qu'au vu
+   d'un export réel (13.3) et le moteur V1 qu'au vu de ses règles (13.4) ; aucun des deux ne conditionne une
+   phase de 0 à 12.
+8. **Contrôle mécanique de ces propriétés** : le script vérifie aussi qu'aucune phase de 0 à 12 n'exige d'action
+   humaine, que les actions H-02 à H-12 se situent toutes en phase 13 et que chaque frontière du document 02
+   a son contrat au document 08.
 
 ## 3. Décisions (section 2 du plan MCL)
 
@@ -150,19 +163,19 @@ Le plan est complet au sens suivant, et chaque point est vérifiable :
 | D-02 | Sources dans **`src/xpbots/`** (paquet unique), tests dans `tests/robot/`, dossiers MCL dans `mcl/<artefact>/` | Arrêtée par l'utilisateur le 05/11/2026 | Noyau partagé entre les deux robots ; analyse des imports Python par `mcl.py` | — |
 | D-03 | Architecture « noyau déterministe piloté par événements + coquille impérative » ([document 01](01_architecture.md), §1) | Arrêtée (approuvée le 05/11/2026) | A03, C06, C08, C11.14 | Phase 1 |
 | D-04 | Tests : bibliothèque standard `unittest` et lanceur `tools/run_robot_tests.py` ; aucun `pytest` | Arrêtée (approuvée le 05/11/2026) | Aucune dépendance nouvelle (règles du projet, §4) | Phase 1 |
-| D-05 | Dépendances : cœur en bibliothèque standard ; à l'exécution Windows, `tzdata` (déjà épinglée dans `requirements-dev.txt`) et `MetaTrader5` dans un fichier d'exigences Windows distinct ; rien d'autre | **Autorisée** par l'utilisateur le 05/11/2026 pour `MetaTrader5` | Règles du projet, §4 | Phase 11 |
+| D-05 | Dépendances : cœur en bibliothèque standard ; à l'exécution Windows, `requirements-windows.txt` épingle `MetaTrader5` 5.0.6231, `numpy` qu'il exige et `tzdata` (ces deux dernières aux versions déjà épinglées dans `requirements-dev.txt`) ; rien d'autre | **Autorisée** par l'utilisateur le 05/11/2026 pour `MetaTrader5` | Règles du projet, §4 ; [document 08](08_contrats_frontieres.md), §2.1 | Phase 11 (fichier), 13.1 (installation) |
 | D-06 | État persistant en SQLite (bibliothèque standard), dans `runtime/` ignoré par Git, transactions exclusives | Arrêtée (approuvée le 05/11/2026) | C07, C08 (réservation et intention persistées avant envoi) | Phase 11 |
 | D-07 | Journal C09 en JSON Lines canonique quotidien et journal d'entrées rejouable, dans `logs/` ignoré par Git | Arrêtée (approuvée le 05/11/2026) | C09, C11.14 | Phase 2 (format), 11 (écriture) |
 | D-08 | Identification des ordres : numéro magique par couple (déploiement, stratégie) ; commentaire = préfixe et empreinte courte de la clé d'intention (longueur maximale qualifiée par la sonde S-05) | Arrêtée (approuvée le 05/11/2026) | C08 (clé persistante, propriété, positions externes) | Phase 6 |
 | D-09 | Période de la boucle en direct : constante d'ingénierie de 100 ms, consignée au registre de déploiement, jamais réglée sur un résultat | Arrêtée (approuvée le 05/11/2026) | TTL de 5 s, cotation âgée d'au plus 2 s, délais de correction de 0,25 s | Phase 11 |
-| D-10 | Intégration continue distante (GitHub Actions) et porte `robot-suite` du cycle de vie : **refusées** | Arrêtée : refus de l'utilisateur le 05/11/2026, révisable à sa seule demande | Conséquences planifiées : la suite du robot s'exécute à chaque gate MCL, à chaque fin de phase et avant chaque commit ; les écarts propres à Windows se révèlent en phase 11, sur le poste (risque R-12) | Phase 1 |
+| D-10 | Intégration continue distante (GitHub Actions) et porte `robot-suite` du cycle de vie : **refusées** | Arrêtée : refus de l'utilisateur le 05/11/2026, révisable à sa seule demande | Conséquences planifiées : la suite du robot s'exécute à chaque gate MCL, à chaque fin de phase et avant chaque commit ; les écarts propres à Windows se révèlent en sous-étape 13.1, sur le poste (risque R-12) | Phase 1 |
 | D-11 | Transport des permissions du module fondamental externe : **dossier d'échange JSON** à écriture atomique, un fichier par symbole, lu chaque seconde ([document 01](01_architecture.md), §2.1) | Arrêtée par l'utilisateur le 05/11/2026 | Même mécanisme éprouvé que le snapshot IA (A10) ; aucun réseau | Phase 7 (format), 11 (lecture) |
-| D-12 | Calendrier HIGH et horaires de séance : **service MQL5 d'export** vers le dossier commun du terminal, seul composant MQL5 du projet ([document 01](01_architecture.md), §2.2) ; fermetures exceptionnelles tenues dans un fichier versionné | Arrêtée par l'utilisateur le 05/11/2026 | Le paquet Python `MetaTrader5` n'expose ni le calendrier ni les séances ; A04 autorise le calendrier natif MT5 | Phase 7 (format), 11 (service) |
-| D-13 | Courtier du compte de démonstration : **Deriv MT5** | Arrêtée par l'utilisateur le 05/11/2026 | Symboles micro listés dans le [snapshot public](../../validation/snapshot_public_Deriv_2026-11-04.json) ; disponibilité sur le compte standard à vérifier en 13.1 | Phase 11 |
+| D-12 | Calendrier HIGH et horaires de séance : **service MQL5 d'export** vers le dossier commun du terminal, seul composant MQL5 du projet ([document 01](01_architecture.md), §2.2) ; fermetures exceptionnelles tenues dans un fichier versionné | Arrêtée par l'utilisateur le 05/11/2026 | Le paquet Python `MetaTrader5` n'expose ni le calendrier ni les séances ; A04 autorise le calendrier natif MT5 | Phase 7 (format), 11 (source du service), 13.1 (compilation) |
+| D-13 | Courtier du compte de démonstration : **Deriv MT5** | Arrêtée par l'utilisateur le 05/11/2026 | Symboles micro listés dans le [snapshot public](../../validation/snapshot_public_Deriv_2026-11-04.json) ; disponibilité sur le compte standard à vérifier en 13.1 | Sous-étape 13.1 |
 | D-14 | Ticks historiques C10 : ticks exacts du symbole lié chez le courtier s'ils couvrent la période ; à défaut, source tierce (par exemple Dukascopy) **déclarée contrefactuelle** | Arrêtée par l'utilisateur le 05/11/2026 | C10 ; [données requises](../../data/03_Donnees_Historiques_Requises_et_Validation.md) | Sous-étape 13.3 |
 | D-15 | Règles V1 London : **fournies par l'utilisateur** depuis l'archive locale (voir le [registre de nettoyage](../../maintenance/NETTOYAGE_ET_MERGE.md)) avant la sous-étape 13.4 ; portées dans l'artefact distinct `moteur-london-v1`, réservé au rejeu, sans modifier V3 | Arrêtée par l'utilisateur le 05/11/2026 | C10 (comparaison sur le même moteur) | Sous-étape 13.4 |
 | D-16 | Calendrier du protocole C10 : la démonstration prospective prévue « à partir du 05/11/2026 » ne peut commencer qu'après le gel du robot ; le bilan du 04/02/2027 se tiendra avec les effectifs disponibles et le protocole se prolongera jusqu'aux effectifs requis ; aucune date normative n'est modifiée | Note | C10 | Phase 13 |
-| D-17 | Appels réels aux API LLM (conformité et fonctionnement du service) : **refusés** à ce jour | Arrêtée : refus de l'utilisateur le 05/11/2026 ; l'agent redemande l'autorisation au début de la phase 12 (H-08) | Conséquences planifiées dans les deux cas : sans autorisation, service construit et testé hors ligne et bras IA `NEUTRAL` ; avec autorisation, procédure H-08 puis fonctionnement réel | Phase 12 |
+| D-17 | Appels réels aux API LLM (conformité et fonctionnement du service) : **refusés** à ce jour | Arrêtée : refus de l'utilisateur le 05/11/2026 ; l'agent redemande l'autorisation au début de la sous-étape 13.6 (H-08) | Conséquences planifiées dans les deux cas : le service est construit et testé hors ligne en phase 12 ; sans autorisation, il reste arrêté et le bras IA est `NEUTRAL` ; avec autorisation, procédure H-08 puis fonctionnement réel en 13.6 | Phase 12 (hors ligne), 13.6 (réel) |
 | D-18 | Stratégies injectées dans l'orchestration par la configuration de déploiement (contrat structurel), sans import direct du moteur London | Arrêtée : détail de conception découlant de D-03, introduit le 05/11/2026 pour D-15 | Moteur V1 et futur robot EMA branchés sans défigeage ; simulation de la carte composite inchangée en profondeurs | Phase 9 |
 
 ## 4. Arbitrages de spécification (défauts signalés, C02)
@@ -193,15 +206,15 @@ Procédure complète de chacune : [document 07](07_procedures_humaines.md).
 
 | Id | Moment | Action | Effet si elle manque |
 |---|---|---|---|
-| H-01 | Fin de chaque phase | Demander explicitement la phase suivante | Aucune phase suivante |
-| H-02 | Avant la phase 11 | Préparer le poste Windows (Python 3.13 x64, environnement, accès de l'agent) | La phase 11 s'arrête sur question |
-| H-03 | Avant la phase 11 | Ouvrir le compte de démonstration Deriv MT5 standard en USD et autoriser le trading algorithmique | Aucune sonde ni test de contrat MT5 |
-| H-04 | Phase 11 | Compiler et lancer le service MQL5 `XPBotsExport` | Aucune nouvelle entrée (calendrier périmé) ; `ENVIRONMENT_NOT_READY` (séances) |
-| H-05 | Phase 11, puis à chaque avis du courtier | Tenir le fichier des fermetures exceptionnelles | `ENVIRONMENT_NOT_READY` |
-| H-06 | Phase 11 | Brancher le module fondamental externe sur le dossier d'échange | Toutes les nouvelles entrées refusées (`FUNDAMENTAL_INVALID`) |
-| H-07 | Phase 11 | Exécuter les sondes et les tests de contrat sur le poste | Couches d'infrastructure non construites |
-| H-08 | Début de la phase 12 | Autoriser ou non les appels d'API ; fournir les clés gratuites dans `.env` | Service hors ligne ; bras IA `NEUTRAL` |
-| H-09 | Sous-étape 13.3 | Fournir les données historiques de C10 | Aucun rejeu C10 |
+| H-01 | Fin de chaque phase et de chaque sous-étape | Demander explicitement la phase suivante | Aucune phase suivante |
+| H-02 | Début de la sous-étape 13.1 | Préparer le poste Windows (Python 3.13 x64, environnement, accès de l'agent) | La sous-étape 13.1 s'arrête sur question ; le code des phases 0 à 12 reste complet et vérifié dans le conteneur |
+| H-03 | Début de la sous-étape 13.1 | Ouvrir le compte de démonstration Deriv MT5 standard en USD et autoriser le trading algorithmique | Aucune sonde ni test de contrat MT5 ; aucune qualification C04 |
+| H-04 | Sous-étape 13.1 | Compiler et lancer le service MQL5 `XPBotsExport` | Aucune nouvelle entrée (calendrier périmé) ; `ENVIRONMENT_NOT_READY` (séances) |
+| H-05 | Sous-étape 13.1, puis à chaque avis du courtier | Tenir le fichier des fermetures exceptionnelles | `ENVIRONMENT_NOT_READY` |
+| H-06 | Sous-étape 13.1 | Brancher le module fondamental externe sur le dossier d'échange | Toutes les nouvelles entrées refusées (`FUNDAMENTAL_INVALID`) |
+| H-07 | Sous-étape 13.1 | Exécuter les sondes S-01 à S-08 et les tests de contrat sur le poste | Infrastructure non qualifiée : aucune séance sur le terminal ni démonstration |
+| H-08 | Début de la sous-étape 13.6 | Autoriser ou non les appels d'API ; fournir les clés gratuites dans `.env` | Service arrêté ; bras IA `NEUTRAL` ; fournisseurs `NON_QUALIFIE` |
+| H-09 | Sous-étape 13.3 | Fournir les données historiques de C10 et un extrait de chaque export pour les sondes S-09 et S-10 | Aucun rejeu C10 |
 | H-10 | Avant la sous-étape 13.4 | Fournir la spécification V1 London | Rétention déclarée non applicable |
 | H-11 | Sous-étape 13.6 | Annoter les 200 textes de la qualification A13 | Fournisseurs `NON_QUALIFIE` ; aucun veto réel |
 | H-12 | Sous-étape 13.7 | Décider des mises en service | Aucun passage en démonstration prospective ni en réel |
@@ -228,3 +241,4 @@ Procédure complète de chacune : [document 07](07_procedures_humaines.md).
 | 1.1.0 | 05/11/2026 | Validation par l'utilisateur : douze arbitrages tranchés (recommandations retenues), D-03 à D-09 approuvées, `MetaTrader5` autorisée, intégration continue distante et appels d'API non autorisés, D-11 à D-15 arrêtées ; contrats du dossier d'échange et de l'export MQL5 ; stratégies injectées (D-18) ; moteur V1 de comparaison ; sous-étapes 13.1 à 13.7 |
 | 1.2.0 | 05/11/2026 | Vérification exhaustive (document 06) et script `tools/verifier_plan_london.py` ; six manques corrigés : recontrôle du contexte IA juste avant l'ordre (A03), mesures séparées de C09, indicateurs descriptifs de la lecture d'expert, éléments de rapport C10, contrôle du dossier commun (A02), suspension pour dérive (A13.10) |
 | 1.3.0 | 05/11/2026 | Procédures des douze actions humaines (document 07) ; statuts de D-10 et D-17 explicités comme refus arrêtés ; définition de la complétude du plan (§2.4) ; convertisseurs des exports de ticks (MT5 et source tierce) et sondes S-09, S-10 ; application étape par étape de la skill de planification (document 06, §8) ; contrôles mécaniques étendus aux décisions, aux actions humaines et à cette application |
+| 1.4.0 | 05/11/2026 | Phases 0 à 12 exécutables sans action humaine : contrats des frontières externes finalisés tôt (document 08), d'après l'examen du paquet officiel `MetaTrader5` 5.0.6231 ; infrastructure construite contre ces contrats avec un faux module injecté et répétition générale `PAPER` dans le conteneur ; sondes S-01 à S-08, compilation MQL5, tests de contrat et première séance sur le terminal regroupés en 13.1 ; convertisseurs des exports de ticks déplacés dans l'artefact `donnees-historiques` (13.3) ; autorisation des API redemandée en 13.6 ; `requirements-windows.txt` avec `numpy` ; risque R-18 ; contrôles mécaniques étendus (phases autonomes, moments des actions humaines, frontières contractualisées) |

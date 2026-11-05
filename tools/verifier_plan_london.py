@@ -4,7 +4,9 @@ Sans réseau ni dépendance. Vérifie que le document 06 rattache chaque paramè
 spécification 02 et chaque consigne d'expert à un emplacement du plan ; que les motifs minimaux de C09 sont
 traités par le document 01 ; que les cas d'acceptation C11, S02.6 et A14 sont affectés par le document 03 ; que
 les décisions du plan directeur sont toutes arrêtées ; que chaque action humaine a sa procédure (document 07) ;
-que chaque étape et chaque garde-fou de la skill de planification a sa preuve (document 06, §8).
+que chaque étape et chaque garde-fou de la skill de planification a sa preuve (document 06, §8) ; que les phases
+0 à 12 n'exigent aucune action humaine et que les actions H-02 et suivantes se situent en phase 13 (plan
+directeur, documents 04 et 07) ; que chaque frontière du document 02 a son contrat au document 08, et réciproquement.
 Les listes attendues sont dérivées des sources (spécification, exports, skill), jamais recopiées ici.
 Code de sortie 0 si tout est couvert, 1 sinon.
 """
@@ -187,6 +189,56 @@ def verifier() -> tuple[dict, list[str]]:
             problemes.append(f'skill de planification : « {ident} » sans application ni preuve (document 06, §8)')
     resume['skill_planification'] = {'etapes': etapes, 'garde_fous': garde_fous,
                                      'lignes': len(application)}
+
+    # 9. Les phases 0 à 12 n'exigent aucune action humaine ; plan directeur et document 04 ont les mêmes phases.
+    derniere_phase_autonome = 12
+    phases = [ligne for ligne in lignes_tableau(section(plan_directeur, '2.3')) if re.fullmatch(r'\d+', ligne[0])]
+    doc04 = lire(PLAN / '04_phases.md')
+    fiches = re.findall(r'^## Phase (\d+) — ', doc04, re.M)
+    if [ligne[0] for ligne in phases] != fiches:
+        problemes.append('phases du plan directeur (§2.3) et du document 04 différentes')
+    for ligne in phases:
+        if int(ligne[0]) <= derniere_phase_autonome and (len(ligne) < 4 or ligne[3] != '—'):
+            problemes.append(f'plan directeur, §2.3 : la phase {ligne[0]} exige une action humaine')
+    for numero in fiches:
+        if int(numero) <= derniere_phase_autonome:
+            citees = sorted(set(re.findall(r'\bH-(?:0[2-9]|1\d)\b', section(doc04, f'Phase {numero} '))))
+            if citees:
+                problemes.append(f'document 04, phase {numero} : actions humaines citées ({", ".join(citees)})')
+    resume['phases'] = {'total': len(phases),
+                        'sans_action_humaine': sum(int(ligne[0]) <= derniere_phase_autonome for ligne in phases)}
+
+    # 10. Les actions humaines autres que H-01 se situent toutes en phase 13 (plan directeur, §5, et document 07).
+    en_phase_13 = re.compile(r'\b13\.\d')
+    for ligne in lignes_tableau(section(plan_directeur, '5.')):
+        if ligne[0] != 'H-01' and (len(ligne) < 2 or not en_phase_13.search(ligne[1])):
+            problemes.append(f'action « {ligne[0]} » hors de la phase 13 (plan directeur, §5)')
+    doc07 = lire(PLAN / '07_procedures_humaines.md')
+    for ident in procedures:
+        if ident == 'H-01':
+            continue
+        quand = re.search(r'^- \*\*Quand\*\* : (.*)$', section(doc07, ident + ' '), re.M)
+        if not quand or not en_phase_13.search(quand.group(1)):
+            problemes.append(f'procédure « {ident} » : moment hors de la phase 13 (document 07)')
+    resume['actions_en_phase_13'] = len([a for a in actions if a != 'H-01'])
+
+    # 11. Chaque frontière du document 02, §7, a son contrat au document 08, §1, et réciproquement ; chaque
+    #     paragraphe cité par la table existe et chaque contrat a une vérification réelle.
+    frontieres = [ligne[0] for ligne in lignes_tableau(section(lire(PLAN / '02_cartographie_mcl.md'), '7.'))]
+    doc08 = lire(PLAN / '08_contrats_frontieres.md')
+    contrats = {ligne[0]: ligne for ligne in lignes_tableau(section(doc08, '1.'))}
+    problemes += [f'frontière « {f} » sans contrat (document 08, §1)' for f in frontieres if f not in contrats]
+    problemes += [f'contrat « {c} » sans frontière (document 02, §7)' for c in contrats if c not in frontieres]
+    paragraphes = set(re.findall(r'^#{2,3} (\d+(?:\.\d+)?)\.? ', doc08, re.M))
+    for nom, ligne in contrats.items():
+        cites = re.findall(r'§(\d+(?:\.\d+)?)', ligne[1]) if len(ligne) > 1 else []
+        if not cites:
+            problemes.append(f'contrat « {nom} » : aucun paragraphe cité (document 08, §1)')
+        problemes += [f'contrat « {nom} » : paragraphe §{ref} absent du document 08'
+                      for ref in cites if ref not in paragraphes]
+        if len(ligne) < 3 or not ligne[2] or ligne[2] == '—':
+            problemes.append(f'contrat « {nom} » sans vérification réelle (document 08, §1)')
+    resume['frontieres'] = {'document_02': len(frontieres), 'document_08': len(contrats)}
     return resume, problemes
 
 

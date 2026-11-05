@@ -117,7 +117,7 @@ laisse le complément IA `NEUTRAL` (A12) et déclenche une alerte, sans effet su
 - **Historique de C10** : exporter aujourd'hui l'historique du calendrier produit un calendrier enrichi après
   coup ; son usage en rejeu est déclaré comme approximation exposée à une fuite d'information
   ([données requises](../../data/03_Donnees_Historiques_Requises_et_Validation.md), §4). La collecte prospective
-  des versions commence dès la phase 11.
+  des versions commence dès la première séance sur le poste (sous-étape 13.1).
 
 ## 3. Modes d'exécution
 
@@ -207,7 +207,7 @@ profit d'une position fictive, marge d'un ordre isolé, contrôle natif d'un ord
 symbole, état du compte. Il est nécessaire parce que le dimensionnement doit utiliser les fonctions du courtier
 (C04, C07) à l'intérieur du TTL. Il a deux implémentations réelles : l'adaptateur MT5 (`order_calc_profit`,
 `order_calc_margin`, `order_check`, `symbol_info`, `account_info`) et le simulateur C10 (formules vérifiées
-contre MT5 en phase 11). Chaque appel et son résultat sont écrits dans le journal d'entrées, pour que le rejeu
+contre MT5 par la sonde S-07, en sous-étape 13.1). Chaque appel et son résultat sont écrits dans le journal d'entrées, pour que le rejeu
 d'une séance réelle rende exactement les mêmes décisions (C11.14).
 
 ### 4.6 Simultanéité et priorités
@@ -260,12 +260,15 @@ src/xpbots/
   infra/                            artefact infrastructure : seul lieu des entrées-sorties réelles
   app/                              artefact points-entree : robot, rejeu, qualification, rapports
   service_ia/                       artefact service-ia : processus séparé
+  donnees_historiques/              artefact donnees-historiques (sous-étape 13.3) : exports de ticks → format canonique
 tests/robot/
   outils/                           fabriques synthétiques, courtier scénarisé, faux module MetaTrader5
   squelette/                        test de bout en bout du squelette
   noyau/ donnees_temps/ moteur_london/ execution_coordinateur/ controles_fondamentaux/
   contexte_ia/ orchestration/ journal_rejeu/ infrastructure/ points_entree/ service_ia/
+  moteur_london_v1/ donnees_historiques/
 mql5/Services/XPBotsExport.mq5      service MQL5 d'export du calendrier et des séances (D-12), seul code MQL5
+requirements-windows.txt            exigences d'exécution du poste : MetaTrader5, numpy, tzdata (D-05)
 tools/run_robot_tests.py            lanceur unique des tests du robot (bibliothèque standard)
 mcl/<artefact>/                     carte.json, journal.jsonl, contrats/, PLAN-MCL.md
 mcl/squelette/COUTURES.md           registre des coutures du squelette
@@ -407,8 +410,12 @@ des snapshots. Rejouer ce journal dans le même cœur doit reproduire à l'ident
 
 ## 10. Particularités MT5 relevées et à qualifier
 
-Constats de la recherche du 5 novembre 2026, à confirmer par des **sondes jetables** en phase 11 (le code des
-sondes se jette ; seules leurs preuves sont conservées dans le rapport de qualification) :
+Constats de la recherche du 5 novembre 2026 et de l'examen du paquet `MetaTrader5` 5.0.6231
+([document 08](08_contrats_frontieres.md), §2), à confirmer par des **sondes jetables** : S-01 à S-08 en
+sous-étape 13.1, sur le poste ; S-09 et S-10 en sous-étape 13.3, sur des exports réels. L'infrastructure est
+construite avant, en phase 11, contre les contrats du document 08 ; un écart révélé par une sonde ouvre un
+défigeage « correction » de la couche concernée, avec un test qui capture le cas. Le code des sondes se jette ;
+seules leurs preuves sont conservées dans le rapport de qualification.
 
 | Sonde | Point | Constat de recherche | Conséquence si la sonde échoue |
 |---|---|---|---|
@@ -420,11 +427,15 @@ sondes se jette ; seules leurs preuves sont conservées dans le rapport de quali
 | S-06 | `order_send` bloquant | Appel synchrone ; durée et comportement en déconnexion inconnus ; appels concurrents non documentés | Exécutant dédié avec délai de 5 s, rapprochement possible pendant un envoi bloqué, ou repli documenté |
 | S-07 | `order_calc_margin`, `order_calc_profit`, `order_check` | `OrderCalcMargin` évalue un ordre isolé (C04) | Marge totale = marge du compte + marge du nouvel ordre + contrôle natif |
 | S-08 | `copy_ticks_from` | Date de départ à la seconde ; ticks de même milliseconde possibles ; profondeur d'historique propre au courtier | Dédoublonnage par `time_msc` et ordre natif ; préchargement en bougies natives Bid seulement après comparaison (P-01) |
-| S-09 | Export de ticks du terminal (Affichage, Symboles, onglet Ticks) | Fichier texte en heure du serveur ; colonnes, séparateur et traitement d'un Bid ou d'un Ask inchangé à relever sur un export réel | Convertisseur adapté au format relevé ; un tick sans Bid ni Ask connu est écarté et journalisé, jamais complété par une valeur inventée |
-| S-10 | Export de la source tierce de ticks (D-14) | Format à relever (colonnes, fuseau, précision) sur un fichier réel avant conversion | Convertisseur dédié ; la source reste déclarée contrefactuelle |
+| S-09 | Export de ticks du terminal (Affichage, Symboles, onglet Ticks) | Fichier texte en heure du serveur ; colonnes, séparateur et traitement d'un Bid ou d'un Ask inchangé à relever sur un export réel | Unités `formats_exports` et `conversion_exports_ticks` de l'artefact `donnees-historiques` écrites pour le format relevé ; un tick sans Bid ni Ask connu est écarté et journalisé, jamais complété par une valeur inventée |
+| S-10 | Export de la source tierce de ticks (D-14) | Format à relever (colonnes, fuseau, précision) sur un fichier réel avant conversion | Description et conversion dédiées dans `donnees-historiques` ; la source reste déclarée contrefactuelle |
 
 Le paquet Python ne fournit ni le calendrier économique ni les horaires de séance : D-12 retient le service MQL5
-d'export du §2.2. Le chemin du dossier commun vient de `terminal_info().commondata_path`.
+d'export du §2.2. Le chemin du dossier commun vient de `terminal_info().commondata_path`. Les aides `Buy`, `Sell`
+et `Close` du paquet sont interdites : elles renvoient d'elles-mêmes un ordre refusé, ce que C08 exclut. Les
+commissions ne figurent pas dans les caractéristiques du symbole ; elles se lisent dans les transactions
+(`commission`, `fee`) et se comparent à la fiche publiée du compte. Le type de compte est contrôlé au démarrage
+(démonstration en `DEMO`, réel en `REEL`). Détails : document 08, §2.1, §2.3 et §2.8.
 
 ## 11. Sécurité, secrets et confidentialité
 

@@ -4,7 +4,8 @@ Retour au [plan directeur](README.md). Les règles du projet réservent certains
 compte, utiliser ses identifiants, travailler sur son poste Windows, fournir ses données privées, annoter,
 décider d'une mise en service ([règles du projet](../../../.agents/PROJECT_RULES.md), §4 ; skill
 `xp-bots-deployment-readiness`). Ce ne sont pas des inconnues de conception : chaque geste a ci-dessous sa
-procédure, son critère de vérification et le comportement prévu s'il n'est pas accompli.
+procédure, son critère de vérification et le comportement prévu s'il n'est pas accompli. Hormis H-01, tous
+interviennent en phase 13 : les phases 0 à 12 se construisent dans le conteneur sans aucun d'eux.
 
 Règles communes à toutes les procédures :
 
@@ -25,7 +26,7 @@ Règles communes à toutes les procédures :
 
 ## H-02 — Préparer le poste Windows
 
-- **Quand** : avant la phase 11.
+- **Quand** : au début de la sous-étape 13.1.
 - **Prérequis** : Windows 10 ou 11 en 64 bits ; dépôt déjà présent dans `D:\PROJETS\XP-Bots`.
 - **Étapes**
   1. Installer Python 3.13 en 64 bits depuis python.org, en cochant l'ajout de `python.exe` au `PATH`. Vérifier
@@ -36,19 +37,21 @@ Règles communes à toutes les procédures :
   3. Dans `D:\PROJETS\XP-Bots` : `git fetch origin`, puis se placer sur la branche de travail indiquée dans le
      dernier rapport de phase.
   4. Créer un environnement local ignoré par Git : `python -m venv .venv`, l'activer avec
-     `.venv\Scripts\Activate.ps1`, puis `python -m pip install -r requirements-dev.txt`. En phase 11, installer
-     aussi le fichier d'exigences Windows ajouté par l'agent (`MetaTrader5` et `tzdata`).
+     `.venv\Scripts\Activate.ps1`, puis `python -m pip install -r requirements-dev.txt` et
+     `python -m pip install -r requirements-windows.txt` (fichier écrit par l'agent en phase 11 : `MetaTrader5`,
+     `numpy` et `tzdata`).
   5. Donner l'accès à l'agent, au choix : (a) partager le dossier du dépôt avec la session par Remote Control
      (application Claude pour ordinateur : Paramètres, Claude Code, Remote Control), l'agent demandant ensuite
      l'accès, que l'humain accepte ; (b) exécuter soi-même les commandes que l'agent fournit et lui renvoyer les
      rapports.
 - **Vérification** : `python tools/verify_project.py` et `python tools/run_robot_tests.py` affichent `PASS`
   sur le poste.
-- **Si l'action manque** : la phase 11 s'arrête sur question ; les phases 0 à 10 n'en dépendent pas.
+- **Si l'action manque** : la sous-étape 13.1 s'arrête sur question ; les phases 0 à 12 n'en dépendent pas et
+  restent vertes dans le conteneur.
 
 ## H-03 — Ouvrir le compte de démonstration Deriv MT5
 
-- **Quand** : avant la phase 11 (D-13).
+- **Quand** : au début de la sous-étape 13.1 (D-13).
 - **Étapes**
   1. Dans l'espace client Deriv, ajouter un compte MT5 de **démonstration** de type standard (marchés
      financiers), en USD.
@@ -63,12 +66,13 @@ Règles communes à toutes les procédures :
      micro si elles existent.
   6. Garder le terminal ouvert et connecté pendant les séances d'essai.
 - **Vérification** : statut de connexion actif dans le terminal ; le rapport de qualification de l'agent
-  (`cli_qualification`) lit le compte sans erreur de devise, de levier ni de connexion.
-- **Si l'action manque** : aucune sonde ni aucun test de contrat MT5 ; la phase 11 s'arrête sur question.
+  (`cli_qualification`) lit le compte sans erreur de devise, de levier ni de connexion et le déclare de type
+  démonstration ([document 08](08_contrats_frontieres.md), §2.3).
+- **Si l'action manque** : aucune sonde ni aucun test de contrat MT5 ; la sous-étape 13.1 s'arrête sur question.
 
 ## H-04 — Compiler et lancer le service MQL5 `XPBotsExport`
 
-- **Quand** : en phase 11, après l'écriture du service par l'agent (D-12).
+- **Quand** : en sous-étape 13.1 ; le service a été écrit par l'agent en phase 11 (D-12).
 - **Étapes**
   1. Dans le terminal : Fichier, Ouvrir le dossier des données ; aller dans `MQL5\Services` ; y copier
      `mql5\Services\XPBotsExport.mq5` du dépôt.
@@ -85,7 +89,7 @@ Règles communes à toutes les procédures :
 
 ## H-05 — Tenir le fichier des fermetures exceptionnelles
 
-- **Quand** : avant la première séance de la phase 11, puis à chaque avis du courtier.
+- **Quand** : avant la première séance sur le terminal (sous-étape 13.1), puis à chaque avis du courtier.
 - **Étapes**
   1. Copier le gabarit fourni par l'agent en phase 11 vers
      `%APPDATA%\MetaQuotes\Terminal\Common\Files\XPBots\export\v1\fermetures_exceptionnelles.json`.
@@ -98,7 +102,7 @@ Règles communes à toutes les procédures :
 
 ## H-06 — Brancher le module fondamental externe sur le dossier d'échange
 
-- **Quand** : en phase 11 (D-11).
+- **Quand** : en sous-étape 13.1 (D-11).
 - **Étapes**
   1. Remettre au responsable du module le contrat du [document 01](01_architecture.md), §2.1 : emplacement, un
      fichier par symbole, schéma `fundamental-permission-v1`, écriture atomique, séquence strictement
@@ -114,21 +118,23 @@ Règles communes à toutes les procédures :
 
 ## H-07 — Exécuter les sondes et les tests de contrat sur le poste
 
-- **Quand** : en phase 11, marché ouvert, après H-02 à H-06.
+- **Quand** : en sous-étape 13.1, marché ouvert, après H-02 à H-06.
 - **Étapes**
   1. Avec l'accès (H-02, option a), l'agent exécute lui-même ; sinon, exécuter dans l'ordre les commandes qu'il
-     fournit : une par sonde (S-01 à S-10, [document 01](01_architecture.md), §10), puis les tests de contrat
+     fournit : une par sonde (S-01 à S-08, [document 01](01_architecture.md), §10), puis les tests de contrat
      avec la variable `XPBOTS_CONTRATS_MT5` à `1`.
   2. Vérifier dans le terminal que le compte connecté est le compte démo avant toute commande qui envoie un
      ordre.
   3. Renvoyer à l'agent le contenu de `.local/reports/qualification/`.
-- **Vérification** : un rapport par sonde ; l'agent statue sonde par sonde avant de construire la couche
-  concernée.
-- **Si l'action manque** : les couches d'infrastructure ne sont pas construites ; la phase 11 s'arrête.
+- **Vérification** : un rapport par sonde ; l'agent statue sonde par sonde ; toute divergence avec le
+  [document 08](08_contrats_frontieres.md) ouvre un défigeage « correction » de la couche concernée.
+- **Si l'action manque** : l'infrastructure, construite et testée dans le conteneur, reste non qualifiée :
+  aucune séance sur le terminal ni démonstration ; la sous-étape 13.1 s'arrête.
 
 ## H-08 — Autoriser ou non les appels d'API et fournir les clés gratuites
 
-- **Quand** : au début de la phase 12, quand l'agent redemande l'autorisation (D-17).
+- **Quand** : au début de la sous-étape 13.6, quand l'agent redemande l'autorisation (D-17) ; le service a été
+  construit et testé hors ligne en phase 12.
 - **Étapes en cas d'accord**
   1. Créer un compte gratuit Groq et un projet gratuit Google AI Studio (Gemini) ; générer une clé par service ;
      vérifier dans chaque console que l'offre est gratuite pour ce compte et relever les quotas affichés. Si la
@@ -139,8 +145,8 @@ Règles communes à toutes les procédures :
   3. Communiquer à l'agent les quotas relevés, jamais les clés.
 - **Vérification** : une requête de conformité réussie par route gratuite ; registre de budget à 0 USD de
   dépense payante.
-- **En cas de refus** : comportement prévu par D-17 : service construit et testé hors ligne, laissé arrêté ;
-  bras IA de `PAPER_AB` à `NEUTRAL`.
+- **En cas de refus** : comportement prévu par D-17 : service laissé arrêté ; bras IA de `PAPER_AB` à
+  `NEUTRAL` ; fournisseurs `NON_QUALIFIE`.
 
 ## H-09 — Fournir les données historiques de C10
 
@@ -155,9 +161,12 @@ Règles communes à toutes les procédures :
      rejeu est alors déclaré contrefactuel. Les ticks du courtier servent quand même à comparer les spreads sur
      leur période propre.
   3. Déposer les exports bruts dans `data/raw/exports/<source>/<SYMBOLE>/` (ignoré par Git) avec une note :
-     source, fuseau d'origine, date de récupération, trous connus. L'agent les convertit au format canonique des
+     source, fuseau d'origine, date de récupération, trous connus. Pour les sondes S-09 et S-10, donner à l'agent
+     l'accès à un mois d'export de chaque source (H-02, option a) ou lui transmettre ses cinquante premières
+     lignes avec la note. L'agent construit alors l'artefact `donnees-historiques` pour le format relevé, puis
+     convertit les exports au format canonique des
      [données requises](../../data/03_Donnees_Historiques_Requises_et_Validation.md), §2, dans
-     `data/raw/ticks/`, avec manifeste SHA-256 (convertisseur `cli_donnees`, phase 11).
+     `data/raw/ticks/`, avec manifeste SHA-256 (commande `cli_donnees`, sous-étape 13.3).
   4. **Caractéristiques datées** : pour chaque symbole lié, enregistrer la fiche Spécification du terminal (clic
      droit sur le symbole) et les frais publiés, datés ; à chaque changement connu, une nouvelle fiche.
   5. **Permissions historiques** : si le module fondamental a archivé ses messages avec `known_at`, les fournir en

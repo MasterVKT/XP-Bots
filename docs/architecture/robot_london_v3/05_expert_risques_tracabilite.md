@@ -67,23 +67,24 @@ logique de martingale, de revanche ou d'augmentation du risque après pertes n'e
 
 | Id | Risque | Effet | Traitement | Phase |
 |---|---|---|---|---|
-| R-01 | Base horaire des ticks MT5 ambiguë (UTC ou heure du serveur) | Bougies et sessions décalées, décisions fausses | Sonde S-01, table de conversion versionnée, refus du flux non qualifié | 11 |
-| R-02 | `order_send` bloquant, appels concurrents non garantis | Accusé ambigu, rapprochement retardé | Sonde S-06, exécutant dédié avec délai, repli documenté | 11 |
-| R-03 | Paquet Python sans calendrier ni horaires de séance | Garde d'annonces et garde de fermeture native impossibles | D-12 : service MQL5 d'export ; risque résiduel : code MQL5 non compilable dans le conteneur, contrôlé par revue, compilation et test de contrat sur le poste | 7, 11 |
-| R-04 | SL non attachable à l'entrée chez le courtier | Profil non prêt pour V3 (C06) | Sonde S-02 ; aucun contournement par pose différée ; décision humaine | 11, 13.1 |
+| R-01 | Base horaire des ticks MT5 ambiguë (UTC ou heure du serveur) | Bougies et sessions décalées, décisions fausses | Table de conversion versionnée (document 08, §5) dès la phase 11 ; sonde S-01 ; refus du flux non qualifié | 11, 13.1 |
+| R-02 | `order_send` bloquant, appels concurrents non garantis | Accusé ambigu, rapprochement retardé | Exécutant dédié avec délai dès la phase 11 ; sonde S-06 ; repli documenté | 11, 13.1 |
+| R-03 | Paquet Python sans calendrier ni horaires de séance | Garde d'annonces et garde de fermeture native impossibles | D-12 : service MQL5 d'export ; risque résiduel : code MQL5 non compilable dans le conteneur, contrôlé par revue en phase 11, puis compilation et test de contrat sur le poste en 13.1 | 7, 11, 13.1 |
+| R-04 | SL non attachable à l'entrée chez le courtier | Profil non prêt pour V3 (C06) | Sonde S-02 ; aucun contournement par pose différée ; décision humaine | 13.1 |
 | R-05 | Contrats micro indisponibles sur le compte standard | Presque tous les signaux refusés (`MIN_VOLUME_OR_RISK_REJECT`) | Qualification 13.1 ; verdict « compte incompatible » sans déformer le risque | 13.1 |
 | R-06 | Historique de ticks du courtier trop court | Validation C10 impossible sur le symbole exact | D-14 : source tierce déclarée contrefactuelle | 13.3 |
 | R-07 | Rejeu Python lent sur sept ans de ticks | Protocole C10 long | Mesure en phase 10 ; optimisation à comportement constant | 10, 13.5 |
 | R-08 | Contamination du test réservé | Validation sans valeur | Verrou du test réservé, ouverture unique journalisée après gel | 10, 13.5 |
 | R-09 | Ambiguïtés de spécification tranchées implicitement | Défigeages en chaîne | Arbitrages P-01 à P-12 en phase 0 | 0 |
 | R-10 | Règles V1 absentes du dépôt | Rétention non calculable | D-15 : l'humain fournit la V1 avant 13.4 ; sinon rétention N/A déclarée | 13.4 |
-| R-11 | Quotas ou gratuité des API modifiés, appels non autorisés | Complément IA indisponible | Neutralité A12, autorisation redemandée en phase 12 (D-17), qualification A13, route payante désactivée | 12, 13.6 |
-| R-12 | Composants Windows non testables dans le conteneur, sans intégration continue distante (D-10 non autorisée) | Défauts propres à Windows découverts en phase 11 seulement | Tests de contrat sur le poste, preuves consignées ; D-10 peut être redemandée | 1, 11 |
+| R-11 | Quotas ou gratuité des API modifiés, appels non autorisés | Complément IA indisponible | Neutralité A12, autorisation redemandée en sous-étape 13.6 (D-17), qualification A13, route payante désactivée | 12, 13.6 |
+| R-12 | Composants Windows non testables dans le conteneur, sans intégration continue distante (D-10 non autorisée) | Défauts propres à Windows découverts en sous-étape 13.1 seulement | Tests de contrat sur le poste, preuves consignées ; D-10 peut être redemandée | 1, 13.1 |
 | R-13 | Conditions du courtier modifiées dans le temps | Risque ou coûts faux | Relecture C04 avant chaque ordre, profils datés | 11, 13 |
 | R-14 | Disponibilité humaine (annotation, surveillance de démonstration) | Retard de validation | Sous-étapes 13.x séparées, chacune avec son point d'arrêt | 13 |
 | R-15 | Divergences répétées ou défigeages en chaîne | Carte MCL fausse | Suspendre, sonder, re-cartographier, informer l'humain | 2 à 12 |
-| R-16 | Module fondamental externe qui n'écrit pas de façon atomique ou réutilise une séquence | Permissions rejetées, entrées bloquées | Lecture tolérante (rejet journalisé, état inchangé) ; règles d'écriture remises au fournisseur ; test de contrat avec le vrai module | 11 |
-| R-17 | Calendrier historique exporté après coup | Fuite d'information dans les rejeux C10 | Approximation déclarée (données §4) ; collecte prospective des versions dès la phase 11 | 11, 13.3 |
+| R-16 | Module fondamental externe qui n'écrit pas de façon atomique ou réutilise une séquence | Permissions rejetées, entrées bloquées | Lecture tolérante (rejet journalisé, état inchangé) ; règles d'écriture remises au fournisseur ; test de contrat avec le vrai module | 11, 13.1 |
+| R-17 | Calendrier historique exporté après coup | Fuite d'information dans les rejeux C10 | Approximation déclarée (données §4) ; collecte prospective des versions dès la sous-étape 13.1 | 13.1, 13.3 |
+| R-18 | Infrastructure figée sur des contrats que le réel contredit (comportement de MT5, de Windows ou du terminal différent du document 08) | Défaut découvert après le gel de la phase 11 | Contrats établis par l'examen du paquet officiel ; faux module comparé au document 08 par un test ; sondes et tests de contrat en 13.1 avant toute séance ; défigeage « correction » de la seule couche concernée, test qui capture le cas, régression intégrale ; aucune séance de démonstration avant la fin de 13.1 | 11, 13.1 |
 
 ## 3. Coûts et garanties de MCL
 
@@ -94,9 +95,10 @@ logique de martingale, de revanche ou d'augmentation du risque après pertes n'e
   bénéfice dégradé pour `infrastructure` et `service-ia`, dominés par leurs frontières externes.
 - **Garantie donnée** : à tout instant, le bloc `{0 → k}` de chaque artefact est testé, intégré et stable, et le
   squelette reste déployable et vert.
-- **Garanties non données** : rentabilité ; comportement réel du courtier avant les phases 11 et 13 ; qualité
-  sémantique des modèles avant A13 ; chemin de bout en bout sur la vraie plateforme avant la phase 11. MCL n'est
-  pas présentée comme statistiquement supérieure à une autre approche : c'est une discipline de construction.
+- **Garanties non données** : rentabilité ; comportement réel du courtier avant la sous-étape 13.1 ; qualité
+  sémantique des modèles avant A13 ; chemin de bout en bout sur la vraie plateforme avant la sous-étape 13.1 (la
+  répétition générale de la phase 11 l'exerce contre le faux module seulement). MCL n'est pas présentée comme
+  statistiquement supérieure à une autre approche : c'est une discipline de construction.
 
 ## 4. Matrice de traçabilité spécification → plan
 
@@ -118,7 +120,7 @@ confronte chaque consigne de la skill d'expert à un choix de conception (71 con
 | C07 | Dimensionnement, réserves, gardes | `execution-coordinateur` 1b, 1c, 2a, 3 | 5 | C11.6, C11.7, C11.13 |
 | C08 | Ordres, conflits, sorties, redémarrage | `execution-coordinateur` 2b, 4, 5a, 5b, 6 ; `orchestration` 2 | 6, 9 | C11.10 à C11.13 |
 | C09 | Journal et mesures | `noyau` 2 ; `infrastructure` 0d ; `journal-rejeu` 1c, 3 | 2, 10, 11 | Motifs (P-07, P-08) |
-| C10 | Plan d'évaluation | `journal-rejeu` 0b, 1b, 1c, 1d, 2, 3 ; `moteur-london-v1` | 10, 13.3 à 13.5 | P-11, verrou du test réservé, rétention V3/V1 |
+| C10 | Plan d'évaluation | `journal-rejeu` 0b, 1b, 1c, 1d, 2, 3 ; `donnees-historiques` ; `moteur-london-v1` | 10, 13.3 à 13.5 | P-11, verrou du test réservé, rétention V3/V1 |
 | C11 | Cas d'acceptation communs | Tous | 2 à 13.2 | Document 03, §5.1 |
 | S02.1 | Range et analyse H1 | `moteur-london` 1a, 1b, 2 | 4 | S02.6-1, S02.6-2 |
 | S02.2 | Fenêtre de déclenchement | `donnees-temps` 0b ; `moteur-london` 2 ; `execution-coordinateur` 0e | 3, 4, 5 | S02.6-3 |

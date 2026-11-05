@@ -36,7 +36,9 @@ pas l'exécution de ces cas sur un robot : ils restent verts et inchangés.
   test (doublures des seules frontières externes) : `tests/robot/outils/`.
 - Tests de contrat des frontières réelles : `test_contrat_<frontiere>_<theme>.py`, ignorés sauf si
   `XPBOTS_CONTRATS_MT5=1` (Windows, terminal connecté au compte démo Deriv) ou `XPBOTS_CONTRATS_API=1` (appels
-  d'API réels : non autorisés au 05/11/2026, D-17, redemandés en phase 12).
+  d'API réels : non autorisés au 05/11/2026, D-17, redemandés en sous-étape 13.6). Ils sont écrits avec la
+  couche qu'ils confrontent (phases 11 et 12) et exécutés en phase 13 ; leur absence d'exécution n'empêche aucun
+  gel antérieur, et une divergence constatée ouvre un défigeage « correction » (document 08).
 - Lanceur `tools/run_robot_tests.py` (bibliothèque standard) : ajoute `src` au chemin d'import ; découvre les
   tests ; options `--artefact`, `--couche`, `--categorie 1|2` ; code de sortie non nul au moindre échec ; résumé
   écrit dans `.local/reports/robot_tests.json` (ignoré par Git).
@@ -161,23 +163,30 @@ python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossie
 
 ## 7. Tests de contrat des frontières réelles
 
-- **Convertisseurs d'exports de ticks** : en catégorie 1, fixtures reproduisant le format relevé par les sondes
-  S-09 (export du terminal, heure du serveur) et S-10 (source tierce) ; attendus : fichiers canoniques
-  identiques à une référence calculée à la main, ordre natif conservé, heure UTC exacte de part et d'autre
-  d'un changement d'heure du serveur, tick sans Bid ni Ask connu écarté et journalisé ; en contrat, conversion
-  d'un mois réel sur le poste.
-- **MT5 (poste Windows, compte démo, `XPBOTS_CONTRATS_MT5=1`)** : confirmation des sondes S-01 à S-10 ; lecture
-  complète du profil C04 ; entrée protégée de volume minimal sur compte démo ; ajustement du TP ; clôture ;
-  rapprochement après déconnexion provoquée ; détection d'une position externe ouverte à la main sur le compte
-  démo ; chemin du dossier commun. Jamais sur un compte réel.
+- **Faux module `MetaTrader5` (catégorie 1, conteneur)** : il reproduit les noms et valeurs des constantes, les
+  signatures et les structures nommées du [document 08](08_contrats_frontieres.md), §2 ; il est scénarisable
+  (réponses, codes de retour, `None` suivi de `last_error`, appel bloquant, déconnexion) ; un test compare ses
+  constantes à la liste du document 08 pour qu'une dérive du faux module soit détectée.
+- **MT5 (sous-étape 13.1, poste Windows, compte démo, `XPBOTS_CONTRATS_MT5=1`)** : confirmation des sondes S-01 à
+  S-08 ; garde du type de compte ; lecture complète du profil C04 ; entrée protégée de volume minimal sur compte
+  démo ; ajustement du TP ; clôture ; rapprochement après déconnexion provoquée ; détection d'une position externe
+  ouverte à la main sur le compte démo ; commissions lues dans les transactions ; chemin du dossier commun.
+  Jamais sur un compte réel.
+- **Convertisseurs d'exports de ticks (artefact `donnees-historiques`, sous-étape 13.3)** : en catégorie 1,
+  fixtures reproduisant le format relevé par les sondes S-09 (export du terminal, heure du serveur) et S-10
+  (source tierce), avec des lignes fabriquées, jamais des prix réels copiés (aucun prix brut n'est commité) ;
+  attendus : fichiers canoniques identiques à une référence calculée à la main, ordre natif
+  conservé, heure UTC exacte de part et d'autre d'un changement d'heure du serveur, tick sans Bid ni Ask connu
+  écarté et journalisé ; en contrat, conversion et validation d'un mois réel.
 - **Fichiers et SQLite** : arrêt brutal pendant une transaction, puis reprise ; écriture et lecture concurrentes
   du snapshot et du dossier d'échange des permissions sous Windows (refus de partage, nouvelles tentatives,
   jamais de contenu tronqué accepté).
-- **Service MQL5 d'export** : compilation sans avertissement ; un export réel comparé à la vue calendrier du
-  terminal et à la fiche de séances du symbole ; format validé par les mêmes tests Python que les fixtures.
-- **API LLM (`XPBOTS_CONTRATS_API=1`)** : une requête de conformité par route gratuite configurée, selon les
-  gabarits A08, seulement après l'autorisation explicite que D-17 exige (non accordée au 05/11/2026) ; aucune
-  route payante sans décision.
+- **Service MQL5 d'export (sous-étape 13.1)** : compilation sans avertissement ; un export réel comparé à la vue
+  calendrier du terminal et à la fiche de séances du symbole ; format validé par les mêmes tests Python que les
+  fixtures, écrits en phase 11.
+- **API LLM (sous-étape 13.6, `XPBOTS_CONTRATS_API=1`)** : une requête de conformité par route gratuite
+  configurée, selon les gabarits A08, seulement après l'autorisation explicite que D-17 exige (non accordée au
+  05/11/2026) ; aucune route payante sans décision.
 - **RSS** : lecture réelle des flux Fed et BCE si la politique réseau le permet ; refus BoE consigné.
 
 ## 8. Gardes transverses

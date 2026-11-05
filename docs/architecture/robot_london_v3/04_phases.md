@@ -3,8 +3,11 @@
 Retour au [plan directeur](README.md). Une phase se termine **intégralement**, puis l'agent s'arrête et attend une
 demande explicite pour la suivante (plan directeur, §1). Les identifiants de couches renvoient au
 [document 02](02_cartographie_mcl.md) ; les cas et scénarios au [document 03](03_acceptation_et_tests.md). Toutes
-les décisions et tous les arbitrages sont arrêtés depuis le 05/11/2026 (plan directeur, §3 et §4) ; seules les
-actions humaines du plan directeur, §5, restent à accomplir, aux phases indiquées.
+les décisions et tous les arbitrages sont arrêtés depuis le 05/11/2026 (plan directeur, §3 et §4). Les phases 0 à
+12 s'exécutent entièrement dans le conteneur de développement, sans autre action humaine que la demande de
+passage à la phase suivante (H-01) : les frontières externes y sont construites contre les contrats finalisés tôt
+du [document 08](08_contrats_frontieres.md). Toutes les autres actions humaines du plan directeur, §5, sont
+regroupées dans la phase 13.
 
 ## Gabarit commun à toutes les phases
 
@@ -12,8 +15,9 @@ actions humaines du plan directeur, §5, restent à accomplir, aux phases indiqu
 
 1. Appliquer l'orchestrateur de skills du dépôt (cycle obligatoire d'`AGENTS.md`) ; charger les skills
    métier de la phase (indiquées dans chaque fiche).
-2. Vérifier que les artefacts amont sont figés : `mcl.py --dossier mcl/<amont> statut` ; vérifier que les
-   actions humaines requises par la phase sont accomplies. À défaut, s'arrêter sur une question.
+2. Vérifier que les artefacts amont sont figés : `mcl.py --dossier mcl/<amont> statut`. En phase 13 seulement,
+   vérifier aussi que les actions humaines de la sous-étape sont accomplies ; à défaut, s'arrêter sur une
+   question.
 3. Relever l'état initial : `git status --short`, `python tools/run_robot_tests.py` (à partir de la phase 1),
    `python tools/verify_project.py` ; tout échec préexistant est documenté avant le moindre changement.
 
@@ -58,7 +62,8 @@ actions humaines du plan directeur, §5, restent à accomplir, aux phases indiqu
   3. Renseigner la **carte composite au grain des paquets** : une unité et une couche par artefact
      (`xpbots.noyau`, `xpbots.donnees`, `xpbots.london`, `xpbots.execution`, `xpbots.fondamental`,
      `xpbots.contexte_ia`, `xpbots.orchestration`, `xpbots.rejeu`, `xpbots.infra`, `xpbots.app`,
-     `xpbots.service_ia` ; `xpbots.london_v1` sera ajouté en 13.4), avec les dépendances du tableau du
+     `xpbots.service_ia` ; `xpbots.donnees_historiques` sera ajouté en 13.3 et `xpbots.london_v1` en 13.4),
+     avec les dépendances du tableau du
      document 02, §5 ; `mcl.py analyser` jusqu'à zéro divergence. Les couches parallèles (`xpbots.london` et
      `xpbots.execution`, par exemple) rendent mécaniquement détectable toute dépendance mutuelle. Cette carte sert
      à `analyser` et `verifier`, jamais à `figer`.
@@ -235,71 +240,79 @@ actions humaines du plan directeur, §5, restent à accomplir, aux phases indiqu
 - **Couture** : remplacement de S5 (exécution papier par le simulateur) et de l'analyse des lignes de S1.
 - **Critères de sortie** : huit unités figées ; bout en bout vert ; aucune donnée réelle utilisée à ce stade.
 
-## Phase 11 — Infrastructure réelle, service MQL5 et points d'entrée
+## Phase 11 — Infrastructure réelle, source du service MQL5 et points d'entrée
 
-- **Objectif** : implémentations réelles des frontières, service MQL5 d'export et points d'entrée
+- **Objectif** : implémentations réelles des frontières, construites dans le conteneur contre les contrats
+  finalisés tôt du [document 08](08_contrats_frontieres.md) ; source du service MQL5 d'export ; points d'entrée
   (document 02, §6.9, §6.10 et §6.12).
 - **Skills** : `xp-bots-broker-account-qualification`, `xp-bots-deployment-readiness`,
   `xp-bots-market-data-causality`, MCL.
-- **Prérequis humains** (plan directeur, §5 ; procédures H-02 à H-07 du [document 07](07_procedures_humaines.md)) : poste Windows avec Python 3.13 x64 et le terminal MT5 de Deriv
-  connecté à un **compte de démonstration** standard en USD ; accès de l'agent au poste (dossier partagé) ou
-  exécution par l'humain des commandes fournies ; module fondamental configuré pour écrire dans le dossier
-  d'échange (D-11) ; fichier des fermetures exceptionnelles initialisé (D-12). La dépendance `MetaTrader5` est
-  autorisée (D-05).
+- **Prérequis** : phase 10. Aucune action humaine : le poste Windows, le compte de démonstration et le terminal
+  ne servent qu'à partir de la sous-étape 13.1. La dépendance `MetaTrader5` est autorisée (D-05) mais n'est pas
+  installable dans le conteneur (roues Windows seulement) : le faux module la remplace dans tous les tests.
 - **Étapes**
-  1. **Sondes jetables** S-01 à S-10 (document 01, §10 ; procédure H-07), exécutées sur le poste Windows, code placé dans un
-     dossier ignoré par Git et supprimé ensuite ; preuves dans `.local/reports/qualification/`. Toute sonde en
-     échec est rapportée avant de construire la couche concernée ; si l'entrée protégée n'est pas attachable,
-     le profil est déclaré non prêt (C06) et la phase s'arrête sur décision humaine.
-  2. Ajouter le fichier d'exigences d'exécution Windows qui épingle `MetaTrader5` (5.0.6231, marqueur
-     `sys_platform == "win32"`) et `tzdata`.
-  3. Écrire le service MQL5 `mql5/Services/XPBotsExport.mq5` (document 02, §6.12) ; l'humain le compile dans
-     MetaEditor et l'installe ; le format de ses fichiers est validé par les tests Python des fixtures, puis
-     comparé sur le poste aux vues du terminal. `mcl.py` n'analysant pas MQL5, la convention de module et la
-     revue de code sont rappelées dans le rapport.
-  4. Construire `infrastructure` couche par couche (dossier d'échange D-11 et exports D-12 compris) ;
-     catégorie 1 avec le faux module `MetaTrader5`, des dossiers temporaires et SQLite en mémoire ; tests de
-     contrat sur le poste Windows.
-  5. Construire `points-entree` : boucle en direct (D-09), commandes de rejeu, de qualification et de
-     rapports ; injection du moteur London ; refus de `TECHNICAL_CONTROL_NEUTRAL` en démonstration et en réel ;
-     refus du mode réel sans décision de déploiement tracée ; gabarit du registre de déploiement (sans secret)
-     avec les constantes d'ingénierie (D-09, plafond du dossier d'échange, cadences d'export) ; procédure
-     d'exploitation (accusé inconnu, SL absent, garde, arrêt global, redémarrage, coupure réseau, mise à jour des
-     fermetures exceptionnelles).
-- **Coutures** : remplacement de S6 (écriture réelle), S7 (points d'entrée) et S1 en direct (flux MT5).
-- **Critères de sortie** : couches figées ; tests de contrat MT5, du dossier d'échange et de l'export MQL5 verts
-  sur le poste ; une séance London en mode `PAPER` sur le terminal démo sans erreur, journaux complets ; rejeu du
-  journal d'entrées de cette séance identique (premier contrôle de C11.14).
-- **Exclu** : tout ordre sur compte réel.
+  1. Écrire le faux module `MetaTrader5` de `tests/robot/outils/` d'après le document 08, §2 : constantes,
+     signatures, structures nommées et scénarios (réponses, codes de retour, `None` suivi de `last_error`, appel
+     bloquant, déconnexion) ; ajouter le test qui compare ses constantes à la liste du document 08.
+  2. Écrire `requirements-windows.txt` (document 08, §2.1) et le test qui vérifie que ses versions de `numpy` et
+     de `tzdata` égalent celles de `requirements-dev.txt`.
+  3. Écrire le service MQL5 `mql5/Services/XPBotsExport.mq5` (document 02, §6.12) selon les schémas du
+     document 08, §4, et les tests Python de format sur fixtures. Compilation et comparaison aux vues du terminal
+     en sous-étape 13.1. `mcl.py` n'analysant pas MQL5, la convention de module et la revue de code sont
+     rappelées dans le rapport.
+  4. Construire `infrastructure` couche par couche (dossier d'échange D-11, exports D-12 et table horaire du
+     document 08, §5, compris) : catégories 1 et 2 avec le faux module, des dossiers temporaires et SQLite en
+     fichier temporaire ; écrire avec chaque couche ses tests de contrat (document 03, §7), ignorés hors du poste ;
+     geler chaque couche sur la foi des contrats du document 08, dont la confrontation au réel est planifiée en
+     13.1 (risque R-18).
+  5. Construire `points-entree` : boucle en direct (D-09), commandes de rejeu, de qualification (rapport du
+     document 08, §9) et de rapports ; injection du moteur London ; garde du type de compte (document 08, §2.3) ;
+     refus de `TECHNICAL_CONTROL_NEUTRAL` en démonstration et en réel ; refus du mode réel sans décision de
+     déploiement tracée ; gabarits du registre de déploiement (sans secret, avec les constantes d'ingénierie
+     D-09, plafond du dossier d'échange et cadences d'export) et du fichier des fermetures exceptionnelles
+     (document 08, §4.3) ; procédure d'exploitation (accusé inconnu, SL absent, garde, arrêt global, redémarrage,
+     coupure réseau, mise à jour des fermetures exceptionnelles).
+  6. **Répétition générale dans le conteneur** : une séance London `PAPER` complète à travers la vraie boucle en
+     direct, le faux module servant un flux de ticks scénarisé, le dossier d'échange et les exports étant écrits
+     dans un dossier commun temporaire ; journaux complets ; rejeu du journal d'entrées identique (C11.14).
+- **Coutures** : remplacement de S6 (écriture réelle), S7 (points d'entrée) et S1 en direct (flux MT5, servi ici
+  par le faux module).
+- **Critères de sortie** : couches figées ; suite complète verte dans le conteneur ; tests de contrat écrits et
+  recensés dans le rapport, avec la sous-étape qui les exécutera ; répétition générale identique à son rejeu.
+- **Exclu** : tout appel au vrai terminal et tout ordre, même de démonstration, avant la sous-étape 13.1 ; tout
+  ordre sur compte réel.
 
 ## Phase 12 — Artefact `service-ia`
 
 - **Objectif** : service IA partagé, en arrière-plan, sans inférence locale (document 02, §6.11 ; A04 à A11).
 - **Skills** : `xp-bots-llm-integration-contracts`, MCL.
-- **Prérequis** : phase 11. **Au début de la phase, l'agent redemande l'autorisation des appels d'API réels
-  (D-17, refusée au 05/11/2026 ; procédure H-08).** Avec autorisation : clés des routes gratuites placées par l'humain dans
-  `.env` (jamais lues ni affichées par l'agent), requêtes de conformité, puis fonctionnement réel. Sans
-  autorisation : service construit et testé entièrement hors ligne, laissé arrêté ; le bras IA de `PAPER_AB`
-  reste `NEUTRAL`. La route payante reste désactivée sauf décision explicite.
+- **Prérequis** : phase 11. Aucune action humaine et aucun appel réseau réel : les appels d'API ne sont pas
+  autorisés (D-17) ; leur autorisation sera redemandée en sous-étape 13.6. Les clients des fournisseurs et le
+  collecteur RSS sont testés avec un ouvreur HTTP factice, des réponses fabriquées aux gabarits de A08 et des flux
+  XML fabriqués au format de A04. La route payante reste désactivée sauf décision explicite.
 - **Ordre des couches** : selon `mcl.py analyser` (carte indicative du document 02).
 - **Tests clés** : A14-3 à A14-6 et A14-11 à A14-16 ; égalité avec `parse_model_output`,
   `parse_advisory_output`, `build_policy_event`, `make_snapshot`, `reserve_cost_usd` et `budget_admits` ;
-  plafonds aux bornes ; transaction de budget concurrente ; reprise sans réinférence ; écriture atomique sous
-  Windows ; lecture de l'export MQL5 du calendrier pour l'appariement A06.
-- **Critères de sortie** : hors ligne, couches figées et suite verte ; si les appels sont autorisés, service en
-  marche au moins une journée de marché avec heartbeat régulier, registre de budget cohérent, aucune route
-  payante appelée, et snapshot lu par le robot en `PAPER_AB`.
+  plafonds aux bornes ; transaction de budget concurrente ; reprise sans réinférence ; écriture atomique (le
+  comportement propre à Windows est confirmé en 13.6) ; lecture de l'export MQL5 du calendrier pour
+  l'appariement A06 ; tests de contrat API et RSS écrits, ignorés sans `XPBOTS_CONTRATS_API=1`.
+- **Essai de bout en bout dans le conteneur** : le service, lancé avec l'ouvreur factice, écrit son snapshot
+  (heartbeat, événements fabriqués) que `contexte-ia` lit pendant une séance `PAPER_AB` rejouée ; le bras IA
+  bloque exactement les signaux visés par un veto fabriqué valide et reste `NEUTRAL` sans snapshot.
+- **Critères de sortie** : couches figées ; suite complète verte hors ligne ; essai de bout en bout conforme.
 
 ## Phase 13 — Qualification et validation
 
-Chaque sous-étape est un point d'arrêt. Aucune ne valide une rentabilité par elle-même.
+Chaque sous-étape est un point d'arrêt. Aucune ne valide une rentabilité par elle-même. C'est la seule phase qui
+requiert des actions humaines ([document 07](07_procedures_humaines.md)) ; chaque sous-étape commence par
+vérifier les siennes et s'arrête sur une question si l'une manque.
 
-| Sous-étape | Objet | Prérequis | Sortie |
+| Sous-étape | Objet | Prérequis et actions humaines | Sortie |
 |---|---|---|---|
-| 13.1 | Qualification C04 sur le compte démo Deriv : fiche d'environnement, règle de liaison d'un symbole par sous-jacent, disponibilité des contrats micro, levier du compte, faisabilité du volume minimal à 0,5 %, liste `ENVIRONMENT_NOT_READY` vide pour EURUSD et GBPUSD | Phase 11 | Profil admissible, ou verdict « compte incompatible avec la fréquence visée » (C10), sans déformer le risque |
-| 13.2 | Acceptation sur plateforme : cas C11 qui exigent le courtier (5, 7, 11, 12, 13), en démo ; égalité C11.14 par rejeu des journaux d'entrées de plusieurs séances | 13.1 | Rapport d'acceptation |
-| 13.3 | Données historiques (D-14) : ticks du 02/12/2019 au 03/11/2026 (ceux de Deriv s'ils couvrent toute la période, sinon la source tierce pour toute la période, déclarée contrefactuelle, sans mélange d'historiques), caractéristiques et coûts datés, calendrier avec heures de connaissance (approximation déclarée pour l'historique), permissions historiques causales si elles existent ; conversion par `cli_donnees` ; formats, registres de trous, empreintes | Données fournies par l'humain (H-09) | Données validées dans `data/raw/` (jamais commitées) |
-| 13.4 | Portage de la V1 London (D-15) : spécification fournie par l'humain, versée en contexte avec son empreinte, puis artefact `moteur-london-v1` construit au protocole MCL (document 02, §6.13) et injecté dans le seul rejeu | Fichier V1 fourni (H-10) | Moteur V1 figé, refusé hors rejeu |
+| 13.1 | **Qualification de l'infrastructure sur le poste**, puis qualification C04. (1) Installation de `requirements-windows.txt` et suite complète verte sur le poste ; service MQL5 compilé sans avertissement et lancé (H-04) ; fichier des fermetures exceptionnelles (H-05) et module fondamental (H-06) en place. (2) Sondes S-01 à S-08 et tests de contrat MT5, fichiers, SQLite, dossier d'échange et export MQL5 (document 03, §7) ; garde du type de compte. (3) Toute divergence avec le document 08 : défigeage « correction » de la couche concernée, test qui capture le cas, nouveau gel, régression intégrale ; si l'entrée protégée n'est pas attachable (S-02), profil « non prêt pour V3 » (C06) et arrêt sur décision humaine. (4) Qualification C04 sur le compte démo Deriv : fiche d'environnement, règle de liaison d'un symbole par sous-jacent, disponibilité des contrats micro, levier du compte, faisabilité du volume minimal à 0,5 %, liste `ENVIRONMENT_NOT_READY` vide pour EURUSD et GBPUSD. (5) Une séance London `PAPER` sur le terminal démo sans erreur, journaux complets, rejeu identique de son journal d'entrées (premier contrôle réel de C11.14) ; écart d'horloge mesuré et consigné ; début de la collecte prospective des versions du calendrier | Phase 12 ; H-02 à H-07 | Rapport de qualification ; profil admissible, ou verdict « compte incompatible avec la fréquence visée » (C10), sans déformer le risque |
+| 13.2 | Acceptation sur plateforme : cas C11 qui exigent le courtier (5, 7, 11, 12, 13), en démo ; égalité C11.14 par rejeu des journaux d'entrées de plusieurs séances | 13.1 ; terminal démo ouvert (H-03) | Rapport d'acceptation |
+| 13.3 | Données historiques (D-14). (1) Exports fournis par l'humain : ticks du 02/12/2019 au 03/11/2026 (ceux de Deriv s'ils couvrent toute la période, sinon la source tierce pour toute la période, déclarée contrefactuelle, sans mélange d'historiques), caractéristiques et coûts datés, permissions historiques causales si elles existent. (2) Sondes S-09 et S-10 sur ces exports. (3) Construction de l'artefact `donnees-historiques` au protocole MCL (document 02, §6.14). (4) Conversion et validation : ordre, couverture, registres de trous, manifeste SHA-256, calendrier avec heures de connaissance (approximation déclarée pour l'historique) | 13.1 ; H-09 | Artefact `donnees-historiques` figé ; données validées dans `data/raw/` (jamais commitées) |
+| 13.4 | Portage de la V1 London (D-15) : spécification fournie par l'humain, versée en contexte avec son empreinte, puis artefact `moteur-london-v1` construit au protocole MCL (document 02, §6.13) et injecté dans le seul rejeu | Phase 12 ; H-10 | Moteur V1 figé, refusé hors rejeu |
 | 13.5 | Rejeux C10 : contrôle d'implémentation 2020–2022, validation 2023–2024, rejeu continu 2020–2026, stress, six perturbations, compte London seul ; comparaison V3/V1 sur le même moteur ; ouverture **unique** du test réservé après gel du robot (empreinte consignée) ; période 01/05–03/11/2026 en diagnostic | 13.3, 13.4 | Rapport C10 ; « non validé » si un critère manque, sans retouche |
-| 13.6 | Qualification sémantique A13 : 200 textes annotés par un humain, seuils `model_min_material_event_precision` et `model_min_material_event_recall`, zéro citation non vérifiée ; comparaison gratuit et payant seulement si le payant est configuré | Phase 12 avec appels autorisés, annotateur humain (H-11) | `QUALIFIE` ou `NON_QUALIFIE` par fournisseur |
-| 13.7 | Collecte prospective `PAPER_AB` puis démonstration : effectifs minimaux de A13 et de C10 ; checklist go/no-go (`xp-bots-deployment-readiness`) ; le veto réel reste désactivé sans validation financière A13 ; le réel n'est décidé que par l'humain | 13.1 à 13.6 | Décision tracée de l'humain (H-12) |
+| 13.6 | **IA réelle et qualification sémantique A13.** (1) L'agent redemande l'autorisation des appels d'API réels (D-17). (2) Avec autorisation : clés gratuites placées par l'humain dans `.env` (jamais lues ni affichées par l'agent), tests de contrat API et RSS, écriture atomique du snapshot confirmée sous Windows, service en marche au moins une journée de marché (heartbeat régulier, registre de budget cohérent, aucune route payante appelée, snapshot lu par le robot en `PAPER_AB`) ; puis 200 textes annotés par un humain, seuils `model_min_material_event_precision` et `model_min_material_event_recall`, zéro citation non vérifiée ; comparaison gratuit et payant seulement si le payant est configuré. (3) Sans autorisation : service laissé arrêté, bras IA de `PAPER_AB` à `NEUTRAL`, fournisseurs `NON_QUALIFIE` | 13.1 ; H-08, H-11 | `QUALIFIE` ou `NON_QUALIFIE` par fournisseur |
+| 13.7 | Collecte prospective `PAPER_AB` puis démonstration : effectifs minimaux de A13 et de C10 ; checklist go/no-go (`xp-bots-deployment-readiness`) ; le veto réel reste désactivé sans validation financière A13 ; le réel n'est décidé que par l'humain | 13.1 à 13.6 ; H-12 | Décision tracée de l'humain (H-12) |

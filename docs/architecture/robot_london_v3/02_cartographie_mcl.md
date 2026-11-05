@@ -101,11 +101,13 @@ nature (extension ou modification), artefact, justification, gate vert de la CI 
 | `service-ia` | `noyau`, `contexte-ia` (format du snapshot) | 4 |
 | `journal-rejeu` | `noyau`, `execution-coordinateur`, `orchestration`, `moteur-london` (fabrique de stratégie) ; `moteur-london-v1` à partir de 13.4 | 5 |
 | `points-entree` | `noyau`, `orchestration`, `journal-rejeu`, `infrastructure`, `moteur-london` (fabrique de stratégie) | 6 |
+| `donnees-historiques` | `noyau`, `infrastructure` (table de conversion, lecture des fichiers), `journal-rejeu` (analyse des ticks) ; sous-étape 13.3 | 6 |
 
 Une simulation de cette carte composite avec `mcl.py analyser` (5 novembre 2026, hors du dépôt) rend exactement
-ces profondeurs, sans divergence ni cycle, avec ou sans `moteur-london-v1` (qui prend la couche parallèle 2c) ;
-son unique alerte, « plusieurs racines (`service_ia`, `app`) », est attendue : le robot et le service IA sont
-deux processus distincts. Les cartes prévues de `noyau`, `donnees-temps`, `moteur-london`,
+ces profondeurs, sans divergence ni cycle, avec ou sans `moteur-london-v1` (couche parallèle 2c) et
+`donnees-historiques` (couche parallèle 6b, à côté de `app`) ; son unique alerte, « plusieurs racines
+(`service_ia`, `app`, `donnees_historiques`) », est attendue : le robot, le service IA et la commande de
+préparation des données sont trois programmes distincts. Les cartes prévues de `noyau`, `donnees-temps`, `moteur-london`,
 `execution-coordinateur`, `controles-fondamentaux`, `journal-rejeu` et `infrastructure` ont été simulées de
 même : les couches calculées sont celles des tableaux du §6.
 
@@ -117,11 +119,25 @@ stratégie : les points de composition (`journal-rejeu` pour le rejeu, `points-e
 fournissent les fabriques de stratégie par la configuration de déploiement (D-18). Le moteur V1 et le futur
 robot EMA s'y branchent donc sans défiger l'orchestration.
 
-**Ordre de construction** (ordre produit du guide, compatible avec les dépendances) : `noyau` (phase 2),
-`donnees-temps` (3), `moteur-london` (4), `execution-coordinateur` (5 et 6), `controles-fondamentaux` (7),
-`contexte-ia` (8), `orchestration` (9), `journal-rejeu` (10), `infrastructure` et `points-entree` (11),
-`service-ia` (12), `moteur-london-v1` (13.4). `infrastructure` pourrait techniquement venir plus tôt ; elle
-attend la phase 11 parce qu'elle exige le poste Windows et le compte de démonstration.
+**Ordre de construction** : `noyau` (phase 2), `donnees-temps` (3), `moteur-london` (4),
+`execution-coordinateur` (5 et 6), `controles-fondamentaux` (7), `contexte-ia` (8), `orchestration` (9),
+`journal-rejeu` (10), `infrastructure` et `points-entree` (11), `service-ia` (12), `donnees-historiques` (13.3),
+`moteur-london-v1` (13.4). Les phases 0 à 12 se construisent entièrement dans le conteneur ; l'infrastructure y
+est bâtie contre les contrats du [document 08](08_contrats_frontieres.md), puis qualifiée sur le poste en 13.1.
+
+**Correspondance avec l'ordre produit** (section « Ordre de construction et de qualification » du
+[guide](../GUIDE_IMPLEMENTATION.md), qui fixe l'ordre de livraison ; MCL ne fixe que l'ordre à l'intérieur d'une
+étape) :
+
+| Étape du guide | Phases du plan | Remarque |
+|---|---|---|
+| 1. Contrôles de référence ; portage et comparaison des indicateurs, horaires, états de signal, arrondis et stops | 0 à 4 ; couche 0d de la phase 5 | Détecteurs et stop London comparés à `london_signal` et `london_setups` (phase 4) ; niveaux arrondis comparés à `rounded_levels` (phase 5) |
+| 2. Exécution et coordinateur du compte ; caractéristiques réelles du compte standard | 5 et 6 ; 13.1 | Les caractéristiques réelles ne se lisent que sur le compte démo (13.1) ; le refus quand le volume minimal dépasse le risque de 0,5 % est testé dès la phase 5 |
+| 3. Chaque méthode séparément, puis leurs interactions sur le même compte | 4 (méthode London complète) ; 9 et 10 (interactions) | Seule inversion : l'enveloppe du moteur London (couche 2), mince et sans lien avec le coordinateur, est construite avec les détecteurs de l'étape 1, avant le coordinateur ; les deux artefacts sont parallèles, donc l'ordre des dépendances est respecté ; le robot EMA n'est pas construit |
+| 4. Calendrier et permissions fondamentales causales | 7 ; 11 (lecture des fichiers) ; 13.1 | Aucun avis rétrospectif utilisé comme connu avant l'ordre |
+| 5. Service IA en arrière-plan et adaptateurs des API autorisées | 8 (lecteur du robot) ; 12 (service) ; 13.6 (appels réels) | Aucun appel LLM dans le chemin d'entrée |
+| 6. Qualification des sorties du modèle, puis collecte prospective en `PAPER_AB` | 13.6 ; 13.7 | Aucun veto réel non validé |
+| 7. Protocoles financiers de C11 et A13 | 10 (outils) ; 13.2, 13.5 et 13.7 | Coût IA partagé déduit une seule fois ; incertitude publiée |
 
 `controles-fondamentaux` et `contexte-ia` implémentent les ports déclarés par `execution-coordinateur` : ils
 viennent donc après lui, ce qui respecte aussi l'ordre produit du guide (« brancher » le calendrier et les
@@ -498,7 +514,16 @@ Esquisses de contrat :
 
 ### 6.9 Artefact `infrastructure` (paquet `xpbots.infra`, phase 11)
 
-Rôle : seules implémentations réelles des frontières externes. Précédé des sondes jetables S-01 à S-10.
+Rôle : seules implémentations réelles des frontières externes. Construite en phase 11 dans le conteneur, contre
+les contrats de frontière finalisés tôt du [document 08](08_contrats_frontieres.md) (exception MCL des frontières
+externes), avec un faux module `MetaTrader5` conforme au §2 de ce document (noms, valeurs, signatures et
+structures du paquet 5.0.6231). Aucun module de `xpbots` n'importe `MetaTrader5` au chargement : seule la
+fabrique de l'enveloppe `assemblage` l'importe, à l'exécution sur le poste, et l'injecte dans les couches `mt5_*`,
+qui le typent par un protocole structurel de `types_infra` ; les tests leur injectent le faux module. La suite
+complète s'exécute ainsi sous Linux, où le paquet n'est pas installable (roues Windows seulement). Dans la carte,
+l'externe `MetaTrader5` n'est autorisé qu'à la couche de `assemblage`. Les sondes S-01 à S-08 et les tests de
+contrat s'exécutent ensuite sur le poste, en sous-étape 13.1 ; toute divergence constatée ouvre un défigeage
+formel de nature « correction » de la couche concernée, avec test capturant le cas, puis nouveau gel.
 
 | Unité | Couche | Responsabilité | Entrée → sortie | Dépend de | Frontière réelle | Sources |
 |---|---|---|---|---|---|---|
@@ -509,14 +534,13 @@ Rôle : seules implémentations réelles des frontières externes. Précédé de
 | `lecteur_snapshot` | 0e | Lire les octets du snapshot IA au chemin réel, avec plafond de taille | chemin → octets, heure de lecture | — | système de fichiers | A10 |
 | `lecteur_ticks` | 0f | Lire en flux les fichiers de ticks mensuels et calculer leur empreinte | fichiers → lignes, SHA-256 | — | système de fichiers | C10 |
 | `sources_controles` | 0g | Lire le dossier d'échange des permissions (D-11), les exports MQL5 du calendrier et des séances et le fichier des fermetures exceptionnelles (D-12) | fichiers → octets horodatés à la lecture | — | système de fichiers | C04, C05 |
-| `mt5_session` | 1a | S'attacher au terminal, lire version, état, compte et dossier commun | — → session et informations | `types_infra` | `MetaTrader5` | C04 |
-| `conversion_exports_ticks` | 1b | Convertir les exports de ticks du terminal (S-09) et de la source tierce (S-10) en fichiers mensuels canoniques (données requises, §2) : heure convertie en UTC par la table qualifiée, ordre natif et numéro de séquence conservés, manifeste SHA-256, aucun tick inventé | exports bruts → fichiers canoniques et manifeste | `types_infra` | système de fichiers | C10, C03.1 |
+| `mt5_session` | 1 | S'attacher au terminal, lire version, état, compte et dossier commun | — → session et informations | `types_infra` | `MetaTrader5` | C04 |
 | `mt5_specifications` | 2a | Lire et contrôler les caractéristiques C04 et produire les profils | symbole → profils, liste `ENVIRONMENT_NOT_READY` | `mt5_session` | `MetaTrader5` | C04 |
 | `mt5_flux` | 2b | Récupérer les ticks incrémentalement, convertir l'heure, signaler la connexion | symbole, curseur → ticks, états de connexion | `mt5_session`, `types_infra` | `MetaTrader5` | C03, S-01, S-08 |
 | `mt5_calculs` | 2c | Implémenter le port de calcul avec les fonctions natives | requêtes → résultats | `mt5_session` | `MetaTrader5` | C04, C07, S-07 |
 | `mt5_execution` | 2d | Exécuter les commandes d'ordre avec délai d'accusé et rapprochement | commandes → réponses | `mt5_session` | `MetaTrader5`, `threading` | C08, S-02 à S-06 |
 | `courtier_mt5` | 3 | Composer les adaptateurs MT5 en exécutant de commandes et en qualification de l'environnement au démarrage et avant ordre | commandes, contrôles → réponses, rapports | 2a, 2b, 2c, 2d | — | C04, C08 |
-| `assemblage` | 4 | Enveloppe : fournir à la coquille l'ensemble configuré des adaptateurs réels | configuration d'exécution → adaptateurs prêts | 0b à 0g, 1b, 3 | — | C08, A10 |
+| `assemblage` | 4 | Enveloppe : importer `MetaTrader5` sur le poste, l'injecter et fournir à la coquille l'ensemble configuré des adaptateurs réels | configuration d'exécution → adaptateurs prêts | 0b à 0g, 3 | `MetaTrader5` (import et injection seulement) | C08, A10 |
 
 Chaque adaptateur feuille déclare sa frontière réelle dans `depend_de` (horloge, SQLite, système de fichiers,
 `MetaTrader5`) : une simulation de cette carte avec `mcl.py analyser` donne alors une racine unique,
@@ -537,8 +561,7 @@ avant chaque ordre (C04) ; aucun secret journalisé.
 | `cli_rejeu` | 1b | Lancer un rejeu C10 | arguments → résultats et rapports | `configuration_application` | journal-rejeu, infrastructure | C10 |
 | `cli_qualification` | 1c | Qualifier l'environnement C04 et exécuter les contrôles de qualification | arguments → rapport | `configuration_application` | infrastructure | C04 |
 | `cli_rapports` | 1d | Produire les rapports à partir des journaux | journaux → rapports | `configuration_application` | journal-rejeu, infrastructure | C09, A11 |
-| `cli_donnees` | 1e | Convertir et valider les données historiques de la sous-étape 13.3 (exports de ticks, manifeste, registre des trous) | dossiers d'exports → données canoniques validées, rapport | `configuration_application` | infrastructure, journal-rejeu | C10 |
-| `principal` | 2 | Points d'entrée `python -m` et refus des modes non autorisés | arguments → code de sortie | 1a, 1b, 1c, 1d, 1e | — | C01 |
+| `principal` | 2 | Points d'entrée `python -m` et refus des modes non autorisés | arguments → code de sortie | 1a, 1b, 1c, 1d | — | C01 |
 
 ### 6.11 Artefact `service-ia` (paquet `xpbots.service_ia`, phase 12, processus séparé)
 
@@ -597,6 +620,26 @@ compte, les mêmes coûts et les mêmes permissions que V3, pour la seule réten
 - Aucune règle de V3 n'est modifiée ; un écart de comportement V1 qui exigerait de changer le noyau ou le
   coordinateur est signalé comme défaut avant toute adaptation.
 
+### 6.14 Artefact `donnees-historiques` (paquet `xpbots.donnees_historiques`, sous-étape 13.3)
+
+Rôle : préparer les données de validation de C10. Les exports réellement disponibles (terminal MT5, source
+tierce) ne sont pas au format canonique attendu par le rejeu ([données requises](../../data/03_Donnees_Historiques_Requises_et_Validation.md),
+§2) ; leur format exact n'est connu qu'au vu d'un fichier réel (sondes S-09 et S-10). L'artefact est donc
+construit en 13.3, après ces sondes ; il ne conditionne aucune phase d'implémentation du robot.
+
+| Unité | Couche | Responsabilité | Entrée → sortie | Dépend de | Amont | Sources |
+|---|---|---|---|---|---|---|
+| `formats_exports` | 0 | Décrire, pour chaque source, les colonnes, séparateurs, fuseau et conventions relevés par S-09 et S-10 | constats des sondes → descriptions typées | — | noyau | C10, S-09, S-10 |
+| `conversion_exports_ticks` | 1 | Convertir un export en fichiers mensuels canoniques : heure convertie en UTC (table qualifiée de S-01 pour l'heure du serveur), ordre natif et numéro de séquence conservés, aucun tick inventé, tick sans Bid ni Ask connu écarté et journalisé | lignes d'export → lignes canoniques | `formats_exports` | infrastructure (table de conversion), noyau | C03.1, C10 |
+| `validation_jeu_donnees` | 2 | Contrôler un jeu de fichiers : ordre, couverture des dates, registre des trous, manifeste SHA-256, déclaration contrefactuelle, aucun mélange de sources pour une même série | fichiers canoniques → rapport de validation | `conversion_exports_ticks` | journal-rejeu (analyse des ticks), noyau | C04, C10 |
+| `cli_donnees` | 3 | Enveloppe : commande `python -m xpbots.donnees_historiques` qui convertit, valide et rapporte | dossiers d'exports → données canoniques validées et rapport | `validation_jeu_donnees` | infrastructure (lecture en flux, table de conversion) | C10 |
+
+Tests : fixtures reproduisant les formats relevés (document 03, §7) ; test de contrat sur un mois réel du poste.
+Les couches 0 à 2 sont pures (lignes en entrée ; lignes et rapports en sortie). Seule l'enveloppe `cli_donnees`
+touche le système de fichiers : lecture en flux et empreintes par `infrastructure` 0f, écriture atomique des
+fichiers canoniques, du manifeste et du registre des trous ([document 08](08_contrats_frontieres.md), §6).
+`reference` et `MetaTrader5` sont interdits.
+
 ## 7. Frontières externes et doublures
 
 | Frontière | Contrat attendu | Doublure minimale (tests) | Couches qui l'utilisent doublée | Implémentation réelle | Test de contrat |
@@ -609,6 +652,7 @@ compte, les mêmes coûts et les mêmes permissions que V3, pour la seule réten
 | Journal | Enregistrements C09 et d'entrées | Liste en mémoire | `points-entree` | `infrastructure` 0d | Relecture canonique identique |
 | Snapshot IA | Octets et heure de lecture | Octets fabriqués | `contexte-ia` | `infrastructure` 0e | Écriture et lecture concurrentes sous Windows |
 | Fichiers de ticks | Lignes de texte et manifeste | Lignes fabriquées | `journal-rejeu` | `infrastructure` 0f | Empreintes et ordre natif |
+| Exports de ticks (S-09, S-10) | Lignes brutes au format relevé par la sonde | Lignes fabriquées selon les formats relevés | `donnees-historiques` | `donnees-historiques` 3, lecture par `infrastructure` 0f | S-09, S-10 ; conversion et validation d'un mois réel (13.3) |
 | Dossier d'échange des permissions (D-11) | Octets de messages et heure de lecture | Messages scénarisés avec `known_at` ; fichiers écrits par un module factice | `controles-fondamentaux` | `infrastructure` 0g | Remplacement concurrent par le vrai module, sous Windows |
 | Export MQL5 du calendrier et des séances (D-12) | Versions horodatées | Versions scénarisées ; fixtures JSON du format | `controles-fondamentaux`, `execution-coordinateur`, `service-ia` | `infrastructure` 0g et service MQL5 | Export réel comparé à la vue du terminal |
 | API LLM | Requêtes et réponses HTTPS | Ouvreur HTTP factice | `service-ia` | `service-ia` 1d | Conformité A08, avec accord explicite de l'humain |
@@ -624,6 +668,7 @@ compte, les mêmes coûts et les mêmes permissions que V3, pour la seule réten
 | `infrastructure` | `reference`, `xpbots.app`, `xpbots.service_ia` ; chaque frontière réelle autorisée dans ses seules couches |
 | `points-entree` | `reference` et les frontières réelles directes (toujours par `xpbots.infra`) |
 | `service-ia` | `MetaTrader5`, `reference`, et les paquets du robot autres que `xpbots.noyau` et le format de `xpbots.contexte_ia` |
+| `donnees-historiques` | `MetaTrader5`, `reference`, `xpbots.app`, `xpbots.service_ia` ; système de fichiers dans la seule couche `cli_donnees` |
 
 Un test transversal de pureté (document 03, §8) complète ces règles : aucun appel à l'horloge système, à
 `datetime.now` ou à `date.today` dans les paquets du cœur.
