@@ -1,5 +1,18 @@
 {
   "schema_version": 1,
   "description": "Registre des lacunes de skills XP-Bots : types de tâches non couverts, occurrences, preuves bornées et décision (consignee, proposee, promue, creee, etendue, rejetee). Écrit uniquement par skill_gap_ledger.py et create_skill.py.",
-  "entries": []
+  "entries": [
+    {
+      "id": "publication-git-avance-de-master-et-synchronisation-du-depot-local",
+      "label": "Publication Git : avance de master et synchronisation du dépôt local",
+      "occurrences": 1,
+      "first_seen": "2026-11-05",
+      "last_seen": "2026-11-05",
+      "evidence": [
+        "2026-11-05 : fast-forward de master vers b6395bf, push, commandes de synchronisation du poste Windows ; précédent : fusion du 4 novembre (NETTOYAGE_ET_MERGE.md)"
+      ],
+      "decision": "consignee",
+      "skill": null
+    }
+  ]
 }
