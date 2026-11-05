@@ -25,15 +25,17 @@ class ProfilSynthetique:
     prix_initial: Decimal
     spread: Decimal
     couverture: tuple[tuple[int, int], ...]
+    seances: tuple[tuple[int, int], ...]
 
 
-# Mercredi 4 novembre 2026, 08:00–10:00 UTC ; GBPUSD a une interruption déclarée de 08:40 à 08:50.
+# Mercredi 4 novembre 2026, 08:00–10:00 UTC, marché ouvert ; GBPUSD a une interruption déclarée de 08:40 à 08:50.
 DEBUT_MS = 1793779200000
 FIN_MS = DEBUT_MS + 2 * 3_600_000
 PROFILS = (
-    ProfilSynthetique('EURUSD', 'EURUSDsynth', Decimal('1.10000'), Decimal('0.00008'), ((DEBUT_MS, FIN_MS),)),
+    ProfilSynthetique('EURUSD', 'EURUSDsynth', Decimal('1.10000'), Decimal('0.00008'), ((DEBUT_MS, FIN_MS),),
+                      ((DEBUT_MS, FIN_MS),)),
     ProfilSynthetique('GBPUSD', 'GBPUSDsynth', Decimal('1.30000'), Decimal('0.00012'),
-                      ((DEBUT_MS, DEBUT_MS + 2_400_000), (DEBUT_MS + 3_000_000, FIN_MS))),
+                      ((DEBUT_MS, DEBUT_MS + 2_400_000), (DEBUT_MS + 3_000_000, FIN_MS)), ((DEBUT_MS, FIN_MS),)),
 )
 # Tick EURUSD exactement à une frontière M15 (08:15:00.000) et égalité de milliseconde entre symboles.
 INSTANTS_IMPOSES = {'EURUSD': (DEBUT_MS + 900_000, DEBUT_MS + 1_234_567), 'GBPUSD': (DEBUT_MS + 1_234_567,)}
@@ -64,11 +66,11 @@ def generer(graine: int = 20261104, ecart_max_ms: int = 30_000) -> tuple[str, st
         bid = bid.quantize(QUANTUM)
         lignes.append(f'{profil.symbole},{profil.symbole_courtier},{t},{sequence},{bid},{(bid + profil.spread).quantize(QUANTUM)}')
     manifeste = {
-        'schema': 'xp-fixture-manifeste-v1', 'origine': 'synthetique', 'fuseau': 'UTC',
+        'schema': 'xp-fixture-manifeste-v2', 'origine': 'synthetique', 'fuseau': 'UTC',
         'description': 'Ticks synthétiques déterministes du squelette (graine %d) ; aucun prix réel.' % graine,
         'fin_donnees_ms': FIN_MS,
-        'symboles': {p.symbole: {'symbole_courtier': p.symbole_courtier, 'couverture': [list(c) for c in p.couverture]}
-                     for p in PROFILS},
+        'symboles': {p.symbole: {'symbole_courtier': p.symbole_courtier, 'couverture': [list(c) for c in p.couverture],
+                                 'seances': [list(s) for s in p.seances]} for p in PROFILS},
     }
     return '\n'.join(lignes) + '\n', json.dumps(manifeste, ensure_ascii=False, indent=2) + '\n'
 

@@ -22,8 +22,8 @@ def lire(chemin):
     return [json.loads(ligne) for ligne in Path(chemin).read_text(encoding='utf-8').splitlines()]
 
 
-def clotures_jusqua(lignes, limite_ms):
-    return [l for l in lignes if l['type'] == 'CLOTURE_BOUGIE' and ms_depuis_iso(l['cloture_utc']) <= limite_ms]
+def jusqua(lignes, limite_ms):
+    return [l for l in lignes if l['type'] != 'INITIALISATION' and ms_depuis_iso(l['instant_utc']) <= limite_ms]
 
 
 class TestSqueletteBoutEnBout(unittest.TestCase):
@@ -40,19 +40,25 @@ class TestSqueletteBoutEnBout(unittest.TestCase):
 
     def test_journal_complet_et_conforme(self):
         resume, chemin = self.rejouer()
-        self.assertEqual(resume, {'ticks': 933, 'enregistrements': 17, 'clotures': {'DATA_GAP': 2, 'NO_SETUP': 14},
-                                  'intentions': {}, 'bougies_incompletes': 0})
+        self.assertEqual(resume, {'ticks': 933, 'enregistrements': 20, 'clotures': {'DATA_GAP': 2, 'WARMUP': 14},
+                                  'intentions': {}, 'donnees': {'REINITIALISATION': 1, 'TROU': 2}})
         lignes = lire(chemin)
-        self.assertEqual([l['sequence'] for l in lignes], list(range(1, 18)))
+        self.assertEqual([l['sequence'] for l in lignes], list(range(1, 21)))
         self.assertTrue(all(valider_enregistrement(l) == [] for l in lignes))
         self.assertEqual(lignes[0]['type'], 'INITIALISATION')
         self.assertEqual(lignes[0]['segments_minimaux'], list(SEGMENTS_MINIMAUX))
-        clotures = lignes[1:]
-        cles = [(ms_depuis_iso(l['cloture_utc']), ['EURUSD', 'GBPUSD'].index(l['symbole'])) for l in clotures]
+        cles = [(ms_depuis_iso(l['instant_utc']), ['EURUSD', 'GBPUSD'].index(l['symbole'])) for l in lignes[1:]]
         self.assertEqual(cles, sorted(cles))
+        clotures = [l for l in lignes if l['type'] == 'CLOTURE_BOUGIE']
         trous = [(l['symbole'], l['cloture_utc']) for l in clotures if l['motif'] == 'DATA_GAP']
         self.assertEqual(trous, [('GBPUSD', '2026-11-04T08:45:00.000Z'), ('GBPUSD', '2026-11-04T09:00:00.000Z')])
-        self.assertTrue(all(l['valide'] is (l['motif'] == 'NO_SETUP') for l in clotures))
+        self.assertTrue(all(l['valide'] is (l['motif'] == 'WARMUP') for l in clotures))
+        self.assertTrue(all(l['jour_londres'] == '2026-11-04' and 'tr' in l['indicateurs'] or l['motif'] == 'DATA_GAP'
+                            for l in clotures))
+        donnees = [(l['evenement'], l['debut_utc'], l['details']['motif']) for l in lignes if l['type'] == 'DONNEES']
+        self.assertEqual(donnees, [('TROU', '2026-11-04T08:30:00.000Z', 'COUVERTURE'),
+                                   ('TROU', '2026-11-04T08:45:00.000Z', 'COUVERTURE'),
+                                   ('REINITIALISATION', '2026-11-04T08:30:00.000Z', 'RECUPERATION_INDISPONIBLE')])
 
     def test_rejeu_deterministe_octet_pour_octet(self):
         _, premier = self.rejouer('a.jsonl')
@@ -67,7 +73,7 @@ class TestSqueletteBoutEnBout(unittest.TestCase):
                     str(FIXTURE_MANIFESTE), '--journal', str(sortie)]
         resultat = subprocess.run(commande, cwd=RACINE, env=env, capture_output=True, text=True, timeout=60)
         self.assertEqual(resultat.returncode, 0, resultat.stderr)
-        self.assertEqual(json.loads(resultat.stdout)['clotures'], {'DATA_GAP': 2, 'NO_SETUP': 14})
+        self.assertEqual(json.loads(resultat.stdout)['clotures'], {'DATA_GAP': 2, 'WARMUP': 14})
         self.assertEqual(sortie.read_bytes(), attendu.read_bytes())
         repetition = subprocess.run(commande, cwd=RACINE, env=env, capture_output=True, text=True, timeout=60)
         self.assertEqual(repetition.returncode, 2)  # un journal existant n'est jamais écrasé
@@ -97,7 +103,8 @@ class TestSqueletteBoutEnBout(unittest.TestCase):
         if fin_ms is not None:
             manifeste['fin_donnees_ms'] = fin_ms
             for decl in manifeste['symboles'].values():
-                decl['couverture'] = [[a, min(b, fin_ms)] for a, b in decl['couverture'] if a < fin_ms]
+                for cle in ('couverture', 'seances'):
+                    decl[cle] = [[a, min(b, fin_ms)] for a, b in decl[cle] if a < fin_ms]
         chemin_manifeste = self.dossier / 'derive.json'
         chemin_manifeste.write_text(json.dumps(manifeste), encoding='utf-8')
         return ticks, chemin_manifeste
@@ -107,9 +114,9 @@ class TestSqueletteBoutEnBout(unittest.TestCase):
         _, complet = self.rejouer('complet.jsonl')
         ticks, manifeste = self._fixture_derivee(lambda c: c if int(c[2]) < H09 else None, fin_ms=H09)
         _, prefixe = self.rejouer('prefixe.jsonl', ticks, manifeste)
-        attendu = clotures_jusqua(lire(complet), H09)
-        self.assertEqual(len(attendu), 8)
-        self.assertEqual(clotures_jusqua(lire(prefixe), H09), attendu)
+        attendu = jusqua(lire(complet), H09)
+        self.assertEqual(len(attendu), 11)  # 8 clôtures, 2 trous et la réinitialisation GBPUSD de 09:00
+        self.assertEqual(jusqua(lire(prefixe), H09), attendu)
 
     def test_causalite_ticks_futurs_modifies(self):
         _, complet = self.rejouer('complet.jsonl')
@@ -121,7 +128,7 @@ class TestSqueletteBoutEnBout(unittest.TestCase):
 
         ticks, manifeste = self._fixture_derivee(decaler)
         _, modifie = self.rejouer('modifie.jsonl', ticks, manifeste)
-        self.assertEqual(clotures_jusqua(lire(modifie), H09), clotures_jusqua(lire(complet), H09))
+        self.assertEqual(jusqua(lire(modifie), H09), jusqua(lire(complet), H09))
         self.assertNotEqual(lire(modifie)[-1]['ohlc'], lire(complet)[-1]['ohlc'])
 
 

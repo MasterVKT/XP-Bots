@@ -16,10 +16,18 @@ NOMBRES_AUTORISES = {
 NOMBRES_AUTORISES_PAR_FICHIER = {
     ('noyau/temps.py', 1000): 'conversions d\'unités ms/s et µs/ms, seules constantes temporelles du code',
     ('app/rejeu.py', 2): 'code de sortie d\'usage invalide (convention argparse)',
+    ('donnees_temps/c1c_indicateurs.py', 2): 'coefficient 2/(n+1) de la définition de l\'EMA (C03 point 8)',
+    ('donnees_temps/c1c_indicateurs.py', 50): 'RSI neutre de la définition (C03 point 9)',
+    ('donnees_temps/c1c_indicateurs.py', 100): 'bornes de la définition du RSI (C03 point 9)',
 }
 TEXTES_AUTORISES = {
     'PAPER': 'nom du mode (code) ; la valeur par défaut reste lue dans common.default_mode',
-    'UTC': 'fuseau déclaré par un manifeste de fixture',
+    'UTC': 'fuseau déclaré par un manifeste de fixture ; variante d\'alignement implémentée',
+}
+TEXTES_AUTORISES_PAR_FICHIER = {
+    ('donnees_temps/c0_parametres_seances.py', 'BID'): 'variante implémentée : refus de démarrer sinon',
+    ('donnees_temps/c0_parametres_seances.py', 'WILDER'): 'variante implémentée : refus de démarrer sinon',
+    ('donnees_temps/c0_parametres_seances.py', 'PREVIOUS_CLOSED_M15'): 'variante implémentée : refus de démarrer sinon',
 }
 APPELS_D_HORLOGE = {('datetime', 'now'), ('datetime', 'utcnow'), ('datetime', 'today'), ('date', 'today'),
                     ('time', 'time'), ('time', 'time_ns'), ('time', 'monotonic'), ('time', 'monotonic_ns'),
@@ -67,7 +75,8 @@ class TestReglesTransverses(unittest.TestCase):
                 if type(v) in (int, float) and v in nombres and v not in NOMBRES_AUTORISES \
                         and (relatif, v) not in NOMBRES_AUTORISES_PAR_FICHIER:
                     violations.append(f'{relatif}:{noeud.lineno} nombre {v!r}')
-                if type(v) is str and v in textes and v not in TEXTES_AUTORISES:
+                if type(v) is str and v in textes and v not in TEXTES_AUTORISES \
+                        and (relatif, v) not in TEXTES_AUTORISES_PAR_FICHIER:
                     violations.append(f'{relatif}:{noeud.lineno} texte {v!r}')
         self.assertEqual(violations, [], 'valeurs de config/ recopiées dans le code')
 

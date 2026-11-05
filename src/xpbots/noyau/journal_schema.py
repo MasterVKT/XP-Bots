@@ -1,8 +1,8 @@
 """Enregistrements du journal C09 : schéma fermé par type, validation et construction numérotée.
 
-Types disponibles depuis la phase 1 : INITIALISATION, CLOTURE_BOUGIE, INTENTION. Les autres types (ordres,
-exécutions, protections, sorties, gardes, alertes, rapprochements) s'ajoutent par extension additive avec leur
-premier producteur.
+Types disponibles depuis la phase 1 : INITIALISATION, CLOTURE_BOUGIE, INTENTION ; depuis la phase 2 : DONNEES
+(trous, récupérations, réinitialisations, préchargement). Les autres types (ordres, exécutions, protections,
+sorties, gardes, alertes, rapprochements) s'ajoutent par extension additive avec leur premier producteur.
 """
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from xpbots.noyau.config import BundleTechnique
 from xpbots.noyau.decisions import (CleIntention, DecisionContexteIA, DecisionFondamentale, MotifRefus,
                                     ResultatTechnique, Signal)
 from xpbots.noyau.json_canonique import JSONInvalide, serialiser
-from xpbots.noyau.marche import BougieEnrichie, StatutBougie
+from xpbots.noyau.marche import BougieEnrichie, EvenementDonnees, NatureEvenementDonnees, StatutBougie
 from xpbots.noyau.temps import InstantInvalide, iso_depuis_ms, ms_depuis_iso
 
 
@@ -30,6 +30,7 @@ class TypeEnregistrement(StrEnum):
     INITIALISATION = 'INITIALISATION'
     CLOTURE_BOUGIE = 'CLOTURE_BOUGIE'
     INTENTION = 'INTENTION'
+    DONNEES = 'DONNEES'
 
 
 class Mode(StrEnum):
@@ -54,6 +55,7 @@ CLES_SPECIFIQUES = {
     TypeEnregistrement.INTENTION: frozenset({
         'cle', 'signal', 'fondamental', 'calendrier', 'contexte_ia', 'bras_ab', 'cout_api_alloue_usd', 'courtier',
         'cotation', 'frais', 'risque', 'volume', 'decision', 'motif', 'ordre_envoye'}),
+    TypeEnregistrement.DONNEES: frozenset({'symbole', 'evenement', 'debut_utc', 'fin_utc', 'details'}),
 }
 _EMPREINTE = re.compile(r'[0-9a-f]{64}')
 
@@ -121,6 +123,14 @@ def _verifier_specifique(type_, enr, erreurs):
             erreurs.append('ordre_envoye : booléen attendu')
         elif enr['decision'] == Decision.REFUS and enr['ordre_envoye']:
             erreurs.append('un refus n\'envoie aucun ordre')
+    elif type_ is TypeEnregistrement.DONNEES:
+        if enr['evenement'] not in {n.value for n in NatureEvenementDonnees}:
+            erreurs.append(f"evenement inconnu : {enr['evenement']!r}")
+        for cle in ('debut_utc', 'fin_utc'):
+            if enr[cle] is not None and not _iso_valide(enr[cle]):
+                erreurs.append(f'{cle} : instant UTC mal formé')
+        if not isinstance(enr['details'], Mapping):
+            erreurs.append('details : objet attendu')
 
 
 def valider_enregistrement(enr: Mapping) -> list[str]:
@@ -198,6 +208,13 @@ class ConstructeurEnregistrements:
             'statut': bougie.statut, 'indicateurs': bougie.indicateurs, 'a_t': bougie.a_t,
             'etat_detecteur': resultat.etat_detecteur, 'signal_emis': resultat.signal is not None,
             'motif': resultat.motif})
+
+    def donnees(self, evenement: EvenementDonnees) -> dict:
+        return self._finaliser(TypeEnregistrement.DONNEES, evenement.instant_ms, {
+            'symbole': evenement.symbole, 'evenement': evenement.nature,
+            'debut_utc': None if evenement.debut_ms is None else iso_depuis_ms(evenement.debut_ms),
+            'fin_utc': None if evenement.fin_ms is None else iso_depuis_ms(evenement.fin_ms),
+            'details': evenement.details})
 
     def intention(self, instant_ms: int, cle: CleIntention, signal: Signal,
                   fondamental: DecisionFondamentale | None, contexte_ia: DecisionContexteIA | None,

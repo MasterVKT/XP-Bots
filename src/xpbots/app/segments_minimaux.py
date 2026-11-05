@@ -1,14 +1,14 @@
 """Segments minimaux du squelette composite, chacun remplacé plus tard par un artefact de chair.
 
 Chaque segment respecte la spécification sur son périmètre réduit (voir `mcl/robot-ema-v3/COUTURES.md`) :
-fondamental absent = refus, contexte IA absent = NEUTRAL, aucun ordre n'est jamais émis.
+fondamental absent = refus, contexte IA absent = NEUTRAL, aucun ordre n'est jamais émis. L'agrégateur M15
+minimal a été remplacé en phase 2 par l'enveloppe de `donnees-temps` (`PipelineMarche`).
 """
 from __future__ import annotations
 
 import csv
 import hashlib
 import re
-from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
 from typing import Iterator, Mapping, Sequence
@@ -19,15 +19,15 @@ from xpbots.noyau.decisions import (CleIntention, DecisionContexteIA, DecisionFo
 from xpbots.noyau.journal_schema import (ConstructeurEnregistrements, Decision, EnregistrementInvalide, Mode,
                                          valider_enregistrement)
 from xpbots.noyau.json_canonique import serialiser
-from xpbots.noyau.marche import Bougie, BougieEnrichie, StatutBougie, Tick
+from xpbots.noyau.marche import BougieEnrichie, EvenementDonnees, StatutBougie, Tick
 from xpbots.noyau.ports import ContexteIA, ControleFondamental, Journal, Strategie
-from xpbots.noyau.temps import MS_PAR_SECONDE, Instant
+from xpbots.noyau.temps import Instant
 
 # Nom du scénario de contrôle technique isolé défini par C05 (jamais un remplacement implicite).
 SCENARIO_TECHNICAL_CONTROL_NEUTRAL = 'TECHNICAL_CONTROL_NEUTRAL'
 
 ENTETE_TICKS = ('canonical_symbol', 'broker_symbol', 'time_utc_ms', 'sequence', 'bid', 'ask')
-SCHEMA_MANIFESTE = 'xp-fixture-manifeste-v1'
+SCHEMA_MANIFESTE = 'xp-fixture-manifeste-v2'
 CLES_MANIFESTE = frozenset({'schema', 'origine', 'fuseau', 'description', 'fin_donnees_ms', 'symboles'})
 FUSEAU_MANIFESTE = 'UTC'
 _ENTIER = re.compile(r'-?\d+')
@@ -76,33 +76,44 @@ class LecteurFixtureCSV:
         if type(m['symboles']) is not dict or not m['symboles']:
             raise ErreurDonneesFixture('manifeste : au moins un symbole attendu')
         fin = _entier_manifeste(m['fin_donnees_ms'], 'fin_donnees_ms')
-        courtier, couverture = {}, {}
+        courtier, couverture, seances = {}, {}, {}
         for symbole, decl in m['symboles'].items():
-            if type(decl) is not dict or set(decl) != {'symbole_courtier', 'couverture'}:
+            if type(decl) is not dict or set(decl) != {'symbole_courtier', 'couverture', 'seances'}:
                 raise ErreurDonneesFixture(f'manifeste : déclaration de {symbole} invalide')
             if type(decl['symbole_courtier']) is not str or not decl['symbole_courtier']:
                 raise ErreurDonneesFixture(f'manifeste : symbole courtier de {symbole} invalide')
-            intervalles, precedente_fin = [], None
-            for intervalle in decl['couverture']:
-                try:
-                    debut, fin_i = intervalle
-                except (TypeError, ValueError) as erreur:
-                    raise ErreurDonneesFixture(f'manifeste : intervalle de {symbole} invalide') from erreur
-                debut = _entier_manifeste(debut, f'couverture de {symbole}')
-                fin_i = _entier_manifeste(fin_i, f'couverture de {symbole}')
-                if not debut < fin_i <= fin or (precedente_fin is not None and debut < precedente_fin):
-                    raise ErreurDonneesFixture(f'manifeste : couverture de {symbole} non ordonnée ou hors données')
-                intervalles.append((debut, fin_i))
-                precedente_fin = fin_i
             courtier[symbole] = decl['symbole_courtier']
-            couverture[symbole] = tuple(intervalles)
+            couverture[symbole] = self._intervalles(decl['couverture'], f'couverture de {symbole}', fin)
+            seances[symbole] = self._intervalles(decl['seances'], f'séances de {symbole}', fin)
+        self._seances = seances
         return tuple(m['symboles']), courtier, couverture, fin
+
+    @staticmethod
+    def _intervalles(liste, contexte, fin) -> tuple[tuple[int, int], ...]:
+        if type(liste) is not list:
+            raise ErreurDonneesFixture(f'manifeste : {contexte} doit être une liste')
+        intervalles, precedente_fin = [], None
+        for intervalle in liste:
+            try:
+                debut, fin_i = intervalle
+            except (TypeError, ValueError) as erreur:
+                raise ErreurDonneesFixture(f'manifeste : intervalle invalide ({contexte})') from erreur
+            debut = _entier_manifeste(debut, contexte)
+            fin_i = _entier_manifeste(fin_i, contexte)
+            if not debut < fin_i <= fin or (precedente_fin is not None and debut < precedente_fin):
+                raise ErreurDonneesFixture(f'manifeste : {contexte} non ordonnée ou hors données')
+            intervalles.append((debut, fin_i))
+            precedente_fin = fin_i
+        return tuple(intervalles)
 
     def symboles(self) -> tuple[str, ...]:
         return self._symboles
 
     def couverture(self, symbole: str) -> tuple[tuple[int, int], ...]:
         return self._couverture[symbole]
+
+    def seances(self, symbole: str) -> tuple[tuple[int, int], ...]:
+        return self._seances[symbole]
 
     def fin_donnees_ms(self) -> int:
         return self._fin
@@ -175,78 +186,6 @@ class EcrivainJournalJSONL:
         return False
 
 
-@dataclass
-class _BougieEnCours:
-    ouverture_ms: int
-    o: Decimal
-    h: Decimal
-    l: Decimal  # noqa: E741 (notation OHLC de la spécification)
-    c: Decimal
-    nb_ticks: int
-
-
-class AgregateurM15Minimal:
-    """Bougies Bid [T, T+période) alignées UTC, closes quand l'horloge de rejeu atteint T+période.
-
-    Validité = intervalle entièrement couvert par le manifeste. Aucune gestion de trou au-delà (artefact
-    `donnees-temps`) ; un intervalle sans tick ne produit pas de bougie.
-    """
-
-    def __init__(self, symboles_ordonnes: Sequence[str], couverture: Mapping[str, Sequence[tuple[int, int]]],
-                 periode_s: int):
-        if type(periode_s) is not int or periode_s <= 0:
-            raise ValueError('période invalide')
-        self._rang = {symbole: rang for rang, symbole in enumerate(symboles_ordonnes)}
-        self._couverture = {s: tuple(couverture[s]) for s in symboles_ordonnes}
-        self._periode_s = periode_s
-        self._periode_ms = periode_s * MS_PAR_SECONDE
-        self._en_cours: dict[str, _BougieEnCours] = {}
-        self.bougies_incompletes = 0
-
-    def _couverte(self, symbole, debut, fin) -> bool:
-        return any(a <= debut and fin <= b for a, b in self._couverture[symbole])
-
-    def _clore(self, symbole, etat: _BougieEnCours) -> BougieEnrichie:
-        valide = self._couverte(symbole, etat.ouverture_ms, etat.ouverture_ms + self._periode_ms)
-        bougie = Bougie(symbole, self._periode_s, etat.ouverture_ms, etat.o, etat.h, etat.l, etat.c,
-                        etat.nb_ticks, valide)
-        return BougieEnrichie(bougie, StatutBougie.OK if valide else StatutBougie.DATA_GAP)
-
-    def avancer(self, instant_ms: int) -> list[BougieEnrichie]:
-        """Clôt toutes les bougies dont la fin est <= instant, par instant de clôture puis rang du symbole."""
-        closes = []
-        for symbole in list(self._en_cours):
-            etat = self._en_cours[symbole]
-            if etat.ouverture_ms + self._periode_ms <= instant_ms:
-                closes.append(self._clore(symbole, etat))
-                del self._en_cours[symbole]
-        return sorted(closes, key=lambda be: (be.bougie.cloture_ms, self._rang[be.bougie.symbole]))
-
-    def ajouter(self, tick: Tick) -> None:
-        """Ajoute un tick à sa bougie ; l'horloge doit avoir été avancée à l'instant du tick."""
-        if tick.symbole not in self._rang:
-            raise ValueError(f'symbole non géré : {tick.symbole}')
-        t = tick.instant.ms
-        ouverture = t - t % self._periode_ms
-        etat = self._en_cours.get(tick.symbole)
-        if etat is None:
-            self._en_cours[tick.symbole] = _BougieEnCours(ouverture, tick.bid, tick.bid, tick.bid, tick.bid, 1)
-            return
-        if etat.ouverture_ms != ouverture:
-            raise RuntimeError('horloge non avancée avant un tick d\'une nouvelle bougie')
-        etat.h = max(etat.h, tick.bid)
-        etat.l = min(etat.l, tick.bid)
-        etat.c = tick.bid
-        etat.nb_ticks += 1
-
-    def terminer(self, fin_ms: int) -> list[BougieEnrichie]:
-        """Avance jusqu'à la fin des données ; une bougie non terminée n'est jamais close (causalité)."""
-        closes = self.avancer(fin_ms)
-        self.bougies_incompletes += len(self._en_cours)
-        self._en_cours.clear()
-        return closes
-
-
 class StrategieNeutre:
     """Méthode neutre : jamais de signal ; motif NO_SETUP, ou le motif du statut de la bougie."""
 
@@ -310,6 +249,10 @@ class CoordinateurRefus:
         self._execution = execution
         self._journal = journal
         self._constructeur = constructeur
+
+    def sur_evenement_donnees(self, evenement: EvenementDonnees) -> None:
+        """Trou, récupération, réinitialisation ou préchargement : journalisé tel quel (C09)."""
+        self._journal.ajouter(self._constructeur.donnees(evenement))
 
     def sur_bougie(self, bougie: BougieEnrichie) -> None:
         for strategie in self._strategies:

@@ -15,7 +15,7 @@ Résultat visé : un robot Python qui, sur les mêmes ticks, prend les mêmes d�
 MT5 démo (C04), et un service IA partagé (A04–A11) en dernière phase. **La rentabilité reste non validée** :
 elle relève du protocole C10/A13 sur les données réelles de l'utilisateur.
 
-Avancement : **phases 0 et 1 terminées le 2026-11-05** (cartographie confirmée par `mcl.py`, puis squelette composite livré ; tableau de suivi dans `mcl/robot-ema-v3/PLAN-MCL.md`). Chaque phase suivante ne démarre que sur
+Avancement : **phases 0, 1 et 2 terminées le 2026-11-05** (cartographie confirmée par `mcl.py`, squelette composite, artefact `donnees-temps` figé et branché ; tableau de suivi dans `mcl/robot-ema-v3/PLAN-MCL.md`). Chaque phase suivante ne démarre que sur
 demande explicite de l'utilisateur.
 
 ## 1. Décisions arrêtées

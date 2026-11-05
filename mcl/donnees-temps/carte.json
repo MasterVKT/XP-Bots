@@ -162,7 +162,8 @@
       "depend_de": [
         "sessions_londres",
         "constructeur_bougies",
-        "etat_indicateurs"
+        "etat_indicateurs",
+        "calendrier_seances"
       ],
       "couche": "3"
     }

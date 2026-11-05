@@ -10,7 +10,7 @@ from xpbots.noyau.decisions import (CleIntention, DecisionContexteIA, DecisionFo
                                     MotifRefus, ResultatTechnique, Sens)
 from xpbots.noyau.journal_schema import (ConstructeurEnregistrements, Decision, EnregistrementInvalide, Mode,
                                          en_json, valider_enregistrement)
-from xpbots.noyau.marche import Bougie, BougieEnrichie, StatutBougie
+from xpbots.noyau.marche import Bougie, BougieEnrichie, EvenementDonnees, NatureEvenementDonnees, StatutBougie
 
 T = 1793779200000
 
@@ -66,6 +66,19 @@ class TestConstruction(unittest.TestCase):
             DecisionFondamentale(True, None, {'direction': 'ANY'}, 'TECHNICAL_CONTROL_NEUTRAL'),
             DecisionContexteIA(EtatContexteIA.BLOCK, 3, ('evt',)), Decision.REFUS, MotifRefus.AI_CONTEXT_VETO, False)
         self.assertEqual(enr['contexte_ia'], {'etat': 'BLOCK', 'sequence_snapshot': 3, 'evenements': ['evt']})
+
+
+class TestEnregistrementDonnees(unittest.TestCase):
+    def test_evenement_de_donnees(self):
+        c = ConstructeurEnregistrements('dep-test', Mode.PAPER, charger_bundle_technique())
+        enr = c.donnees(EvenementDonnees('GBPUSD', NatureEvenementDonnees.REINITIALISATION, T + 3600000, T, None,
+                                         {'motif': 'RECUPERATION_INDISPONIBLE'}))
+        self.assertEqual(valider_enregistrement(enr), [])
+        self.assertEqual((enr['debut_utc'], enr['fin_utc'], enr['instant_utc']),
+                         ('2026-11-04T08:00:00.000Z', None, '2026-11-04T09:00:00.000Z'))
+        for changement in ({'evenement': 'INCONNU'}, {'debut_utc': '2026-11-04'}, {'details': []}):
+            with self.subTest(changement=changement):
+                self.assertTrue(valider_enregistrement(dict(enr, **changement)))
 
 
 class TestValidation(unittest.TestCase):

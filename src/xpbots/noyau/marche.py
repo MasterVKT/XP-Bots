@@ -126,3 +126,36 @@ class BougieEnrichie:
             raise DonneeMarcheInvalide('A_t doit être un flottant fini strictement positif (C03 point 11)')
         if self.jour_londres is not None and type(self.jour_londres) is not date:
             raise DonneeMarcheInvalide('jour_londres doit être une date')
+
+
+class NatureEvenementDonnees(StrEnum):
+    """Événements de qualité des données (C03 points 6 et 7), journalisés par le coordinateur."""
+
+    TROU = 'TROU'
+    RECUPERATION = 'RECUPERATION'
+    REINITIALISATION = 'REINITIALISATION'
+    PRECHARGEMENT = 'PRECHARGEMENT'
+
+
+@dataclass(frozen=True)
+class EvenementDonnees:
+    """Trou, récupération, réinitialisation ou fin de préchargement d'un symbole, avec ses bornes UTC."""
+
+    symbole: str
+    nature: NatureEvenementDonnees
+    instant_ms: int
+    debut_ms: int | None = None
+    fin_ms: int | None = None
+    details: Mapping[str, object] = field(default_factory=dict)
+
+    def __post_init__(self):
+        _symbole(self.symbole, 'symbole')
+        if not isinstance(self.nature, NatureEvenementDonnees):
+            raise DonneeMarcheInvalide('nature doit être une NatureEvenementDonnees')
+        _entier(self.instant_ms, 'instant_ms')
+        for nom in ('debut_ms', 'fin_ms'):
+            if getattr(self, nom) is not None:
+                _entier(getattr(self, nom), nom)
+        if not isinstance(self.details, Mapping):
+            raise DonneeMarcheInvalide('details doit être un dictionnaire')
+        object.__setattr__(self, 'details', MappingProxyType(dict(self.details)))

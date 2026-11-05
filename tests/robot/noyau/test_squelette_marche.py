@@ -3,7 +3,8 @@ import unittest
 from datetime import date
 from decimal import Decimal
 
-from xpbots.noyau.marche import Bougie, BougieEnrichie, DonneeMarcheInvalide, StatutBougie, Tick
+from xpbots.noyau.marche import (Bougie, BougieEnrichie, DonneeMarcheInvalide, EvenementDonnees,
+                                 NatureEvenementDonnees, StatutBougie, Tick)
 from xpbots.noyau.temps import Instant
 
 T = 1793779200000  # 2026-11-04 08:00:00.000 UTC, aligné M15 et H1
@@ -79,6 +80,17 @@ class TestBougieEnrichie(unittest.TestCase):
         for a_t in (0.0, -0.1, float('inf'), 1):
             with self.subTest(a_t=a_t), self.assertRaises(DonneeMarcheInvalide):
                 BougieEnrichie(bougie(), StatutBougie.OK, a_t=a_t)
+
+
+class TestEvenementDonnees(unittest.TestCase):
+    def test_validation_et_lecture_seule(self):
+        e = EvenementDonnees('EURUSD', NatureEvenementDonnees.TROU, T + 1, T, T + 1, {'motif': 'COUVERTURE'})
+        with self.assertRaises(TypeError):
+            e.details['motif'] = 'SANS_BID'
+        for args in (('EURUSD', 'TROU', T), ('EURUSD', NatureEvenementDonnees.TROU, 1.0),
+                     ('', NatureEvenementDonnees.TROU, T), ('EURUSD', NatureEvenementDonnees.TROU, T, 1.5)):
+            with self.subTest(args=args), self.assertRaises(DonneeMarcheInvalide):
+                EvenementDonnees(*args)
 
 
 if __name__ == '__main__':

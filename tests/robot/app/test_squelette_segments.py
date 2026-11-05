@@ -5,17 +5,17 @@ import unittest
 from decimal import Decimal
 from pathlib import Path
 
+from robot.fixtures import generateur_ticks
 from robot.outils import FIXTURE_MANIFESTE, FIXTURE_TICKS, signal_valide
-from xpbots.app.segments_minimaux import (SCENARIO_TECHNICAL_CONTROL_NEUTRAL, AgregateurM15Minimal,
-                                          ContexteIANeutre, CoordinateurRefus, EcrivainJournalJSONL,
+from xpbots.app.segments_minimaux import (SCENARIO_TECHNICAL_CONTROL_NEUTRAL, ContexteIANeutre,
+                                          CoordinateurRefus, EcrivainJournalJSONL,
                                           ErreurDonneesFixture, ErreurJournal, ExecutionPapierMinimale,
                                           FondamentalAbsent, IssueInattendue, LecteurFixtureCSV, StrategieNeutre)
 from xpbots.noyau.config import charger_bundle_technique
 from xpbots.noyau.decisions import (CleIntention, EtatContexteIA, MotifRefus, Refuse, ResultatTechnique, Sens)
 from xpbots.noyau.journal_schema import ConstructeurEnregistrements, EnregistrementInvalide, Mode
-from xpbots.noyau.marche import Bougie, BougieEnrichie, StatutBougie, Tick
+from xpbots.noyau.marche import Bougie, BougieEnrichie, EvenementDonnees, NatureEvenementDonnees, StatutBougie
 from xpbots.noyau.ports import ContexteIA, ControleFondamental, Journal, SourceTicksHistoriques, Strategie
-from xpbots.noyau.temps import Instant
 
 T = 1793779200000  # 08:00:00.000 UTC
 M15 = 900_000
@@ -23,9 +23,10 @@ ENTETE = 'canonical_symbol,broker_symbol,time_utc_ms,sequence,bid,ask\n'
 
 
 def manifeste(**changements):
-    m = {'schema': 'xp-fixture-manifeste-v1', 'origine': 'synthetique', 'fuseau': 'UTC', 'description': 'test',
+    m = {'schema': 'xp-fixture-manifeste-v2', 'origine': 'synthetique', 'fuseau': 'UTC', 'description': 'test',
          'fin_donnees_ms': T + 4 * M15,
-         'symboles': {'EURUSD': {'symbole_courtier': 'EURUSDsynth', 'couverture': [[T, T + 4 * M15]]}}}
+         'symboles': {'EURUSD': {'symbole_courtier': 'EURUSDsynth', 'couverture': [[T, T + 4 * M15]],
+                                 'seances': [[T, T + 4 * M15]]}}}
     m.update(changements)
     return m
 
@@ -53,6 +54,7 @@ class TestLecteurFixture(AvecDossier):
         self.assertEqual(len(ticks), 933)
         self.assertEqual(lecteur.symboles(), ('EURUSD', 'GBPUSD'))
         self.assertEqual(len(lecteur.couverture('GBPUSD')), 2)
+        self.assertEqual(lecteur.seances('GBPUSD'), ((generateur_ticks.DEBUT_MS, generateur_ticks.FIN_MS),))
         self.assertTrue(all(a.instant < b.instant for a, b in zip(ticks, ticks[1:])))
         self.assertEqual(set(lecteur.empreintes()), {'ticks', 'manifeste'})
 
@@ -81,64 +83,19 @@ class TestLecteurFixture(AvecDossier):
             list(LecteurFixtureCSV(ticks, mani).ticks())
 
     def test_manifestes_refuses(self):
-        for m in (manifeste(fuseau='Europe/London'), manifeste(schema='autre'), dict(manifeste(), extra=1),
-                  manifeste(symboles={'EURUSD': {'symbole_courtier': 'X', 'couverture': [[T + 10, T]]}}),
-                  manifeste(symboles={'EURUSD': {'symbole_courtier': 'X',
-                                                 'couverture': [[T, T + M15], [T + 10, T + 2 * M15]]}}),
-                  manifeste(symboles={'EURUSD': {'symbole_courtier': 'X', 'couverture': [[T, T + 9 * M15]]}}),
-                  '{"schema":"xp-fixture-manifeste-v1","schema":"x"}'):
+        def symbole(couverture, seances=((T, T + 4 * M15),)):
+            return {'EURUSD': {'symbole_courtier': 'X', 'couverture': [list(c) for c in couverture],
+                               'seances': [list(s) for s in seances]}}
+
+        for m in (manifeste(fuseau='Europe/London'), manifeste(schema='xp-fixture-manifeste-v1'),
+                  dict(manifeste(), extra=1), manifeste(symboles=symbole(((T + 10, T),))),
+                  manifeste(symboles=symbole(((T, T + M15), (T + 10, T + 2 * M15)))),
+                  manifeste(symboles=symbole(((T, T + 9 * M15),))),
+                  manifeste(symboles=symbole(((T, T + M15),), ((T, T + 9 * M15),))),
+                  manifeste(symboles={'EURUSD': {'symbole_courtier': 'X', 'couverture': [[T, T + M15]]}}),
+                  '{"schema":"xp-fixture-manifeste-v2","schema":"x"}'):
             with self.subTest(m=m), self.assertRaises(ErreurDonneesFixture):
                 self.lecteur([], m)
-
-
-def tick(t, bid='1.10000', symbole='EURUSD', sequence=0):
-    return Tick(symbole, symbole + 'synth', Instant(t, sequence), Decimal(bid), Decimal(bid) + Decimal('0.00008'))
-
-
-class TestAgregateur(unittest.TestCase):
-    def agregateur(self, couverture=None):
-        couverture = couverture or {'EURUSD': ((T, T + 8 * M15),), 'GBPUSD': ((T, T + 8 * M15),)}
-        return AgregateurM15Minimal(['EURUSD', 'GBPUSD'], couverture, 900)
-
-    def test_tick_de_frontiere_dans_la_bougie_suivante(self):
-        ag = self.agregateur()
-        for t, bid in ((T + 1, '1.10000'), (T + M15 - 1, '1.10020')):
-            self.assertEqual(ag.avancer(t), [])
-            ag.ajouter(tick(t, bid))
-        closes = ag.avancer(T + M15)  # le tick à T+900 s clôt la précédente sans y entrer (C03 point 2)
-        ag.ajouter(tick(T + M15, '1.10500'))
-        self.assertEqual(len(closes), 1)
-        b = closes[0].bougie
-        self.assertEqual((b.ouverture_ms, b.cloture_ms, b.c, b.h, b.nb_ticks), (T, T + M15, Decimal('1.10020'),
-                                                                              Decimal('1.10020'), 2))
-        suivante = ag.terminer(T + 2 * M15)[0].bougie
-        self.assertEqual((suivante.ouverture_ms, suivante.o, suivante.nb_ticks), (T + M15, Decimal('1.10500'), 1))
-
-    def test_validite_par_couverture_declaree(self):
-        ag = self.agregateur({'EURUSD': ((T, T + M15 // 2), (T + M15 // 2 + 1, T + 8 * M15)),
-                              'GBPUSD': ((T, T + 8 * M15),)})
-        ag.ajouter(tick(T + 1))
-        be = ag.avancer(T + M15)[0]
-        self.assertFalse(be.bougie.valide)
-        self.assertIs(be.statut, StatutBougie.DATA_GAP)
-
-    def test_ordre_des_clotures_simultanees_et_bougie_incomplete(self):
-        ag = self.agregateur()
-        ag.ajouter(tick(T + 5, '1.30000', 'GBPUSD', 1))
-        ag.ajouter(tick(T + 6, '1.10000', 'EURUSD', 2))
-        closes = ag.avancer(T + M15)
-        self.assertEqual([be.bougie.symbole for be in closes], ['EURUSD', 'GBPUSD'])
-        ag.ajouter(tick(T + M15 + 1))
-        self.assertEqual(ag.terminer(T + M15 + 10), [])
-        self.assertEqual(ag.bougies_incompletes, 1)
-
-    def test_horloge_avancee_obligatoire(self):
-        ag = self.agregateur()
-        ag.ajouter(tick(T + 1))
-        with self.assertRaises(RuntimeError):
-            ag.ajouter(tick(T + M15 + 1))
-        with self.assertRaises(ValueError):
-            ag.ajouter(tick(T + 2, symbole='XAUUSD'))
 
 
 def bougie_ok(valide=True):
@@ -253,6 +210,17 @@ class TestCoordinateurRefus(unittest.TestCase):
         self.assertEqual(intention['motif'], 'ENVIRONMENT_NOT_READY')
         self.assertEqual(intention['contexte_ia']['etat'], 'NEUTRAL')
         self.assertEqual(intention['fondamental']['scenario'], 'TECHNICAL_CONTROL_NEUTRAL')
+
+    def test_evenement_de_donnees_journalise(self):
+        journal = JournalMemoire()
+        constructeur = ConstructeurEnregistrements('dep', Mode.PAPER, charger_bundle_technique())
+        coordinateur = CoordinateurRefus('dep', [StrategieNeutre('EMA_V3')], FondamentalAbsent(Mode.PAPER),
+                                         ContexteIANeutre(), ExecutionPapierMinimale(), journal, constructeur)
+        coordinateur.sur_evenement_donnees(EvenementDonnees('EURUSD', NatureEvenementDonnees.TROU, T + M15, T,
+                                                            T + M15, {'motif': 'SANS_BID'}))
+        ligne, = journal.lignes
+        self.assertEqual((ligne['type'], ligne['evenement'], ligne['debut_utc'], ligne['details']),
+                         ('DONNEES', 'TROU', '2026-11-04T08:00:00.000Z', {'motif': 'SANS_BID'}))
 
     def test_veto_ia_ajoute_seulement_un_refus(self):
         class ContexteBloquant:

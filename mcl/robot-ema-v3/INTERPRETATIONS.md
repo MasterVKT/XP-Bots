@@ -1,6 +1,8 @@
 # Registre des points d'interprétation — robot 1 `EMA_V3`
 
-Statut global : **proposé — en attente de validation de l'utilisateur** (phase 0, 2026-11-05).
+Statut global : **proposé — en attente de validation de l'utilisateur** (phase 0, 2026-11-05). R4, R5 et R6 sont
+appliqués depuis la phase 2 sur la lecture proposée, faute d'objection reçue ; une autre décision se traduira par
+une levée de gel tracée (`mcl.py defiger`) des couches indiquées.
 
 Règle (C02) : une contradiction ou un flou relevé pendant l'implémentation est signalé ici, jamais arbitré en
 silence. Chaque point validé devient un test nommé dans la couche indiquée ; un point refusé reçoit la lecture
@@ -11,9 +13,9 @@ choisie par l'utilisateur. Aucun de ces points ne modifie une valeur figée de `
 | R1 | S01.2 point 1 | Sortie de position exactement à un instant de clôture M15 | Cette clôture n'est pas « strictement postérieure » : ni préparation ni entrée ; la clôture suivante est ignorée ; `IDLE` ensuite | moteur-ema 2 | proposé |
 | R2 | S01.2 point 8, C08 | Issue d'un signal encore inconnue à la clôture suivante (accusé ambigu) | Sous-état technique d'attente, sans préparation de repli ; fill confirmé → `OWNED_POSITION` ; refus → `COOLDOWN` d'une clôture à partir de la résolution | moteur-ema 2 | proposé |
 | R3 | C06 | « Cotation non croisée » | Bid ≤ Ask (spread nul admis) ; Bid > Ask refusé | execution-coordinateur 1a | proposé |
-| R4 | C03 point 5 | Bougie sans aucun Bid en séance alors que la couverture est établie | Bougie invalide traitée comme un trou (`DATA_GAP`) | donnees-temps 1b | proposé |
-| R5 | C03 points 5–6 | Détection des trous en rejeu (aucun seuil de silence dans la spécification) | Couverture déclarée par le manifeste des données ; sans manifeste, rejeu refusé ; aucun seuil inventé | donnees-temps 3, journal-rejeu 1c | proposé |
-| R6 | C03 point 6 | Reprise après un trou inexpliqué | Récupération des ticks manquants puis recalcul depuis le préchargement ; à défaut, nouvelle initialisation journalisée | donnees-temps 2 et 3 | proposé |
+| R4 | C03 point 5 | Bougie sans aucun Bid en séance alors que la couverture est établie | Bougie invalide traitée comme un trou (`DATA_GAP`) | donnees-temps 1b (`test_intervalle_attendu_sans_bid_r4`), 3 (`test_intervalle_sans_bid_r4`) | appliqué (phase 2) |
+| R5 | C03 points 5–6 | Détection des trous en rejeu (aucun seuil de silence dans la spécification) | Couverture déclarée par le manifeste des données ; sans manifeste, rejeu refusé ; aucun seuil inventé | donnees-temps 1b (`test_interruption_inexpliquee`), app (`test_manifestes_refuses`), journal-rejeu 1c | appliqué (phase 2) |
+| R6 | C03 point 6 | Reprise après un trou inexpliqué | Récupération des ticks manquants puis recalcul depuis l'état d'avant le trou ; à défaut, nouvelle initialisation journalisée (nouveau préchauffage) | donnees-temps 3 (`TestRecuperation`, `test_trou_de_couverture_puis_reinitialisation`) | appliqué (phase 2) |
 | R7 | C06 | Motif quand une contrainte native SL/TP (distance minimale, gel) invalide le plan | `PROTECTION_ERROR` | execution-coordinateur 1b | proposé |
 | R8 | C07 | Motif quand des positions externes empêchent la coordination fiable du risque | `ENVIRONMENT_NOT_READY` | execution-coordinateur 3 | proposé |
 | R9 | C10 | « Un tick adverse » du scénario de référence | Un `tick_size` défavorable ajouté au prix du premier tick après le délai | journal-rejeu 1b | proposé |
