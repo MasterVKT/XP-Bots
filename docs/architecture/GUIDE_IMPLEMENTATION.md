@@ -1,6 +1,6 @@
 # Guide d'implémentation des deux robots
 
-État du dépôt au 4 novembre 2026 : spécifications 3.1.0, paramètres figés, contrats et fonctions de référence disponibles. Aucun robot de plateforme, service HTTP LLM, registre de budget transactionnel ou adaptateur courtier n'est encore fourni. Ce guide oriente la construction ; les deux spécifications autonomes fixent le comportement détaillé.
+État du dépôt au 5 novembre 2026 : spécifications 3.1.0, paramètres figés, contrats et fonctions de référence disponibles ; plan d'implémentation du robot London arrêté et structure MCL composite posée dans `mcl/robot-london-v3/`. Aucun robot de plateforme, service HTTP LLM, registre de budget transactionnel ou adaptateur courtier n'est encore fourni. Ce guide oriente la construction ; les deux spécifications autonomes fixent le comportement détaillé.
 
 ## Autorité des ressources
 
@@ -37,12 +37,12 @@ L'analyse fondamentale externe et le complément LLM ont des rôles distincts. U
 
 Les dates et champs de collecte sont décrits dans les [données historiques requises](../data/03_Donnees_Historiques_Requises_et_Validation.md). Un calendrier de collecte ne prouve pas à lui seul que l'effectif de validation sera atteint.
 
-Le [plan d'implémentation intégrale du robot London](robot_london_v3/README.md) (`LONDON_V3`, version 1.4.0 du 5 novembre 2026, validé par l'utilisateur) décline cet ordre en phases MCL avec points d'arrêt ; ses décisions et arbitrages de spécification sont arrêtés. Ses phases 0 à 12 se construisent dans le conteneur de développement contre des contrats de frontière finalisés tôt ; les actions réservées à l'humain (poste, compte de démonstration, données, autorisation des API, annotation, mises en service) sont regroupées dans sa phase 13 de qualification.
+Le [plan d'implémentation intégrale du robot London](robot_london_v3/README.md) (`LONDON_V3`, version 1.4.1 du 5 novembre 2026, validé par l'utilisateur) décline cet ordre en phases MCL avec points d'arrêt ; ses décisions et arbitrages de spécification sont arrêtés. Ses phases 0 à 12 se construisent dans le conteneur de développement contre des contrats de frontière finalisés tôt ; les actions réservées à l'humain (poste, compte de démonstration, données, autorisation des API, annotation, mises en service) sont regroupées dans sa phase 13 de qualification.
 
 ## Emploi des fonctions de référence
 
 `reference/technical.py` fournit les indicateurs et détecteurs de configurations, sans portefeuille, dimensionnement complet ou modèle de fills. `reference/llm_contracts.py` illustre validation textuelle, causalité, veto et bornes de coût, sans client HTTP, verrouillage concurrent du budget ou persistance de production. Leur [notice](../../reference/README.md) précise les limites.
 
-Les dépendances de `requirements-dev.txt` concernent ces contrôles Python. Le langage, la plateforme et les dépendances du futur robot ne sont pas arrêtés par le rangement du dépôt. Aucun dossier d'application vide ni adaptateur factice n'a été ajouté.
+Les dépendances de `requirements-dev.txt` concernent ces contrôles Python. Pour le robot London (`LONDON_V3`) et les composants partagés, le langage et la plateforme sont arrêtés depuis le 5 novembre 2026 : Python 3.13 et MT5, piloté par le paquet officiel `MetaTrader5`, avec les sources dans `src/xpbots/` (décisions D-01 et D-02 du [plan](robot_london_v3/README.md)) ; les dépendances d'exécution suivent sa décision D-05. Le robot EMA n'est pas encore planifié : les composants partagés sont conçus pour le recevoir, et son plan consignera ses propres décisions. Aucun dossier d'application vide ni adaptateur factice n'a été ajouté : le code naît phase par phase, selon le plan, et l'état MCL de chaque artefact est tenu dans `mcl/`.
 
 Pour les futurs historiques, traces et états privés, utiliser les emplacements exclus `data/raw/`, `data/cache/`, `data/private/`, `runtime/`, `logs/` et `.local/`. Les résultats synthétiques servant de fixtures peuvent être ajoutés explicitement dans `tests/` après revue.

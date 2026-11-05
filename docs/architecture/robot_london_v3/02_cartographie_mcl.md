@@ -12,11 +12,13 @@ elle reste une hypothèse que `mcl.py analyser` tranchera unité par unité (zé
 |---|---|---|
 | 1. La structure est-elle connaissable avant construction ? | Oui | Spécification déterministe figée, fonctions de référence, pile dérivée « robot de trading » de la skill MCL, cartographie XP-Bots |
 | 2. Les contrats internes sont-ils stabilisables tôt ? | Oui | Règles et valeurs figées (C01, C02) ; types aux coutures déterminés par C06–C09 |
-| 3. Faut-il construire pour comprendre ? | Non pour le cœur ; partiellement pour l'adaptateur MT5 | Base horaire des ticks, SL au moment de l'entrée, modes de remplissage, appels bloquants : faisabilité technique à sonder (sondes S-01 à S-08) avant les couches d'infrastructure |
+| 3. Faut-il construire pour comprendre ? | Non pour le cœur ; partiellement pour l'adaptateur MT5 | Base horaire des ticks, SL au moment de l'entrée, modes de remplissage, appels bloquants : contrats finalisés tôt ([document 08](08_contrats_frontieres.md)), puis faisabilité confirmée par les sondes S-01 à S-08 en sous-étape 13.1 |
 
 - **Verdict** : applicable. Échelle **application**, donc **mode composite** : squelette déployable, puis un
-  artefact MCL par composant. Les inconnues MT5 suivent la combinaison « sonde jetable puis reconstruction au
-  protocole » ; le code des sondes n'est jamais promu en couche.
+  artefact MCL par composant. Les inconnues MT5 sont traitées par des contrats de frontière finalisés tôt, contre
+  lesquels l'infrastructure est construite en phase 11 ; les sondes jetables de 13.1 les confrontent au réel et
+  un écart ouvre un défigeage « correction » de la seule couche concernée ; le code des sondes n'est jamais
+  promu en couche.
 - **Bénéfice dégradé assumé** : `infrastructure` et `service-ia` sont dominés par leurs frontières externes ;
   l'économie de doublures y est plus faible.
 - **Signaux de mauvais domaine à surveiller** : divergences répétées entre carte et code réel, défigeages en
@@ -33,14 +35,16 @@ elle reste une hypothèse que `mcl.py analyser` tranchera unité par unité (zé
    **Sorties** : ordres d'entrée protégés, ajustements de TP, clôtures, alertes, journal C09 et journal
    d'entrées, rapports C10, A11 et A13.
 3. **Contraintes** : Python 3.13 ; bibliothèque standard dans le cœur ; `MetaTrader5` sous Windows dans
-   l'infrastructure seulement ; TTL de 5 s sans appel réseau ; développement et intégration continue sous
-   Linux, exploitation sur le poste Windows de l'utilisateur.
+   l'infrastructure seulement ; TTL de 5 s sans appel réseau ; développement et contrôles dans un conteneur
+   Linux, sans intégration continue distante (D-10) ; exploitation sur le poste Windows de l'utilisateur à partir
+   de la phase 13.
 4. **Nature** : projet neuf (greenfield) ; `reference/` sert d'oracle de comparaison.
 
 ## 3. Mode composite : le squelette
 
 Le squelette est **hors protocole MCL** : c'est du code de production minimal, déployable dès la phase 1, dont
-la discipline est de rester vert en intégration continue. Chaque artefact de chair remplace un segment minimal
+la discipline est de rester vert ; faute d'intégration continue distante (D-10), son « intégration continue » est
+la suite locale complète, rejouée à chaque gate, à chaque fin de phase et avant chaque commit. Chaque artefact de chair remplace un segment minimal
 en respectant le contrat de la couture.
 
 ### 3.1 Segments
@@ -63,7 +67,8 @@ intégrale de **chaque** gate du plan.
 
 `mcl/squelette/COUTURES.md` décrit chaque couture (types et comportements échangés, artefact propriétaire,
 statut minimal ou remplacé). Toute modification d'une couture est un **changement de contrat tracé** : date,
-nature (extension ou modification), artefact, justification, gate vert de la CI du squelette.
+nature (extension ou modification), artefact, justification, test de bout en bout du squelette vert dans la
+suite locale complète (sa « CI », D-10).
 
 ## 4. Conventions communes des cartes MCL
 

@@ -193,7 +193,8 @@ python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossie
 
 - **Pureté du cœur** : test qui parcourt les paquets du cœur et refuse tout appel à l'horloge système,
   `datetime.now`, `datetime.utcnow`, `date.today`, ainsi que toute ouverture de fichier.
-- **Architecture** : `mcl.py verifier` de chaque carte, exécuté par chaque gate et par l'intégration continue.
+- **Architecture** : `mcl.py verifier` de chaque carte, exécuté par chaque gate ; celui de la carte composite
+  `mcl/robot-london-v3/` à chaque fin de phase (aucune intégration continue distante, D-10).
 - **Configuration figée** : le robot refuse de démarrer sur une copie modifiée de l'un des deux exports, et sur
   une configuration où une option désactivée serait activée.
 - **Non-recopie des valeurs** : en test seulement, des paramètres construits avec d'autres valeurs doivent

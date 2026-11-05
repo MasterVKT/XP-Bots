@@ -1,11 +1,12 @@
 # Plan d'implémentation intégrale du robot 2 — London Breakout M15 (`LONDON_V3`)
 
-> Plan directeur, version **1.4.0** du **5 novembre 2026**. Statut : **validé par l'utilisateur le
+> Plan directeur, version **1.4.1** du **5 novembre 2026**. Statut : **validé par l'utilisateur le
 > 05/11/2026** ; couverture vérifiée mécaniquement par `python tools/verifier_plan_london.py`
 > ([document 06](06_verification_exhaustive.md)). Toutes les décisions de conception et les douze arbitrages de
 > spécification sont arrêtés. Les phases 0 à 12 s'exécutent entièrement dans le conteneur de développement, sans
 > autre action humaine que la demande de passage à la phase suivante ; les autres **actions humaines** (§5) sont
-> regroupées dans la phase 13. Aucune ligne de code du robot n'existe encore. Ce plan organise la construction ;
+> regroupées dans la phase 13. Phase 0 terminée le 05/11/2026 (structure MCL composite dans
+> [`mcl/robot-london-v3/`](../../../mcl/robot-london-v3/PLAN-MCL.md)) ; aucune ligne de code du robot n'existe encore. Ce plan organise la construction ;
 > il n'ajoute, ne retire et ne modifie aucune règle métier, aucun seuil et aucun coût.
 
 ## 0. Autorité, portée et lecture
@@ -242,3 +243,4 @@ Procédure complète de chacune : [document 07](07_procedures_humaines.md).
 | 1.2.0 | 05/11/2026 | Vérification exhaustive (document 06) et script `tools/verifier_plan_london.py` ; six manques corrigés : recontrôle du contexte IA juste avant l'ordre (A03), mesures séparées de C09, indicateurs descriptifs de la lecture d'expert, éléments de rapport C10, contrôle du dossier commun (A02), suspension pour dérive (A13.10) |
 | 1.3.0 | 05/11/2026 | Procédures des douze actions humaines (document 07) ; statuts de D-10 et D-17 explicités comme refus arrêtés ; définition de la complétude du plan (§2.4) ; convertisseurs des exports de ticks (MT5 et source tierce) et sondes S-09, S-10 ; application étape par étape de la skill de planification (document 06, §8) ; contrôles mécaniques étendus aux décisions, aux actions humaines et à cette application |
 | 1.4.0 | 05/11/2026 | Phases 0 à 12 exécutables sans action humaine : contrats des frontières externes finalisés tôt (document 08), d'après l'examen du paquet officiel `MetaTrader5` 5.0.6231 ; infrastructure construite contre ces contrats avec un faux module injecté et répétition générale `PAPER` dans le conteneur ; sondes S-01 à S-08, compilation MQL5, tests de contrat et première séance sur le terminal regroupés en 13.1 ; convertisseurs des exports de ticks déplacés dans l'artefact `donnees-historiques` (13.3) ; autorisation des API redemandée en 13.6 ; `requirements-windows.txt` avec `numpy` ; risque R-18 ; contrôles mécaniques étendus (phases autonomes, moments des actions humaines, frontières contractualisées) |
+| 1.4.1 | 05/11/2026 | Phase 0 exécutée : dossier MCL composite `mcl/robot-london-v3/` (carte au grain des paquets, divergence en mode strict, frontières externes et couches autorisées) ; guide, règles du projet, README et skill de planification alignés sur D-01 et D-02 ; phrases périmées corrigées (document 02 : sondes et intégration continue ; document 03 : vérification d'architecture ; document 04 : commande de la carte composite et suivi des phases) |

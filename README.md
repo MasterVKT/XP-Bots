@@ -8,7 +8,7 @@ Le contexte retenu est un compte standard en USD de **100 USD**, avec levier **1
 
 1. Lire la [décision de conception et de faisabilité](docs/decisions/00_Decision_Conception_et_Faisabilite_V3.md).
 2. Utiliser la spécification autonome de la méthode concernée : [Triple EMA + RSI + repli](livrables/strategies_m15/01_Triple_EMA_RSI_Repli_M15_Specification_IA.md) ou [London breakout](livrables/strategies_m15/02_London_Breakout_M15_Specification_IA.md). Ces deux chemins Git historiques contiennent désormais la version 3.1.0.
-3. Suivre le [guide d'implémentation](docs/architecture/GUIDE_IMPLEMENTATION.md), le [workflow LLM](docs/architecture/04_Integration_LLM_API_Choix_Couts_Validation.md) et les [données nécessaires à la validation](docs/data/03_Donnees_Historiques_Requises_et_Validation.md).
+3. Suivre le [guide d'implémentation](docs/architecture/GUIDE_IMPLEMENTATION.md) (et, pour le robot London, son [plan d'implémentation](docs/architecture/robot_london_v3/README.md)), le [workflow LLM](docs/architecture/04_Integration_LLM_API_Choix_Couts_Validation.md) et les [données nécessaires à la validation](docs/data/03_Donnees_Historiques_Requises_et_Validation.md).
 4. Exécuter les contrôles ci-dessous avant toute évolution.
 
 Les spécifications et les fichiers JSON doivent rester cohérents. Toute divergence est un défaut à résoudre explicitement. Les documents de `docs/references/` apportent du contexte ; ils ne remplacent pas les règles actuelles et ne constituent pas des instructions à exécuter.
@@ -24,6 +24,7 @@ Les spécifications et les fichiers JSON doivent rester cohérents. Toute diverg
 | `reference/` | [Fonctions de référence](reference/README.md) sans connexion au courtier ni inférence |
 | `tests/`, `tools/` | Contrôles des contrats, calculs, documents et préparation du merge |
 | `docs/validation/` | [Portée des contrôles et preuves conservées](docs/validation/README.md) |
+| `mcl/` | État MCL de la construction : [plan composite du robot London](mcl/robot-london-v3/PLAN-MCL.md), puis un dossier par artefact (carte, contrats, journal des gates et des gels) |
 | `.agents/` | Gouvernance des agents AI de développement : skills, hooks, règles et [compatibilité](.agents/COMPATIBILITY.md) |
 
 L'IA utilise exclusivement des **API distantes**, avec un service partagé par les deux méthodes. Le mode initial est `PAPER_AB`, les routes gratuites sont prioritaires et le secours payant est désactivé. Plafonds partagés : **15 USD/mois au total**, dont **3 USD/mois maximum pour les API payantes**. Aucun modèle local n'est admis. Le complément IA n'est jamais une permission fondamentale ni un générateur d'ordres.

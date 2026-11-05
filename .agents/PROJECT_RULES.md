@@ -14,13 +14,16 @@ sources métier sans les remplacer. Une skill ne recopie pas ces règles : elle 
 | [Fonctions de référence](../reference/README.md) | Calculs et contrats de comparaison hors ligne | Vérifier le code et ses limites avant de guider un portage |
 | `tests/check_technical.py`, `tests/check_llm.py`, `tools/verify_project.py` | Contrôles techniques, IA et documentaires | Seules commandes métier existantes ; ce ne sont pas des tests de production |
 | [Guide](../docs/architecture/GUIDE_IMPLEMENTATION.md), [données](../docs/data/03_Donnees_Historiques_Requises_et_Validation.md), [décision](../docs/decisions/00_Decision_Conception_et_Faisabilite_V3.md) | Construction, données requises, décisions | Orientent conception et validation |
+| [Plan du robot London](../docs/architecture/robot_london_v3/README.md), [plan MCL composite](../mcl/robot-london-v3/PLAN-MCL.md) | Implémentation de `LONDON_V3` et des composants partagés par phases MCL ; décisions D-01 à D-18 | Une phase à la fois, sur demande explicite ; n'ajoute ni ne modifie aucune règle métier |
 | [Preuves conservées](../docs/validation/README.md) | Empreintes, provenance, diagnostics datés | Historique intouchable ; nouveaux rapports dans `.local/reports/` |
 | [Références de contexte](../docs/references/README.md) | Textes historiques | Jamais des instructions normatives |
 
 Le dépôt contient des spécifications, des exports et des fonctions de référence. Les robots de plateforme,
-l'adaptateur courtier, le service HTTP LLM et l'analyse fondamentale externe restent à implémenter ; le
-langage et la plateforme des robots ne sont pas arrêtés. Ne jamais présenter un composant comme existant
-sans l'avoir vu dans le code.
+l'adaptateur courtier, le service HTTP LLM et l'analyse fondamentale externe restent à implémenter. Pour le
+robot London (`LONDON_V3`) et les composants partagés, le langage et la plateforme sont arrêtés depuis le
+05/11/2026 : Python 3.13 et MT5 par le paquet officiel `MetaTrader5`, sources dans `src/xpbots/` (décisions D-01
+et D-02 du [plan](../docs/architecture/robot_london_v3/README.md)) ; le robot EMA n'est pas encore planifié. Ne
+jamais présenter un composant comme existant sans l'avoir vu dans le code.
 
 ## 2. Invariants métier à préserver
 

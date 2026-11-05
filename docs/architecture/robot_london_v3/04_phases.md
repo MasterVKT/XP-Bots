@@ -36,7 +36,9 @@ regroupées dans la phase 13.
 
 **À la sortie de la phase**
 
-7. Gate global de l'artefact ; checkpoint si `statut` le signale ; `mcl.py verifier` de la carte composite.
+7. Gate global de l'artefact ; checkpoint si `statut` le signale ; `mcl.py verifier` de la carte composite
+   (`mcl.py --dossier mcl/robot-london-v3 verifier`) ; ligne de la phase ajoutée au suivi des phases de
+   `mcl/robot-london-v3/PLAN-MCL.md`, §7.
 8. `python tools/run_robot_tests.py`, `python tools/verify_project.py` et `python tools/verifier_plan_london.py`
    (couverture du plan, à garder verte quand le plan évolue) ; l'intégration continue distante n'est pas
    autorisée (D-10) ; suite de gouvernance si un fichier de gouvernance a changé.
