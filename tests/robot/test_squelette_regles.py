@@ -28,6 +28,9 @@ TEXTES_AUTORISES_PAR_FICHIER = {
     ('donnees_temps/c0_parametres_seances.py', 'BID'): 'variante implémentée : refus de démarrer sinon',
     ('donnees_temps/c0_parametres_seances.py', 'WILDER'): 'variante implémentée : refus de démarrer sinon',
     ('donnees_temps/c0_parametres_seances.py', 'PREVIOUS_CLOSED_M15'): 'variante implémentée : refus de démarrer sinon',
+    ('moteur_ema/c0_parametres.py', 'SMA_N'): 'variante implémentée : refus de démarrer sinon',
+    ('moteur_ema/c0_parametres.py', 'WILDER'): 'variante implémentée : refus de démarrer sinon',
+    ('moteur_ema/c0_parametres.py', 'EMA15_TO_EMA50'): 'variante implémentée : refus de démarrer sinon',
 }
 APPELS_D_HORLOGE = {('datetime', 'now'), ('datetime', 'utcnow'), ('datetime', 'today'), ('date', 'today'),
                     ('time', 'time'), ('time', 'time_ns'), ('time', 'monotonic'), ('time', 'monotonic_ns'),

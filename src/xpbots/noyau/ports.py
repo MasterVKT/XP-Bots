@@ -1,7 +1,8 @@
 """Ports du squelette : interfaces que les segments minimaux puis les artefacts de chair implémentent.
 
 Ports disponibles depuis la phase 1 : `SourceTicksHistoriques`, `Journal`, `Strategie`, `ControleFondamental`,
-`ContexteIA` ; depuis la phase 2 : `Stockage`. Les autres ports (flux de ticks réel, horloge, courtier, calculs
+`ContexteIA` ; depuis la phase 2 : `Stockage` ; en phase 3 : `Strategie.sur_evenement_donnees`,
+`Strategie.notifier_sortie`, `SourceTicksHistoriques.tick_size`. Les autres ports (flux de ticks réel, horloge, courtier, calculs
 courtier, sources fondamentales, lecteur de snapshot, transport HTTP) arrivent avec leur premier consommateur
 (`mcl/robot-ema-v3/COUTURES.md`).
 """
@@ -11,7 +12,9 @@ from typing import Iterator, Mapping, Protocol, runtime_checkable
 
 from xpbots.noyau.decisions import (CleIntention, DecisionContexteIA, DecisionFondamentale, IssueSignal,
                                     ResultatTechnique, Sens)
-from xpbots.noyau.marche import BougieEnrichie, Tick
+from decimal import Decimal
+
+from xpbots.noyau.marche import BougieEnrichie, EvenementDonnees, Tick
 
 
 @runtime_checkable
@@ -35,6 +38,9 @@ class SourceTicksHistoriques(Protocol):
 
     def empreintes(self) -> Mapping[str, str]:
         """SHA-256 des fichiers de données, pour le journal d'initialisation."""
+
+    def tick_size(self, symbole: str) -> Decimal:
+        """Pas de prix natif du symbole déclaré avec les données (C04, profil d'instrument)."""
 
 
 @runtime_checkable
@@ -67,6 +73,12 @@ class Strategie(Protocol):
 
     def appliquer_issue(self, cle: CleIntention, issue: IssueSignal) -> None:
         """Issue définitive d'un signal émis par cette méthode (fill ou refus)."""
+
+    def notifier_sortie(self, symbole: str, instant_ms: int) -> None:
+        """Sortie de la position que cette méthode possède sur le symbole (C08, S01.2 point 1)."""
+
+    def sur_evenement_donnees(self, evenement: EvenementDonnees) -> None:
+        """Événement de qualité des données (C03.6) : un trou efface armements et replis en attente."""
 
 
 @runtime_checkable

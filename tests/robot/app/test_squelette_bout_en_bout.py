@@ -41,7 +41,7 @@ class TestSqueletteBoutEnBout(unittest.TestCase):
     def test_journal_complet_et_conforme(self):
         resume, chemin = self.rejouer()
         self.assertEqual(resume, {'ticks': 933, 'enregistrements': 20, 'clotures': {'DATA_GAP': 2, 'WARMUP': 14},
-                                  'intentions': {}, 'donnees': {'REINITIALISATION': 1, 'TROU': 2}})
+                                  'intentions': {}, 'donnees': {'RECALCUL': 1, 'TROU': 2}})
         lignes = lire(chemin)
         self.assertEqual([l['sequence'] for l in lignes], list(range(1, 21)))
         self.assertTrue(all(valider_enregistrement(l) == [] for l in lignes))
@@ -58,7 +58,7 @@ class TestSqueletteBoutEnBout(unittest.TestCase):
         donnees = [(l['evenement'], l['debut_utc'], l['details']['motif']) for l in lignes if l['type'] == 'DONNEES']
         self.assertEqual(donnees, [('TROU', '2026-11-04T08:30:00.000Z', 'COUVERTURE'),
                                    ('TROU', '2026-11-04T08:45:00.000Z', 'COUVERTURE'),
-                                   ('REINITIALISATION', '2026-11-04T08:30:00.000Z', 'RECUPERATION_INDISPONIBLE')])
+                                   ('RECALCUL', '2026-11-04T08:30:00.000Z', 'RECUPERATION_INDISPONIBLE')])
 
     def test_rejeu_deterministe_octet_pour_octet(self):
         _, premier = self.rejouer('a.jsonl')
@@ -115,7 +115,7 @@ class TestSqueletteBoutEnBout(unittest.TestCase):
         ticks, manifeste = self._fixture_derivee(lambda c: c if int(c[2]) < H09 else None, fin_ms=H09)
         _, prefixe = self.rejouer('prefixe.jsonl', ticks, manifeste)
         attendu = jusqua(lire(complet), H09)
-        self.assertEqual(len(attendu), 11)  # 8 clôtures, 2 trous et la réinitialisation GBPUSD de 09:00
+        self.assertEqual(len(attendu), 11)  # 8 clôtures, 2 trous et le recalcul GBPUSD de 09:00 (R6′)
         self.assertEqual(jusqua(lire(prefixe), H09), attendu)
 
     def test_causalite_ticks_futurs_modifies(self):

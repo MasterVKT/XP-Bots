@@ -15,7 +15,7 @@ Résultat visé : un robot Python qui, sur les mêmes ticks, prend les mêmes d�
 MT5 démo (C04), et un service IA partagé (A04–A11) en dernière phase. **La rentabilité reste non validée** :
 elle relève du protocole C10/A13 sur les données réelles de l'utilisateur.
 
-Avancement : **phases 0, 1 et 2 terminées le 2026-11-05** (cartographie confirmée par `mcl.py`, squelette composite, artefact `donnees-temps` figé et branché ; tableau de suivi dans `mcl/robot-ema-v3/PLAN-MCL.md`). Chaque phase suivante ne démarre que sur
+Avancement : **phases 0, 1, 2 et 3 terminées le 2026-11-05** (cartographie confirmée par `mcl.py`, squelette composite, artefact `donnees-temps` figé et branché, artefact `moteur-ema` figé et branché, décisions R1–R18 prises par délégation dans `mcl/robot-ema-v3/INTERPRETATIONS.md` ; tableau de suivi dans `mcl/robot-ema-v3/PLAN-MCL.md`). Chaque phase suivante ne démarre que sur
 demande explicite de l'utilisateur.
 
 ## 1. Décisions arrêtées
@@ -198,8 +198,8 @@ contrats finalisés ensemble, gates et gels séparés.
 | 1a | `sessions_londres` (`c1a_sessions`) | jour Londres, jour UTC, jour ouvré 0–4 ; bougie (ouverture ≥ début, clôture < fin, même jour Londres) dans la fenêtre d'un bloc ; instant UTC de l'heure de sortie forcée d'un jour ; appartenance au blackout `[21:00,23:00)` UTC | changements d'heure 2025/2026 (08:00 Londres = 07:00 UTC l'été, 08:00 l'hiver), première clôture 08:15, dernière 15:45, 16:00 exclue, week-end exclu, jour UTC ≠ jour Londres, concordance `local_decision_in_window` | avec 1b et 1c |
 | 1b | `constructeur_bougies` (`c1b_bougies`) | ticks ordonnés + événements de couverture + séances natives → M15/H1 clôturées `[T,T+d)` alignées sur l'époque UTC, OHLC Bid, validité ; événements de trou | tick à T+900 dans la bougie suivante, égalités de ms départagées par séquence, minute inchangée ≠ trou, fermeture officielle ≠ trou, interruption inexpliquée = trou, H1 invisible avant clôture, clôture déclenchée par l'horloge sans tick, bougie sans Bid (R4) | — |
 | 1c | `indicateurs` (`c1c_indicateurs`) | états incrémentaux EMA(n) graine SMA, RSI Wilder (50/100/0), TR (premier = H−L), ATR Wilder, `A_t` = ATR de t−1, historique EMA50 sur 4 bougies | valeurs = `reference.technical` (`ema`, `wilder`, `rsi`, `add_indicators`) à 1e-12 près et **mêmes comparaisons de seuil** ; indisponibilité avant graine ; cas RSI nuls | — |
-| 2 | `etat_indicateurs` (`c2_etat_indicateurs`) | préchargement ≥ `warmup_closed_m15_bars` M15 (H1 inutile pour EMA) → état + empreinte (premier horodatage, SHA-256) ; persistance via `Stockage` ; reprise sur les seules nouvelles bougies ; trou → R6 | préchargement insuffisant = `WARMUP` ; préchargement différent journalisé | redémarrage = flux continu |
-| 3 | `pipeline_marche` (`c3_pipeline`) | par symbole : ticks + couverture + horloge → `BougieEnrichie` (bougie, indicateurs, `A_t`, jour Londres, statut OK/WARMUP/DATA_GAP) ou événement de trou | statuts, effacement après trou (R5, R6) | **C11.1** préfixe causal ; trou puis récupération ; changement d'heure |
+| 2 | `etat_indicateurs` (`c2_etat_indicateurs`) | préchargement ≥ `warmup_closed_m15_bars` M15 (H1 inutile pour EMA) → état + empreinte (premier horodatage, SHA-256) ; persistance via `Stockage` ; reprise sur les seules nouvelles bougies ; trou → R6′ | préchargement insuffisant = `WARMUP` ; préchargement différent journalisé | redémarrage = flux continu |
+| 3 | `pipeline_marche` (`c3_pipeline`) | par symbole : ticks + couverture + horloge → `BougieEnrichie` (bougie, indicateurs, `A_t`, jour Londres, statut OK/WARMUP/DATA_GAP) ou événement de trou | statuts, effacement après trou (R5, R6′) | **C11.1** préfixe causal ; trou puis récupération ; changement d'heure |
 
 ### 7.B `moteur_ema` (S01) — phase 3
 
@@ -371,9 +371,11 @@ pied d'audit et marqueur → **arrêt**.
 Lacune de skill possible : adaptateur Python MetaTrader5 (non couvert explicitement par une skill) → évaluée en
 phase 9 avec `xp-bots-skill-gap-detector`.
 
-## 10. Registre des points d'interprétation (validation de l'utilisateur requise)
+## 10. Registre des points d'interprétation (décidés par délégation de l'utilisateur en phase 3)
 
-Lecture littérale proposée ; chaque point devient un test nommé. Aucun n'est tranché sans accord.
+Lecture littérale proposée ; chaque point devient un test nommé. L'utilisateur a délégué les décisions le
+2026-11-05 (critère : potentiel de rentabilité, sans toucher `config/` ni le texte normatif) ; le registre faisant
+foi est `mcl/robot-ema-v3/INTERPRETATIONS.md`.
 
 | Id | Point | Proposition |
 |---|---|---|
@@ -382,18 +384,19 @@ Lecture littérale proposée ; chaque point devient un test nommé. Aucun n'est 
 | R3 | « Cotation non croisée » | Bid ≤ Ask (spread nul admis) ; Bid > Ask refusé |
 | R4 | Bougie sans aucun Bid en séance, couverture établie | Bougie invalide traitée comme un trou (`DATA_GAP`) |
 | R5 | Détection des trous en rejeu (aucun seuil dans C03) | Couverture déclarée par le manifeste des données ; sans manifeste, rejeu refusé ; aucun seuil inventé |
-| R6 | Reprise après trou inexpliqué | Récupération des ticks manquants puis recalcul depuis le préchargement ; sinon nouvelle initialisation journalisée |
+| R6′ | Reprise après trou inexpliqué (R6 révisé en phase 3) | Récupération des ticks manquants ; à défaut, recalcul sur les seules bougies valides, sans nouveau préchauffage (décidé par délégation, registre) |
 | R7 | Motif quand une contrainte native SL/TP invalide le plan (C06) | `PROTECTION_ERROR` |
 | R8 | Motif quand des positions externes empêchent la coordination (C07) | `ENVIRONMENT_NOT_READY` |
 | R9 | « Un tick adverse » (C10) | Un `tick_size` défavorable ajouté au prix du premier tick après le délai |
 | R10 | Devises par symbole (C05) et symboles par issuer (A06), absents des exports | Table codée depuis le texte, avec test de concordance sur la spécification |
 | R11 | Comparaison V1 (C10) : spécification V1 absente du dépôt | Rétention `N/A` jusqu'à fourniture de la V1 ; aucune conclusion économique |
-| R12 | Calendrier : le paquet Python MetaTrader5 n'expose aucune fonction Calendar | Choix en phase 6 : exportateur MQL5 minimal (CSV versionné vers `Common/Files`) ou calendrier fourni par le module fondamental |
+| R12 | Calendrier : le paquet Python MetaTrader5 n'expose aucune fonction Calendar | Décidé (phase 3, délégation) : exportateur MQL5 minimal du calendrier natif MT5 (CSV versionné vers `Common/Files`) ; calendrier livré par le module fondamental admis en alternative |
 | R13 | Transport des permissions fondamentales (non spécifié) | Fichiers JSONL écrits atomiquement dans un dossier dédié ; à confirmer avec le module externe |
 | R14 | Heure des ticks MT5 : documentation = UTC, rapports contradictoires (heure serveur) | Contrôle empirique obligatoire en qualification ; écart non expliqué → `ENVIRONMENT_NOT_READY` |
 | R15 | Réglages d'exploitation non normatifs (intervalle de scrutation ≤250 ms, chemins, `deployment_id`, magic) | Hors `config/` figé : gabarit `deploiement/environnement.exemple.json`, valeurs dans `runtime/` |
 | R16 | Six perturbations C10 | Scénarios nommés réservés au rejeu, jamais chargeables en `PAPER`/`DEMO` |
 | R17 | Priorité LONDON avant EMA sans robot 2 | Coordinateur générique testé avec des signaux `LONDON_V3` synthétiques |
+| R18 | Seuil RSI d'armement (S01.2 point 4) sans clé dédiée | Clés `long_signal_rsi_min` / `short_signal_rsi_max` (décidé en phase 3) |
 
 ## 11. Vérification
 

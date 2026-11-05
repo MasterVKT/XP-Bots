@@ -133,7 +133,8 @@ class NatureEvenementDonnees(StrEnum):
 
     TROU = 'TROU'
     RECUPERATION = 'RECUPERATION'
-    REINITIALISATION = 'REINITIALISATION'
+    RECALCUL = 'RECALCUL'  # trou irrécupérable : recalcul sur les seules bougies valides (R6′)
+    REINITIALISATION = 'REINITIALISATION'  # préchargement différent : nouvelle initialisation (C03.7)
     PRECHARGEMENT = 'PRECHARGEMENT'
 
 

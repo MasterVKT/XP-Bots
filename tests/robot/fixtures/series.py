@@ -38,3 +38,35 @@ def bougies_directes(symbole: str, debut_ms: int, nb: int, graine: int = 3) -> l
         l = min(o, c) - QUANTUM * alea.randint(0, 10)  # noqa: E741
         bougies.append(Bougie(symbole, M15 // 1000, debut_ms + i * M15, o, h, l, c, 3, True))
     return bougies
+
+
+def bougies_tendances(symbole: str, debut_ms: int, nb: int, graine: int = 1) -> list[Bougie]:
+    """Bougies valides consécutives à régimes de tendance (dérive haussière, baissière ou nulle), au quantum.
+
+    Série synthétique pour exercer la méthode S01 (armements, replis, reprises) ; aucun prix réel.
+    """
+    alea = random.Random(graine)
+    c, bougies, derive, reste = Decimal('1.10000'), [], 0, 0
+    for i in range(nb):
+        if reste == 0:
+            derive, reste = alea.choice((-6, 0, 6)), alea.randint(60, 400)
+        reste -= 1
+        o = c
+        c = o + QUANTUM * (derive + alea.randint(-40, 40))
+        h = max(o, c) + QUANTUM * alea.randint(0, 25)
+        l = min(o, c) - QUANTUM * alea.randint(0, 25)  # noqa: E741
+        bougies.append(Bougie(symbole, M15 // 1000, debut_ms + i * M15, o, h, l, c, 4, True))
+    return bougies
+
+
+def ticks_depuis_bougies(bougies: list[Bougie], spread: Decimal = Decimal('0.00008'),
+                         sequence_depart: int = 1) -> list[Tick]:
+    """Quatre ticks par bougie (O, extrême, autre extrême, C) strictement dans [T, T+900 s) : OHLC Bid reproduits."""
+    ticks, sequence = [], sequence_depart
+    for i, b in enumerate(bougies):
+        extremes = (b.l, b.h) if i % 2 else (b.h, b.l)
+        for decalage, bid in zip((1_000, 200_000, 400_000, 800_000), (b.o, *extremes, b.c)):
+            ticks.append(Tick(b.symbole, b.symbole + 'synth', Instant(b.ouverture_ms + decalage, sequence), bid,
+                              bid + spread))
+            sequence += 1
+    return ticks

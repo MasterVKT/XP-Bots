@@ -51,7 +51,7 @@ Cette simulation utilise un index temporaire et conserve l'index réel, la branc
 
 ## Robot 1 Triple EMA + RSI + repli (en construction)
 
-Le [plan d'implémentation](docs/architecture/PLAN_IMPLEMENTATION_ROBOT_EMA_V3.md) découpe la construction en phases ; l'avancement est suivi dans [le plan composite](mcl/robot-ema-v3/PLAN-MCL.md). Le squelette actuel rejoue une fixture de ticks synthétiques jusqu'au journal C09, avec le composant données et temps (bougies M15, indicateurs EMA/RSI/ATR, trous, préchauffage) : aucun ordre, aucun appel réseau, aucune donnée de prix réelle. Le journal est écrit sous `runtime/`, exclu de Git, et n'est jamais écrasé.
+Le [plan d'implémentation](docs/architecture/PLAN_IMPLEMENTATION_ROBOT_EMA_V3.md) découpe la construction en phases ; l'avancement est suivi dans [le plan composite](mcl/robot-ema-v3/PLAN-MCL.md). Le squelette actuel rejoue une fixture de ticks synthétiques jusqu'au journal C09, avec le composant données et temps (bougies M15, indicateurs EMA/RSI/ATR, trous, préchauffage) et le moteur de la méthode S01 (signaux identiques à la référence, refusés tant que le fondamental et l'exécution manquent) : aucun ordre, aucun appel réseau, aucune donnée de prix réelle. Le journal est écrit sous `runtime/`, exclu de Git, et n'est jamais écrasé.
 
 ```powershell
 python tools/run_robot_tests.py

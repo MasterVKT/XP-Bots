@@ -41,8 +41,8 @@ Point d'insertion dans le squelette : stratégie neutre NO_SETUP du squelette (v
 | `conditions_repli` | Tester le contexte d'armement, la validité du repli et le contact avec la zone EMA15–EMA50. | valeurs de la bougie et indicateurs, A_t > 0 → booléens selon S01.2 points 4 à 6 | parametres_ema |
 | `bougie_reprise` | Tester la bougie de reprise de S01.3. | OHLC Bid, TR, E15, RSI, A_t > 0 → vrai seulement si toutes les conditions S01.3 du sens sont vraies | parametres_ema |
 | `stop_objectif_ema` | Calculer buffer, B_SL non arrondi, refus au-delà de 2,50 A et multiple d'objectif. | sens, clôture, extrême du repli signal compris, A_t, tick_size Decimal → B_SL sur l'échelle Bid, distance sens·(C−B_SL), drapeau trop large ; k = 1,5 | parametres_ema |
-| `machine_etats_ema` | Gérer armement, contact, repli de 1 à 8 bougies, cooldown, position possédée et compteur journalier par symbole. | BougieEnrichie au statut OK ; issues ; instants de sortie → état (IDLE, ARMED_*, PULLBACK_*, COOLDOWN, OWNED_POSITION) et événement AUCUN ou REPRISE(sens, extrêmes, âge) | tendance_ema, conditions_repli, bougie_reprise, amont-noyau |
-| `moteur_ema` | Produire à chaque clôture admissible un signal ou un motif technique et appliquer l'issue reçue. | BougieEnrichie, tick_size, issues → Signal ou motif, état du détecteur et niveaux structurels | machine_etats_ema, stop_objectif_ema, amont-donnees-temps, stockage-etat |
+| `machine_etats_ema` | Gérer armement, contact, repli de 1 à 8 bougies, cooldown, position possédée et compteur journalier par symbole. | observation de clôture ; issues ; instants de sortie → état (IDLE, ARMED_*, PULLBACK_*, COOLDOWN, OWNED_POSITION, ATTENTE_ISSUE) et transition (REPRISE avec sens, extrêmes, âge) | tendance_ema, conditions_repli, bougie_reprise, parametres_ema, amont-noyau |
+| `moteur_ema` | Produire à chaque clôture admissible un signal ou un motif technique et appliquer l'issue reçue. | BougieEnrichie, tick_size, issues → Signal ou motif, état du détecteur et niveaux structurels | machine_etats_ema, stop_objectif_ema, parametres_ema, amont-noyau, amont-donnees-temps, stockage-etat |
 
 Question-test : « constructible et testable si rien d'autre n'existait ? »
 
@@ -58,15 +58,15 @@ Question-test : « constructible et testable si rien d'autre n'existait ? »
 
 ## 4. Étape 3 — Graphe de dépendances
 
-- `parametres_ema` → amont-noyau
+- `parametres_ema` → amont-noyau, amont-donnees-temps (genres, `FonctionNonImplementee`, `analyser_heure`)
 - `tendance_ema` → parametres_ema
 - `conditions_repli` → parametres_ema
 - `bougie_reprise` → parametres_ema
 - `stop_objectif_ema` → parametres_ema
-- `machine_etats_ema` → tendance_ema, conditions_repli, bougie_reprise, amont-noyau
-- `moteur_ema` → machine_etats_ema, stop_objectif_ema, amont-donnees-temps, stockage-etat
+- `machine_etats_ema` → tendance_ema, conditions_repli, bougie_reprise, parametres_ema, amont-noyau
+- `moteur_ema` → machine_etats_ema, stop_objectif_ema, parametres_ema, amont-noyau, amont-donnees-temps, stockage-etat
 
-- **Contrôle de divergence** : `mcl.py analyser --ecrire` puis `analyser` (2026-11-05) : profondeurs proposées identiques aux profondeurs déclarées, zéro divergence.
+- **Contrôle de divergence** : `mcl.py analyser --ecrire` puis `analyser` (2026-11-05) : profondeurs proposées identiques aux profondeurs déclarées, zéro divergence ; dépendances réelles ajoutées à la carte en phase 3 avant chaque construction (`amont-noyau`, `amont-donnees-temps`, `parametres_ema`), `analyser` de nouveau sans divergence.
 - Regroupements retenus (unités indépendantes de même profondeur réunies dans une couche) : aucun.
 - **Amont figé** (artefacts antérieurs, déclarés comme frontières autorisées partout) : amont-noyau, amont-donnees-temps.
 - **Frontières externes** : stockage-etat.
@@ -105,13 +105,13 @@ Question-test : « constructible et testable si rien d'autre n'existait ? »
 
 | Couche | Tests cat. 1 | Tests cat. 2 | Gate | Statut |
 |---|---|---|---|---|
-| 0 | clés du bloc ema, drapeaux non implémentés refusés | — | `python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossier mcl/moteur-ema gate --couche 0 --unitaire "python tools/run_robot_tests.py --artefact moteur_ema --couche 0 --categorie 1" --regression "python tools/run_robot_tests.py" --regression "python tools/verify_project.py"` puis `figer --couche 0` | à construire |
-| 1a | EMA égales ou pente EMA50 nulle : aucun armement (C11.2, S01.6) ; inégalités strictes | via 2 | `python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossier mcl/moteur-ema gate --couche 1a --unitaire "python tools/run_robot_tests.py --artefact moteur_ema --couche 1a --categorie 1" --integration "python tools/run_robot_tests.py --artefact moteur_ema --couche 1a --categorie 2" --regression "python tools/run_robot_tests.py" --regression "python tools/verify_project.py"` puis `figer --couche 1a` | à construire |
-| 1b | RSI de repli 40 admis ; clôture à EMA50−0,25A exactement admise ; mèche sous EMA50 sans clôture au-delà n'annule pas ; contact aux bornes | via 2 | `python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossier mcl/moteur-ema gate --couche 1b --unitaire "python tools/run_robot_tests.py --artefact moteur_ema --couche 1b --categorie 1" --integration "python tools/run_robot_tests.py --artefact moteur_ema --couche 1b --categorie 2" --regression "python tools/run_robot_tests.py" --regression "python tools/verify_project.py"` puis `figer --couche 1b` | à construire |
-| 1c | RSI 49,999 refusé, 50 admis ; O=C refusé ; TR > 2,5A refusé ; 0,65 exactement admis ; R = 0 refusé | via 2 | `python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossier mcl/moteur-ema gate --couche 1c --unitaire "python tools/run_robot_tests.py --artefact moteur_ema --couche 1c --categorie 1" --integration "python tools/run_robot_tests.py --artefact moteur_ema --couche 1c --categorie 2" --regression "python tools/run_robot_tests.py" --regression "python tools/verify_project.py"` puis `figer --couche 1c` | à construire |
-| 1d | S01.5 : B_SL 1,09945 et 1,10055 ; extrême de la bougie de signal inclus ; plancher 0,80A ; STOP_TOO_WIDE au-delà de 2,5A | via 3 | `python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossier mcl/moteur-ema gate --couche 1d --unitaire "python tools/run_robot_tests.py --artefact moteur_ema --couche 1d --categorie 1" --integration "python tools/run_robot_tests.py --artefact moteur_ema --couche 1d --categorie 2" --regression "python tools/run_robot_tests.py" --regression "python tools/verify_project.py"` puis `figer --couche 1d` | à construire |
-| 2 | transitions T1 à T12 une par une (plan maître 7.B), R1, R2 | équivalence avec reference.technical.ema_setups sur séries synthétiques | `python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossier mcl/moteur-ema gate --couche 2 --unitaire "python tools/run_robot_tests.py --artefact moteur_ema --couche 2 --categorie 1" --integration "python tools/run_robot_tests.py --artefact moteur_ema --couche 2 --categorie 2" --regression "python tools/run_robot_tests.py" --regression "python tools/verify_project.py"` puis `figer --couche 2` | à construire |
-| 3 | motifs et ordre des traitements ; compteur de six fills (T11) ; persistance | bloc A+B réel : S01.6 complet, C11.4, causalité | `python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossier mcl/moteur-ema gate --couche 3 --unitaire "python tools/run_robot_tests.py --artefact moteur_ema --couche 3 --categorie 1" --integration "python tools/run_robot_tests.py --artefact moteur_ema --couche 3 --categorie 2" --regression "python tools/run_robot_tests.py" --regression "python tools/verify_project.py"` puis `figer --couche 3` | à construire |
+| 0 | clés du bloc ema, drapeaux non implémentés refusés | — | `python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossier mcl/moteur-ema gate --couche 0 --unitaire "python tools/run_robot_tests.py --artefact moteur_ema --couche 0 --categorie 1" --regression "python tools/run_robot_tests.py" --regression "python tools/verify_project.py"` puis `figer --couche 0` | figée (phase 3) |
+| 1a | EMA égales ou pente EMA50 nulle : aucun armement (C11.2, S01.6) ; inégalités strictes | via 2 | `python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossier mcl/moteur-ema gate --couche 1a --unitaire "python tools/run_robot_tests.py --artefact moteur_ema --couche 1a --categorie 1" --integration "python tools/run_robot_tests.py --artefact moteur_ema --couche 1a --categorie 2" --regression "python tools/run_robot_tests.py" --regression "python tools/verify_project.py"` puis `figer --couche 1a` | figée (phase 3) |
+| 1b | RSI de repli 40 admis ; clôture à EMA50−0,25A exactement admise ; mèche sous EMA50 sans clôture au-delà n'annule pas ; contact aux bornes | via 2 | `python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossier mcl/moteur-ema gate --couche 1b --unitaire "python tools/run_robot_tests.py --artefact moteur_ema --couche 1b --categorie 1" --integration "python tools/run_robot_tests.py --artefact moteur_ema --couche 1b --categorie 2" --regression "python tools/run_robot_tests.py" --regression "python tools/verify_project.py"` puis `figer --couche 1b` | figée (phase 3) |
+| 1c | RSI 49,999 refusé, 50 admis ; O=C refusé ; TR > 2,5A refusé ; 0,65 exactement admis ; R = 0 refusé | via 2 | `python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossier mcl/moteur-ema gate --couche 1c --unitaire "python tools/run_robot_tests.py --artefact moteur_ema --couche 1c --categorie 1" --integration "python tools/run_robot_tests.py --artefact moteur_ema --couche 1c --categorie 2" --regression "python tools/run_robot_tests.py" --regression "python tools/verify_project.py"` puis `figer --couche 1c` | figée (phase 3) |
+| 1d | S01.5 : B_SL 1,09945 et 1,10055 ; extrême de la bougie de signal inclus ; plancher 0,80A ; STOP_TOO_WIDE au-delà de 2,5A | via 3 | `python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossier mcl/moteur-ema gate --couche 1d --unitaire "python tools/run_robot_tests.py --artefact moteur_ema --couche 1d --categorie 1" --integration "python tools/run_robot_tests.py --artefact moteur_ema --couche 1d --categorie 2" --regression "python tools/run_robot_tests.py" --regression "python tools/verify_project.py"` puis `figer --couche 1d` | figée (phase 3) |
+| 2 | transitions T1 à T12 une par une (plan maître 7.B), R1, R2 | équivalence avec reference.technical.ema_setups sur séries synthétiques | `python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossier mcl/moteur-ema gate --couche 2 --unitaire "python tools/run_robot_tests.py --artefact moteur_ema --couche 2 --categorie 1" --integration "python tools/run_robot_tests.py --artefact moteur_ema --couche 2 --categorie 2" --regression "python tools/run_robot_tests.py" --regression "python tools/verify_project.py"` puis `figer --couche 2` | figée (phase 3) |
+| 3 | motifs et ordre des traitements ; compteur de six fills (T11) ; persistance | bloc A+B réel : S01.6 complet, C11.4, causalité | `python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossier mcl/moteur-ema gate --couche 3 --unitaire "python tools/run_robot_tests.py --artefact moteur_ema --couche 3 --categorie 1" --integration "python tools/run_robot_tests.py --artefact moteur_ema --couche 3 --categorie 2" --regression "python tools/run_robot_tests.py" --regression "python tools/verify_project.py"` puis `figer --couche 3` | figée (phase 3) |
 
 ## 10. Étape 8 — Checkpoints
 
@@ -124,4 +124,10 @@ Question-test : « constructible et testable si rien d'autre n'existait ? »
 
 ## 12. Bilan
 
-- À compléter à la clôture de l'artefact (`mcl.py rapport`).
+- Enveloppe construite et figée le 2026-11-05 (phase 3) : 7 gates de couche verts (0, 1a, 1b, 1c, 1d, 2, 3),
+  2 checkpoints, aucun défigeage (`mcl.py --dossier mcl/moteur-ema rapport`) ; gate global tracé au journal.
+- Garanti : le bloc {0 → 3} applique S01 avec les seuils de `config/` ; ses configurations sont identiques à
+  `reference.technical.ema_setups` sur des séries synthétiques à tendances, nourri par la référence (couche 2) comme
+  par le vrai pipeline `donnees-temps` (couche 3) ; R1, R2, R18 et T1–T12 sont des tests nommés.
+- Non garanti : la rentabilité (aucune évaluation C10), le comportement face aux données réelles du courtier
+  (phases 8–9) ; le fill, la sortie et le refus réels arrivent avec `execution-coordinateur` (phases 4–5).

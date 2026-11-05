@@ -1,28 +1,43 @@
 # Contrat de la couche 0 — parametres-ema (artefact `moteur-ema`)
 
-- **Statut** : esquisse (phase 0, 2026-11-05) ; finalisation juste avant la construction de la couche (phase(s) 3), puis gel par `mcl.py figer`.
-- **Consommateurs cartographiés** : couches 1a, 1b, 1c, 1d
-- **Dépend de** : couches aucune (réelles et figées) ; amont figé : amont-noyau ; frontières externes doublées : aucune
+- **Statut** : finalisé (phase 3, 2026-11-05) ; gel tracé dans `mcl/moteur-ema/journal.jsonl`.
+- **Consommateurs cartographiés** : couches 1b, 1c, 1d, 2, 3 (1a n'en a pas besoin : comparaison pure).
+- **Dépend de** : aucune couche interne ; amont figé : `amont-noyau` (`BundleTechnique`, `ConfigurationInvalide`,
+  `figer`), `amont-donnees-temps` couche 0 (`GENRES`, `FonctionNonImplementee`, `analyser_heure`) ; frontières
+  externes : aucune.
 - **Module** : `src/xpbots/moteur_ema/c0_parametres.py`
-- **Sources normatives** : S01.1 à S01.6, C03.8–C03.11, C06 (conversion), A07 ; plan maître, section 7.B
+- **Sources normatives** : C02 (bloc `ema`, bloc `common`), S01.1 à S01.4, C03 points 8 et 9 ; R18.
 
 ---
 
 Unité : parametres_ema
-Responsabilité : Charger et valider le bloc ema de la configuration figée.
-Signature : charger_parametres_ema(bundle) -> ParametresEMA
-Entrée : bundle JSON strict
-Sortie : objet immuable du bloc ema
-Effets de bord : aucun
-Erreurs, exceptions : ConfigurationInvalide ; FonctionNonImplementee si un drapeau prend une valeur non prise en charge (h1_directional_filter_enabled, require_signal_touch, require_directional_body)
+Responsabilité : Charger et valider le bloc `ema` de la configuration figée et les quatre seuils `common` de S01.
+Signature : `charger_parametres_ema(bundle) -> ParametresEMA` ; `ParametresEMA(bloc, common, empreinte)` ;
+`valider_bloc_ema(bloc) -> list[str]` ; constantes `SCHEMA_EMA` (23 clés → genre), `VARIANTES_IMPLEMENTEES`,
+`CLES_COMMON`.
+Entrée : bundle technique strict (`config/parametres_figes_v3.json`).
+Sortie : objet en lecture seule exposant, sans aucune valeur recopiée : `strategie_id`, `periodes_ema` (rapide,
+moyenne, lente), `periode_rsi`, `decalage_pente`, `rsi_repli_long_min`, `rsi_repli_court_max`,
+`rsi_signal_long_min`, `rsi_signal_court_max` (aussi seuils d'armement, R18), `depassement_ema_lente_atr`,
+`age_max_repli`, `position_cloture_min`, `clotures_cooldown`, `entrees_max_jour`, `debut_session`,
+`fin_entrees_exclue`, `sortie_forcee` (textes `HH:MM:SS`), `heures` (trois `time`), `multiple_objectif` (flottant),
+`tampon_structurel_atr`, `stop_min_atr`, `stop_max_atr`, `tr_max_atr` (bloc `common`), `empreinte`, `valeur(cle)`.
+Effets de bord : aucun.
+Erreurs, exceptions : `ConfigurationInvalide` (clé manquante ou en trop, type faux — un entier n'est pas un
+booléen, un flottant n'est pas un entier —, trois périodes EMA strictement croissantes non respectées, fraction de
+clôture hors ]0, 1], fenêtre vide, seuil `common` absent ou non positif, clé absente à la lecture) ;
+`FonctionNonImplementee` si une variante diffère de `SMA_N`, `WILDER`, `EMA15_TO_EMA50`, corps directionnel
+exigé, contact du signal non exigé, filtre H1 désactivé (le robot refuse de démarrer).
 
 ---
 
 ## Spécification exécutable
 
-- Catégorie 1 (`tests/robot/moteur_ema/test_c0_cat1_*.py`) : clés du bloc ema, drapeaux non implémentés refusés.
-- Catégorie 2 (`tests/robot/moteur_ema/test_c0_cat2_*.py`) : —.
+- Catégorie 1 (`tests/robot/moteur_ema/test_c0_cat1_*.py`) : 23 clés exactes, valeurs lues dans `config/`,
+  clés manquantes/en trop/mal typées, lecture seule, variantes non implémentées refusées, périodes, fenêtre,
+  fraction, seuils `common` obligatoires.
+- Catégorie 2 : aucune (feuille interne ; intégration couverte par les couches 2 et 3).
 
 ## Comportements documentés (loi de Hyrum)
 
-Les consommateurs ne codent que contre ce qui est écrit ici. Les observables non documentés (ordre d'itération, texte exact des messages) ne sont pas garantis. Toute valeur normative est lue dans `config/`, jamais recopiée.
+Les consommateurs ne codent que contre ce qui est écrit ici. Le texte des messages d'erreur n'est pas garanti.

@@ -10,12 +10,13 @@ from robot.outils import FIXTURE_MANIFESTE, FIXTURE_TICKS, signal_valide
 from xpbots.app.segments_minimaux import (SCENARIO_TECHNICAL_CONTROL_NEUTRAL, ContexteIANeutre,
                                           CoordinateurRefus, EcrivainJournalJSONL,
                                           ErreurDonneesFixture, ErreurJournal, ExecutionPapierMinimale,
-                                          FondamentalAbsent, IssueInattendue, LecteurFixtureCSV, StrategieNeutre)
+                                          FondamentalAbsent, LecteurFixtureCSV, StockageMemoire)
 from xpbots.noyau.config import charger_bundle_technique
-from xpbots.noyau.decisions import (CleIntention, EtatContexteIA, MotifRefus, Refuse, ResultatTechnique, Sens)
+from xpbots.noyau.decisions import EtatContexteIA, MotifRefus, ResultatTechnique, Sens
 from xpbots.noyau.journal_schema import ConstructeurEnregistrements, EnregistrementInvalide, Mode
 from xpbots.noyau.marche import Bougie, BougieEnrichie, EvenementDonnees, NatureEvenementDonnees, StatutBougie
-from xpbots.noyau.ports import ContexteIA, ControleFondamental, Journal, SourceTicksHistoriques, Strategie
+from xpbots.noyau.ports import (ContexteIA, ControleFondamental, Journal, SourceTicksHistoriques, Stockage,
+                               Strategie)
 
 T = 1793779200000  # 08:00:00.000 UTC
 M15 = 900_000
@@ -23,10 +24,10 @@ ENTETE = 'canonical_symbol,broker_symbol,time_utc_ms,sequence,bid,ask\n'
 
 
 def manifeste(**changements):
-    m = {'schema': 'xp-fixture-manifeste-v2', 'origine': 'synthetique', 'fuseau': 'UTC', 'description': 'test',
+    m = {'schema': 'xp-fixture-manifeste-v3', 'origine': 'synthetique', 'fuseau': 'UTC', 'description': 'test',
          'fin_donnees_ms': T + 4 * M15,
          'symboles': {'EURUSD': {'symbole_courtier': 'EURUSDsynth', 'couverture': [[T, T + 4 * M15]],
-                                 'seances': [[T, T + 4 * M15]]}}}
+                                 'seances': [[T, T + 4 * M15]], 'tick_size': '0.00001'}}}
     m.update(changements)
     return m
 
@@ -53,6 +54,7 @@ class TestLecteurFixture(AvecDossier):
         ticks = list(lecteur.ticks())
         self.assertEqual(len(ticks), 933)
         self.assertEqual(lecteur.symboles(), ('EURUSD', 'GBPUSD'))
+        self.assertEqual(lecteur.tick_size('EURUSD'), Decimal('0.00001'))
         self.assertEqual(len(lecteur.couverture('GBPUSD')), 2)
         self.assertEqual(lecteur.seances('GBPUSD'), ((generateur_ticks.DEBUT_MS, generateur_ticks.FIN_MS),))
         self.assertTrue(all(a.instant < b.instant for a, b in zip(ticks, ticks[1:])))
@@ -83,17 +85,20 @@ class TestLecteurFixture(AvecDossier):
             list(LecteurFixtureCSV(ticks, mani).ticks())
 
     def test_manifestes_refuses(self):
-        def symbole(couverture, seances=((T, T + 4 * M15),)):
+        def symbole(couverture, seances=((T, T + 4 * M15),), tick_size='0.00001'):
             return {'EURUSD': {'symbole_courtier': 'X', 'couverture': [list(c) for c in couverture],
-                               'seances': [list(s) for s in seances]}}
+                               'seances': [list(s) for s in seances], 'tick_size': tick_size}}
 
-        for m in (manifeste(fuseau='Europe/London'), manifeste(schema='xp-fixture-manifeste-v1'),
+        for m in (manifeste(fuseau='Europe/London'), manifeste(schema='xp-fixture-manifeste-v2'),
+                  manifeste(symboles=symbole(((T, T + M15),), tick_size=0.00001)),
+                  manifeste(symboles=symbole(((T, T + M15),), tick_size='0.00000')),
+                  manifeste(symboles=symbole(((T, T + M15),), tick_size='1e-5')),
                   dict(manifeste(), extra=1), manifeste(symboles=symbole(((T + 10, T),))),
                   manifeste(symboles=symbole(((T, T + M15), (T + 10, T + 2 * M15)))),
                   manifeste(symboles=symbole(((T, T + 9 * M15),))),
                   manifeste(symboles=symbole(((T, T + M15),), ((T, T + 9 * M15),))),
                   manifeste(symboles={'EURUSD': {'symbole_courtier': 'X', 'couverture': [[T, T + M15]]}}),
-                  '{"schema":"xp-fixture-manifeste-v2","schema":"x"}'):
+                  '{"schema":"xp-fixture-manifeste-v3","schema":"x"}'):
             with self.subTest(m=m), self.assertRaises(ErreurDonneesFixture):
                 self.lecteur([], m)
 
@@ -104,15 +109,15 @@ def bougie_ok(valide=True):
 
 
 class TestSegmentsDeControle(unittest.TestCase):
-    def test_strategie_neutre(self):
-        s = StrategieNeutre('EMA_V3')
-        self.assertIsInstance(s, Strategie)
-        self.assertIs(s.sur_cloture(bougie_ok()).motif, MotifRefus.NO_SETUP)
-        self.assertIs(s.sur_cloture(bougie_ok(False)).motif, MotifRefus.DATA_GAP)
-        self.assertIs(s.sur_cloture(BougieEnrichie(bougie_ok().bougie, StatutBougie.WARMUP)).motif,
-                      MotifRefus.WARMUP)
-        with self.assertRaises(IssueInattendue):
-            s.appliquer_issue(CleIntention.du_signal('d', signal_valide()), Refuse(MotifRefus.NO_SETUP, 1))
+    def test_stockage_memoire(self):
+        s = StockageMemoire()
+        self.assertIsInstance(s, Stockage)
+        self.assertIsNone(s.lire('moteur_ema/EMA_V3/EURUSD'))
+        s.ecrire('moteur_ema/EMA_V3/EURUSD', b'{}')
+        self.assertEqual(s.lire('moteur_ema/EMA_V3/EURUSD'), b'{}')
+        for args in (('', b'x'), ('cle', 'texte')):
+            with self.subTest(args=args), self.assertRaises(ValueError):
+                s.ecrire(*args)
 
     def test_fondamental_absent_bloque_par_defaut(self):
         f = FondamentalAbsent(Mode.PAPER)
@@ -160,7 +165,7 @@ class StrategieEmettrice:
     strategie_id = 'EMA_V3'
 
     def __init__(self):
-        self.issues = []
+        self.issues, self.evenements = [], []
         self._emis = False
 
     def sur_cloture(self, bougie):
@@ -172,6 +177,12 @@ class StrategieEmettrice:
 
     def appliquer_issue(self, cle, issue):
         self.issues.append((cle, issue))
+
+    def notifier_sortie(self, symbole, instant_ms):
+        raise AssertionError('aucune position dans le squelette')
+
+    def sur_evenement_donnees(self, evenement):
+        self.evenements.append(evenement)
 
 
 class JournalMemoire:
@@ -211,16 +222,18 @@ class TestCoordinateurRefus(unittest.TestCase):
         self.assertEqual(intention['contexte_ia']['etat'], 'NEUTRAL')
         self.assertEqual(intention['fondamental']['scenario'], 'TECHNICAL_CONTROL_NEUTRAL')
 
-    def test_evenement_de_donnees_journalise(self):
-        journal = JournalMemoire()
+    def test_evenement_de_donnees_journalise_puis_transmis(self):
+        journal, strategie = JournalMemoire(), StrategieEmettrice()
+        self.assertIsInstance(strategie, Strategie)
         constructeur = ConstructeurEnregistrements('dep', Mode.PAPER, charger_bundle_technique())
-        coordinateur = CoordinateurRefus('dep', [StrategieNeutre('EMA_V3')], FondamentalAbsent(Mode.PAPER),
+        coordinateur = CoordinateurRefus('dep', [strategie], FondamentalAbsent(Mode.PAPER),
                                          ContexteIANeutre(), ExecutionPapierMinimale(), journal, constructeur)
-        coordinateur.sur_evenement_donnees(EvenementDonnees('EURUSD', NatureEvenementDonnees.TROU, T + M15, T,
-                                                            T + M15, {'motif': 'SANS_BID'}))
+        evenement = EvenementDonnees('EURUSD', NatureEvenementDonnees.TROU, T + M15, T, T + M15, {'motif': 'SANS_BID'})
+        coordinateur.sur_evenement_donnees(evenement)
         ligne, = journal.lignes
         self.assertEqual((ligne['type'], ligne['evenement'], ligne['debut_utc'], ligne['details']),
                          ('DONNEES', 'TROU', '2026-11-04T08:00:00.000Z', {'motif': 'SANS_BID'}))
+        self.assertEqual(strategie.evenements, [evenement])  # la méthode efface ses replis (C03.6)
 
     def test_veto_ia_ajoute_seulement_un_refus(self):
         class ContexteBloquant:

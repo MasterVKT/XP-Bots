@@ -1,4 +1,4 @@
-"""Couche 3 — `pipeline_marche` : statuts, préchargement, trous, récupération, réinitialisation (R4 à R6), reprise."""
+"""Couche 3 — `pipeline_marche` : statuts, préchargement, trous, récupération, recalcul (R4, R5, R6′), reprise."""
 import unittest
 
 from robot.fixtures.series import DEBUT_LUNDI, M15, ticks_bougies
@@ -81,33 +81,46 @@ class TestPrechauffage(unittest.TestCase):
 
 
 class TestTrous(unittest.TestCase):
-    def test_trou_de_couverture_puis_reinitialisation(self):
+    def test_trou_de_couverture_puis_recalcul(self):
         debut, fin = T0 + 15 * M15 + 100, T0 + 15 * M15 + 200
         banc = Banc().jouer(sans_fenetre(ticks(), debut, fin), [(debut, False), (fin, True)], T0 + 40 * M15)
         trou, = banc.evenements(NatureEvenementDonnees.TROU)
         self.assertEqual((trou.debut_ms, trou.fin_ms, trou.details['motif']), (T0 + 15 * M15, T0 + 16 * M15,
                                                                                'COUVERTURE'))
-        reinit, = banc.evenements(NatureEvenementDonnees.REINITIALISATION)
-        self.assertEqual(reinit.details['motif'], 'RECUPERATION_INDISPONIBLE')
+        recalcul, = banc.evenements(NatureEvenementDonnees.RECALCUL)
+        self.assertEqual((recalcul.details['motif'], recalcul.details['bougies']), ('RECUPERATION_INDISPONIBLE', 0))
+        self.assertEqual(banc.evenements(NatureEvenementDonnees.REINITIALISATION), [])
         statuts = banc.statuts()
         self.assertEqual(statuts[15], StatutBougie.DATA_GAP)
-        self.assertEqual(statuts[16:25], [StatutBougie.WARMUP] * 9)  # nouveau préchauffage (R6)
-        self.assertEqual(statuts[25], StatutBougie.OK)
-        self.assertEqual(len(banc.evenements(NatureEvenementDonnees.PRECHARGEMENT)), 2)
+        self.assertEqual(statuts[16:], [StatutBougie.OK] * 24)  # aucun nouveau préchauffage (R6′)
+        self.assertEqual(len(banc.evenements(NatureEvenementDonnees.PRECHARGEMENT)), 1)
+        self.assertEqual(banc.pipeline.etat.compte, 39)
+
+    def test_recalcul_identique_aux_seules_bougies_valides(self):
+        # Référence : mêmes ticks, l'intervalle perdu déclaré fermé officiellement (aucun trou) ; R6′ ne réinvente rien.
+        debut, fin = T0 + 15 * M15 + 100, T0 + 15 * M15 + 200
+        banc = Banc().jouer(sans_fenetre(ticks(), debut, fin), [(debut, False), (fin, True)], T0 + 40 * M15)
+        calendrier = seances(ouvertures=((T0, T0 + 15 * M15), (T0 + 16 * M15, T0 + 400 * M15)))
+        reference = Banc(calendrier=calendrier).jouer(sans_fenetre(ticks(), T0 + 15 * M15, T0 + 16 * M15),
+                                                      fin=T0 + 40 * M15)
+        self.assertEqual(depuis(banc.bougies(), T0 + 16 * M15), depuis(reference.bougies(), T0 + 16 * M15))
+        self.assertEqual(banc.pipeline.etat.exporter(), reference.pipeline.etat.exporter())
 
     def test_intervalle_sans_bid_r4(self):
         banc = Banc().jouer(sans_fenetre(ticks(), T0 + 12 * M15, T0 + 13 * M15), fin=T0 + 40 * M15)
         trou, = banc.evenements(NatureEvenementDonnees.TROU)
         self.assertEqual(trou.details['motif'], 'SANS_BID')
         self.assertEqual(len(banc.bougies()), 39)  # aucun Bid : aucune bougie pour l'intervalle
-        self.assertEqual(len(banc.evenements(NatureEvenementDonnees.REINITIALISATION)), 1)
-        self.assertEqual(banc.bougies()[12].statut, StatutBougie.WARMUP)
-        self.assertEqual(banc.pipeline.etat.compte, 40 - 13)
+        self.assertEqual(len(banc.evenements(NatureEvenementDonnees.RECALCUL)), 1)
+        self.assertEqual(banc.bougies()[12].statut, StatutBougie.OK)
+        self.assertEqual(banc.pipeline.etat.compte, 39)
 
     def test_trou_pendant_le_prechauffage(self):
         banc = Banc().jouer(sans_fenetre(ticks(30), T0 + 4 * M15, T0 + 5 * M15), fin=T0 + 30 * M15)
         prechargement, = banc.evenements(NatureEvenementDonnees.PRECHARGEMENT)
-        self.assertEqual(prechargement.debut_ms, T0 + 5 * M15)  # le préchargement repart après le trou
+        # Le préchargement continue sur les bougies valides : dix bougies, l'intervalle perdu exclu (R6′).
+        self.assertEqual((prechargement.debut_ms, prechargement.fin_ms, prechargement.details['nombre']),
+                         (T0, T0 + 11 * M15, 10))
 
     def test_bougie_complete_en_trou_sans_couverture(self):
         calendrier = seances(ouvertures=((T0, T0 + 5 * M15 + M15 // 2), (T0 + 6 * M15, T0 + 400 * M15)))
@@ -154,7 +167,27 @@ class TestRecuperation(unittest.TestCase):
             banc = Banc(recuperation).jouer(sans_fenetre(complets, debut, fin), [(debut, False), (fin, True)],
                                             T0 + 40 * M15)
             with self.subTest(motif=motif):
-                self.assertEqual(banc.evenements(NatureEvenementDonnees.REINITIALISATION)[0].details['motif'], motif)
+                recalcul, = banc.evenements(NatureEvenementDonnees.RECALCUL)
+                self.assertEqual(recalcul.details['motif'], motif)
+                self.assertEqual(banc.pipeline.etat.compte, 39)
+
+    def test_recuperation_partielle_r6_prime(self):
+        # Trou sur trois intervalles ; l'historique ne rend que l'intervalle du milieu : il est appliqué, seul.
+        complets = ticks()
+        debut, fin = T0 + 15 * M15 + 100, T0 + 17 * M15 + 200
+        milieu = (T0 + 16 * M15, T0 + 17 * M15)
+        banc = Banc(lambda s, d, f: [t for t in complets if milieu[0] <= t.instant.ms < milieu[1]]).jouer(
+            sans_fenetre(complets, debut, fin), [(debut, False), (fin, True)], T0 + 40 * M15)
+        recalcul, = banc.evenements(NatureEvenementDonnees.RECALCUL)
+        self.assertEqual((recalcul.debut_ms, recalcul.fin_ms), (T0 + 15 * M15, T0 + 18 * M15))
+        self.assertEqual((recalcul.details['motif'], recalcul.details['bougies']), ('HISTORIQUE_INCOMPLET', 1))
+        self.assertEqual(banc.pipeline.etat.compte, 38)
+        calendrier = seances(ouvertures=((T0, T0 + 15 * M15), (T0 + 16 * M15, T0 + 17 * M15),
+                                         (T0 + 18 * M15, T0 + 400 * M15)))
+        reference = Banc(calendrier=calendrier).jouer(
+            sans_fenetre(sans_fenetre(complets, T0 + 15 * M15, T0 + 16 * M15), T0 + 17 * M15, T0 + 18 * M15),
+            fin=T0 + 40 * M15)
+        self.assertEqual(banc.pipeline.etat.exporter(), reference.pipeline.etat.exporter())
 
 
 class TestReprise(unittest.TestCase):

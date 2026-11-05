@@ -1,6 +1,7 @@
 # Contrat de la couche 3 — pipeline-marche (artefact `donnees-temps`, enveloppe)
 
-- **Statut** : finalisé (phase 2, 2026-11-05) ; gel tracé dans `mcl/donnees-temps/journal.jsonl`.
+- **Statut** : finalisé (phase 2, 2026-11-05) ; modifié par le défigeage R6′ du 2026-11-05
+  (`mcl/donnees-temps/defigeages/2026-11-05-couche-3-r6.md`) ; gels tracés dans `mcl/donnees-temps/journal.jsonl`.
 - **Consommateurs cartographiés** : aucune couche interne (enveloppe) ; hors artefact : `app` (rejeu, boucle
   paper), `moteur-ema` (bougies enrichies), `execution-coordinateur` (journal des événements de données),
   `journal-rejeu`.
@@ -9,8 +10,8 @@
   `EvenementDonnees`) ; frontières externes : aucune (la récupération d'historique est une fonction fournie par
   l'appelant : flux réel en phase 9, absente en rejeu).
 - **Module** : `src/xpbots/donnees_temps/c3_pipeline.py`
-- **Sources normatives** : C03 points 1 à 7 ; R4, R5 et R6 du registre d'interprétation (appliqués sur la lecture
-  proposée) ; plan maître 7.A ; cas C11.1, C11.3, C11.4.
+- **Sources normatives** : C03 points 1 à 7 ; R4, R5 et R6′ du registre d'interprétation (décidés) ; plan maître
+  7.A ; cas C11.1, C11.3, C11.4.
 
 ---
 
@@ -30,14 +31,18 @@ Sortie, dans l'ordre des clôtures :
   l'atteint ;
 - intervalle attendu incomplet (`COUVERTURE` ou `SANS_BID`, R4) : événement `TROU`, puis la bougie au statut
   `DATA_GAP` si elle existe ; les indicateurs ne sont pas mis à jour ; l'état d'avant le trou est conservé ;
-- en trou, à chaque clôture où la couverture est établie : tentative de récupération de `[début du trou, clôture)`.
-  Historique complet et cohérent : l'état d'avant le trou est restauré, les bougies reconstruites sont appliquées,
-  événement `RECUPERATION`, puis la bougie courante reconstruite avec son statut (aucune décision rétroactive : les
-  bougies passées ne sont pas réémises). Sinon (R6) : événement `REINITIALISATION`, état remis à zéro, nouveau
-  préchauffage ; la bougie courante complète devient la première du nouveau préchargement ;
+- en trou, à chaque clôture où la couverture est établie : sortie du trou. L'état d'avant le trou est conservé ;
+  la récupération de `[début du trou, clôture)` est demandée et seules les bougies reconstruites complètes sont
+  appliquées, dans l'ordre ; la clôture courante complète est appliquée dans sa version reconstruite si elle est
+  complète, sinon dans sa version en direct (aucune décision rétroactive : les bougies passées ne sont pas réémises).
+  Historique complet et cohérent jusqu'à la clôture courante : événement `RECUPERATION` (`bougies` = nombre de
+  bougies reconstruites appliquées). Sinon (R6′) : événement `RECALCUL` (`motif` parmi `RECUPERATION_INDISPONIBLE`,
+  `HISTORIQUE_INVALIDE`, `HISTORIQUE_INCOMPLET` ; `bougies` = reconstructions complètes appliquées) : les
+  indicateurs sont recalculés sur les seules bougies valides, aucun préchauffage n'est relancé, aucune bougie n'est
+  inventée ; le préchargement en cours continue sur les bougies valides ;
 - en trou sans couverture établie : bougie complète au statut `DATA_GAP` (entrées bloquées) ;
 - redémarrage avec un état restauré : si des intervalles attendus ont été manqués depuis la dernière clôture
-  appliquée, le pipeline démarre en trou (récupération ou réinitialisation à la première clôture couverte).
+  appliquée, le pipeline démarre en trou (récupération ou recalcul à la première clôture couverte).
 Le jour Londres d'une bougie est celui de son instant de clôture.
 Effets de bord : états des couches 1b et 2 ; appel de la fonction de récupération.
 Erreurs, exceptions : celles des couches 1b et 2 ; `ValueError` si l'état restauré ne correspond pas à la
@@ -48,9 +53,10 @@ spécification ; `CalendrierInconnu` si les séances ne couvrent pas la période
 ## Spécification exécutable
 
 - Catégorie 1 (`tests/robot/donnees_temps/test_c3_cat1_*.py`) : statuts `WARMUP` puis `OK` à la bougie du
-  préchauffage avec l'événement `PRECHARGEMENT`, trou de couverture puis réinitialisation sans récupération,
-  trou `SANS_BID`, récupération réussie identique au flux sans trou, historique incomplet ou incohérent
-  conduisant à la réinitialisation, trou pendant le préchauffage, bougie complète en trou sans couverture,
+  préchauffage avec l'événement `PRECHARGEMENT`, trou de couverture puis recalcul sans récupération (aucun
+  préchauffage relancé), recalcul identique au calcul sur les seules bougies valides, trou `SANS_BID`,
+  récupération réussie identique au flux sans trou, historique incomplet ou incohérent conduisant au recalcul,
+  récupération partielle appliquée (R6′), trou pendant le préchauffage (préchargement continu), bougie complète en trou sans couverture,
   redémarrage après des intervalles manqués (trou) ou pendant une fermeture officielle (continuité).
 - Catégorie 2 (`tests/robot/donnees_temps/test_c3_cat2_*.py`) : bloc réel {0 → 3} : C11.1 préfixe causal (retirer
   ou modifier des ticks futurs ne change aucune sortie passée), changement d'heure de bout en bout (jour Londres),

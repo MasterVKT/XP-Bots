@@ -26,6 +26,7 @@ class ProfilSynthetique:
     spread: Decimal
     couverture: tuple[tuple[int, int], ...]
     seances: tuple[tuple[int, int], ...]
+    tick_size: Decimal = QUANTUM
 
 
 # Mercredi 4 novembre 2026, 08:00–10:00 UTC, marché ouvert ; GBPUSD a une interruption déclarée de 08:40 à 08:50.
@@ -65,14 +66,28 @@ def generer(graine: int = 20261104, ecart_max_ms: int = 30_000) -> tuple[str, st
     for sequence, (t, _, profil, bid) in enumerate(evenements, start=1):
         bid = bid.quantize(QUANTUM)
         lignes.append(f'{profil.symbole},{profil.symbole_courtier},{t},{sequence},{bid},{(bid + profil.spread).quantize(QUANTUM)}')
-    manifeste = {
-        'schema': 'xp-fixture-manifeste-v2', 'origine': 'synthetique', 'fuseau': 'UTC',
-        'description': 'Ticks synthétiques déterministes du squelette (graine %d) ; aucun prix réel.' % graine,
-        'fin_donnees_ms': FIN_MS,
-        'symboles': {p.symbole: {'symbole_courtier': p.symbole_courtier, 'couverture': [list(c) for c in p.couverture],
-                                 'seances': [list(s) for s in p.seances]} for p in PROFILS},
-    }
+    manifeste = manifeste_v3('Ticks synthétiques déterministes du squelette (graine %d) ; aucun prix réel.' % graine,
+                             FIN_MS, PROFILS)
     return '\n'.join(lignes) + '\n', json.dumps(manifeste, ensure_ascii=False, indent=2) + '\n'
+
+
+def manifeste_v3(description: str, fin_ms: int, profils) -> dict:
+    """Manifeste `xp-fixture-manifeste-v3` : couverture, séances natives et tick_size déclarés par symbole."""
+    return {
+        'schema': 'xp-fixture-manifeste-v3', 'origine': 'synthetique', 'fuseau': 'UTC', 'description': description,
+        'fin_donnees_ms': fin_ms,
+        'symboles': {p.symbole: {'symbole_courtier': p.symbole_courtier, 'couverture': [list(c) for c in p.couverture],
+                                 'seances': [list(s) for s in p.seances], 'tick_size': str(p.tick_size)}
+                     for p in profils},
+    }
+
+
+def ecrire_ticks(chemin_ticks: Path, chemin_manifeste: Path, ticks, manifeste: dict) -> None:
+    """Écrit des ticks (objets `Tick`, ordre strict) au format du cahier de données et leur manifeste."""
+    lignes = [','.join(ENTETE)] + [f'{t.symbole},{t.symbole_courtier},{t.instant.ms},{t.instant.sequence},{t.bid},{t.ask}'
+                                   for t in ticks]
+    Path(chemin_ticks).write_bytes(('\n'.join(lignes) + '\n').encode('utf-8'))
+    Path(chemin_manifeste).write_bytes((json.dumps(manifeste, ensure_ascii=False, indent=2) + '\n').encode('utf-8'))
 
 
 def ecrire(dossier: Path, graine: int = 20261104) -> tuple[Path, Path]:

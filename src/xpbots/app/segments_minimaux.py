@@ -2,7 +2,8 @@
 
 Chaque segment respecte la spécification sur son périmètre réduit (voir `mcl/robot-ema-v3/COUTURES.md`) :
 fondamental absent = refus, contexte IA absent = NEUTRAL, aucun ordre n'est jamais émis. L'agrégateur M15
-minimal a été remplacé en phase 2 par l'enveloppe de `donnees-temps` (`PipelineMarche`).
+minimal a été remplacé en phase 2 par l'enveloppe de `donnees-temps` (`PipelineMarche`), la stratégie neutre en
+phase 3 par l'enveloppe de `moteur-ema` (`MoteurEMA`).
 """
 from __future__ import annotations
 
@@ -15,11 +16,11 @@ from typing import Iterator, Mapping, Sequence
 
 from xpbots.noyau.config import ConfigurationInvalide, lire_json_strict
 from xpbots.noyau.decisions import (CleIntention, DecisionContexteIA, DecisionFondamentale, EtatContexteIA,
-                                    IssueSignal, MotifRefus, Refuse, ResultatTechnique, Sens, Signal)
+                                    MotifRefus, Refuse, Sens, Signal)
 from xpbots.noyau.journal_schema import (ConstructeurEnregistrements, Decision, EnregistrementInvalide, Mode,
                                          valider_enregistrement)
 from xpbots.noyau.json_canonique import serialiser
-from xpbots.noyau.marche import BougieEnrichie, EvenementDonnees, StatutBougie, Tick
+from xpbots.noyau.marche import BougieEnrichie, EvenementDonnees, Tick
 from xpbots.noyau.ports import ContexteIA, ControleFondamental, Journal, Strategie
 from xpbots.noyau.temps import Instant
 
@@ -27,8 +28,9 @@ from xpbots.noyau.temps import Instant
 SCENARIO_TECHNICAL_CONTROL_NEUTRAL = 'TECHNICAL_CONTROL_NEUTRAL'
 
 ENTETE_TICKS = ('canonical_symbol', 'broker_symbol', 'time_utc_ms', 'sequence', 'bid', 'ask')
-SCHEMA_MANIFESTE = 'xp-fixture-manifeste-v2'
+SCHEMA_MANIFESTE = 'xp-fixture-manifeste-v3'
 CLES_MANIFESTE = frozenset({'schema', 'origine', 'fuseau', 'description', 'fin_donnees_ms', 'symboles'})
+CLES_SYMBOLE_MANIFESTE = frozenset({'symbole_courtier', 'couverture', 'seances', 'tick_size'})
 FUSEAU_MANIFESTE = 'UTC'
 _ENTIER = re.compile(r'-?\d+')
 _DECIMAL = re.compile(r'\d+\.\d+')
@@ -40,10 +42,6 @@ class ErreurDonneesFixture(ValueError):
 
 class ErreurJournal(OSError):
     """Journal impossible à créer ou à écrire."""
-
-
-class IssueInattendue(RuntimeError):
-    """Issue reçue par une méthode qui n'a émis aucun signal correspondant."""
 
 
 def _sha256_fichier(chemin: Path) -> str:
@@ -76,16 +74,20 @@ class LecteurFixtureCSV:
         if type(m['symboles']) is not dict or not m['symboles']:
             raise ErreurDonneesFixture('manifeste : au moins un symbole attendu')
         fin = _entier_manifeste(m['fin_donnees_ms'], 'fin_donnees_ms')
-        courtier, couverture, seances = {}, {}, {}
+        courtier, couverture, seances, ticks = {}, {}, {}, {}
         for symbole, decl in m['symboles'].items():
-            if type(decl) is not dict or set(decl) != {'symbole_courtier', 'couverture', 'seances'}:
+            if type(decl) is not dict or set(decl) != CLES_SYMBOLE_MANIFESTE:
                 raise ErreurDonneesFixture(f'manifeste : déclaration de {symbole} invalide')
+            pas = decl['tick_size']
+            if type(pas) is not str or not _DECIMAL.fullmatch(pas) or not Decimal(pas) > 0:
+                raise ErreurDonneesFixture(f'manifeste : tick_size de {symbole} : décimal positif en texte attendu')
+            ticks[symbole] = Decimal(pas)
             if type(decl['symbole_courtier']) is not str or not decl['symbole_courtier']:
                 raise ErreurDonneesFixture(f'manifeste : symbole courtier de {symbole} invalide')
             courtier[symbole] = decl['symbole_courtier']
             couverture[symbole] = self._intervalles(decl['couverture'], f'couverture de {symbole}', fin)
             seances[symbole] = self._intervalles(decl['seances'], f'séances de {symbole}', fin)
-        self._seances = seances
+        self._seances, self._ticks = seances, ticks
         return tuple(m['symboles']), courtier, couverture, fin
 
     @staticmethod
@@ -117,6 +119,9 @@ class LecteurFixtureCSV:
 
     def fin_donnees_ms(self) -> int:
         return self._fin
+
+    def tick_size(self, symbole: str) -> Decimal:
+        return self._ticks[symbole]
 
     def empreintes(self) -> Mapping[str, str]:
         return {'ticks': _sha256_fichier(self._chemin_ticks), 'manifeste': _sha256_fichier(self._chemin_manifeste)}
@@ -186,20 +191,21 @@ class EcrivainJournalJSONL:
         return False
 
 
-class StrategieNeutre:
-    """Méthode neutre : jamais de signal ; motif NO_SETUP, ou le motif du statut de la bougie."""
+class StockageMemoire:
+    """Stockage d'état en mémoire pour le rejeu (port `Stockage`) ; remplacé par `infrastructure` 0b (SQLite)."""
 
-    _MOTIFS = {StatutBougie.OK: MotifRefus.NO_SETUP, StatutBougie.WARMUP: MotifRefus.WARMUP,
-               StatutBougie.DATA_GAP: MotifRefus.DATA_GAP}
+    def __init__(self):
+        self._donnees: dict[str, bytes] = {}
 
-    def __init__(self, strategie_id: str):
-        self.strategie_id = strategie_id
+    def lire(self, cle: str) -> bytes | None:
+        if type(cle) is not str or not cle:
+            raise ValueError('clé de stockage invalide')
+        return self._donnees.get(cle)
 
-    def sur_cloture(self, bougie: BougieEnrichie) -> ResultatTechnique:
-        return ResultatTechnique(None, self._MOTIFS[bougie.statut], {'segment': 'strategie_neutre'})
-
-    def appliquer_issue(self, cle: CleIntention, issue: IssueSignal) -> None:
-        raise IssueInattendue(f'la stratégie neutre n\'émet aucun signal : {cle.texte()}')
+    def ecrire(self, cle: str, valeur: bytes) -> None:
+        if type(cle) is not str or not cle or type(valeur) is not bytes:
+            raise ValueError('clé ou valeur de stockage invalide')
+        self._donnees[cle] = valeur
 
 
 class FondamentalAbsent:
@@ -251,8 +257,10 @@ class CoordinateurRefus:
         self._constructeur = constructeur
 
     def sur_evenement_donnees(self, evenement: EvenementDonnees) -> None:
-        """Trou, récupération, réinitialisation ou préchargement : journalisé tel quel (C09)."""
+        """Événement de données journalisé tel quel (C09), puis transmis aux méthodes (un trou efface leurs replis)."""
         self._journal.ajouter(self._constructeur.donnees(evenement))
+        for strategie in self._strategies:
+            strategie.sur_evenement_donnees(evenement)
 
     def sur_bougie(self, bougie: BougieEnrichie) -> None:
         for strategie in self._strategies:

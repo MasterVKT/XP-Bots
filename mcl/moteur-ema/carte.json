@@ -123,7 +123,8 @@
       "id": "parametres_ema",
       "responsabilite": "Charger et valider le bloc ema de la configuration figée.",
       "depend_de": [
-        "amont-noyau"
+        "amont-noyau",
+        "amont-donnees-temps"
       ],
       "couche": "0"
     },
@@ -131,7 +132,8 @@
       "id": "tendance_ema",
       "responsabilite": "Évaluer l'ordre EMA15/25/50 et la pente de l'EMA50 sur quatre bougies.",
       "depend_de": [
-        "parametres_ema"
+        "parametres_ema",
+        "amont-noyau"
       ],
       "couche": "1a"
     },
@@ -139,7 +141,8 @@
       "id": "conditions_repli",
       "responsabilite": "Tester le contexte d'armement, la validité du repli et le contact avec la zone EMA15–EMA50.",
       "depend_de": [
-        "parametres_ema"
+        "parametres_ema",
+        "amont-noyau"
       ],
       "couche": "1b"
     },
@@ -147,7 +150,8 @@
       "id": "bougie_reprise",
       "responsabilite": "Tester la bougie de reprise de S01.3.",
       "depend_de": [
-        "parametres_ema"
+        "parametres_ema",
+        "amont-noyau"
       ],
       "couche": "1c"
     },
@@ -155,7 +159,8 @@
       "id": "stop_objectif_ema",
       "responsabilite": "Calculer buffer, B_SL non arrondi, refus au-delà de 2,50 A et multiple d'objectif.",
       "depend_de": [
-        "parametres_ema"
+        "parametres_ema",
+        "amont-noyau"
       ],
       "couche": "1d"
     },
@@ -166,6 +171,7 @@
         "tendance_ema",
         "conditions_repli",
         "bougie_reprise",
+        "parametres_ema",
         "amont-noyau"
       ],
       "couche": "2"
@@ -176,6 +182,8 @@
       "depend_de": [
         "machine_etats_ema",
         "stop_objectif_ema",
+        "parametres_ema",
+        "amont-noyau",
         "amont-donnees-temps",
         "stockage-etat"
       ],

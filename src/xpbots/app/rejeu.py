@@ -1,6 +1,6 @@
 """Point d'entrée du rejeu : `python -m xpbots.app.rejeu --ticks <csv> --manifeste <json> --journal <jsonl>`.
 
-Phase 2 : ticks → `donnees-temps` (bougies M15 enrichies, trous, préchargement) → stratégie neutre →
+Phase 3 : ticks → `donnees-temps` (bougies M15 enrichies, trous, préchargement) → `moteur-ema` (méthode S01) →
 coordinateur de refus → exécution papier → journal C09. Aucun ordre, aucun appel réseau.
 """
 from __future__ import annotations
@@ -14,11 +14,13 @@ from typing import Callable, Iterator, Sequence
 from xpbots.app.segments_minimaux import (SCENARIO_TECHNICAL_CONTROL_NEUTRAL, ContexteIANeutre, CoordinateurRefus,
                                           EcrivainJournalJSONL, ErreurDonneesFixture, ErreurJournal,
                                           ExecutionPapierMinimale, FondamentalAbsent, LecteurFixtureCSV,
-                                          StrategieNeutre)
+                                          StockageMemoire)
 from xpbots.donnees_temps.c0_parametres_seances import CalendrierSeances, charger_parametres_techniques
 from xpbots.donnees_temps.c1a_sessions import SessionsLondres
 from xpbots.donnees_temps.c2_etat_indicateurs import SpecIndicateurs
 from xpbots.donnees_temps.c3_pipeline import PipelineMarche
+from xpbots.moteur_ema.c0_parametres import charger_parametres_ema
+from xpbots.moteur_ema.c3_moteur import MoteurEMA
 from xpbots.noyau.config import BundleTechnique, ConfigurationInvalide, charger_bundle_technique
 from xpbots.noyau.journal_schema import ConstructeurEnregistrements, EnregistrementInvalide, Mode
 from xpbots.noyau.json_canonique import serialiser
@@ -27,8 +29,17 @@ from xpbots.noyau.ports import SourceTicksHistoriques, Strategie
 
 DEPLOYMENT_ID_PAR_DEFAUT = 'rejeu-squelette'
 CODE_ERREUR = 2  # convention argparse : usage ou données invalides
-SEGMENTS_MINIMAUX = ('lecteur_fixture_csv', 'ecrivain_journal_jsonl', 'strategie_neutre', 'fondamental_absent',
+SEGMENTS_MINIMAUX = ('lecteur_fixture_csv', 'ecrivain_journal_jsonl', 'stockage_memoire', 'fondamental_absent',
                      'contexte_ia_neutre', 'execution_papier_minimale', 'coordinateur_refus')
+Fabrique = Callable[[BundleTechnique, SourceTicksHistoriques, Sequence[str]], Sequence[Strategie]]
+
+
+def strategies_par_defaut(bundle: BundleTechnique, source: SourceTicksHistoriques,
+                          symboles: Sequence[str]) -> list[Strategie]:
+    """Méthode S01 `EMA_V3` sur les symboles rejoués, tick_size déclaré par la source, état en mémoire."""
+    sessions = SessionsLondres(charger_parametres_techniques(bundle))
+    return [MoteurEMA(charger_parametres_ema(bundle), sessions, {s: source.tick_size(s) for s in symboles},
+                      StockageMemoire())]
 
 
 def spec_indicateurs_ema(bundle: BundleTechnique) -> SpecIndicateurs:
@@ -136,15 +147,14 @@ def _symboles_ordonnes(source, priorite: Sequence[str]) -> list[str]:
 
 def executer_rejeu(chemin_ticks: Path, chemin_manifeste: Path, chemin_journal: Path, *,
                    deployment_id: str = DEPLOYMENT_ID_PAR_DEFAUT, scenario_fondamental: str | None = None,
-                   fabrique_strategies: Callable[[BundleTechnique], Sequence[Strategie]] | None = None,
+                   fabrique_strategies: Fabrique = strategies_par_defaut,
                    racine: Path | None = None) -> dict:
     """Rejoue une fixture de ticks et écrit le journal C09 ; renvoie un résumé des comptes."""
     bundle = charger_bundle_technique(racine)
     source = LecteurFixtureCSV(chemin_ticks, chemin_manifeste)
     symboles = _symboles_ordonnes(source, bundle.valeur('common', 'universe_priority'))
     mode = Mode(bundle.valeur('common', 'default_mode'))
-    strategies = (list(fabrique_strategies(bundle)) if fabrique_strategies
-                  else [StrategieNeutre(bundle.valeur('ema', 'strategy_id'))])
+    strategies = list(fabrique_strategies(bundle, source, symboles))
     constructeur = ConstructeurEnregistrements(deployment_id, mode, bundle)
     marche = MarcheRejoue(source, symboles, bundle)
     with EcrivainJournalJSONL(chemin_journal) as fichier:

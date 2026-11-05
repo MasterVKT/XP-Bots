@@ -1,6 +1,6 @@
 """Couche 3 de `donnees-temps` (enveloppe) : bougies enrichies et événements de données d'un symbole.
 
-Contrat : `mcl/donnees-temps/contrats/couche-3.md`. Sources : C03 points 1 à 7 ; R4 à R6 sur la lecture proposée.
+Contrat : `mcl/donnees-temps/contrats/couche-3.md`. Sources : C03 points 1 à 7 ; R4, R5 et R6′ du registre.
 """
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from xpbots.donnees_temps.c1a_sessions import SessionsLondres
 from xpbots.donnees_temps.c1b_bougies import ClotureIntervalle, ConstructeurBougies, TickHorsOrdre
 from xpbots.donnees_temps.c2_etat_indicateurs import EtatIndicateursSymbole, SpecIndicateurs
 from xpbots.noyau.marche import BougieEnrichie, EvenementDonnees, NatureEvenementDonnees, StatutBougie, Tick
-from xpbots.noyau.temps import MS_PAR_SECONDE, iso_depuis_ms
+from xpbots.noyau.temps import MS_PAR_SECONDE
 
 Recuperation = Callable[[str, int, int], Sequence[Tick] | None]
 Sortie = BougieEnrichie | EvenementDonnees
@@ -127,34 +127,45 @@ class PipelineMarche:
             return self._appliquer(cloture)
         if not cloture.couverture_etablie:
             return [self._enrichie(cloture, StatutBougie.DATA_GAP)]
-        evenements, derniere = self._recuperer(cloture.cloture_ms, cloture.ouverture_ms)
-        if derniere is not None:
-            reconstruite, indicateurs = derniere
-            statut = StatutBougie.OK if self._etat.pret else StatutBougie.WARMUP
-            return evenements + [self._enrichie(reconstruite, statut, indicateurs)]
-        return evenements + self._appliquer(cloture)  # réinitialisée : premier intervalle du nouveau préchargement
+        evenements, appliquee = self._recuperer(cloture.cloture_ms, cloture)
+        reconstruite, indicateurs = appliquee
+        statut = StatutBougie.OK if self._etat.pret else StatutBougie.WARMUP
+        return evenements + [self._enrichie(reconstruite, statut, indicateurs)]
 
-    def _recuperer(self, fin_ms: int, ouverture_courante: int | None):
-        """Récupère [début du trou, fin) ; rend (événements, (dernière clôture, indicateurs) ou None si réinitialisé)."""
+    def _recuperer(self, fin_ms: int, courante: ClotureIntervalle | None):
+        """Sort du trou à `fin_ms` : récupération complète (`RECUPERATION`) ou recalcul sur les bougies valides (R6′).
+
+        L'état d'avant le trou est conservé ; seules les reconstructions complètes de `[début du trou, fin)` sont
+        appliquées, dans l'ordre ; la clôture courante complète l'est en direct si sa reconstruction manque ou est
+        incomplète. Rend (événements, (clôture appliquée, indicateurs) de la clôture courante ou None).
+        """
         debut = self._debut_trou
         historique = self._recuperation(self.symbole, debut, fin_ms) if self._recuperation else None
-        if historique is None:
-            return self._reinitialiser(fin_ms, MOTIF_INDISPONIBLE), None
-        clotures = self._reconstruire(historique, debut, fin_ms)
-        if clotures is None:
-            return self._reinitialiser(fin_ms, MOTIF_INVALIDE), None
-        if not all(c.complet for c in clotures) or (
-                ouverture_courante is not None and (not clotures or clotures[-1].ouverture_ms != ouverture_courante)):
-            return self._reinitialiser(fin_ms, MOTIF_INCOMPLET), None
+        clotures = None if historique is None else self._reconstruire(historique, debut, fin_ms)
+        complet = clotures is not None and all(c.complet for c in clotures) and (
+            courante is None or (bool(clotures) and clotures[-1].ouverture_ms == courante.ouverture_ms))
+        motif = (None if complet else MOTIF_INDISPONIBLE if historique is None
+                 else MOTIF_INVALIDE if clotures is None else MOTIF_INCOMPLET)
         self._etat = EtatIndicateursSymbole.importer(self._spec, self._sauvegarde)
-        derniere = None
-        for cloture in clotures:
-            derniere = (cloture, self._etat.appliquer(cloture.bougie))
+        anterieures = [c for c in clotures or () if c.complet
+                       and (courante is None or c.ouverture_ms < courante.ouverture_ms)]
+        for cloture in anterieures:
+            self._etat.appliquer(cloture.bougie)
+        appliquees, appliquee = len(anterieures), None
+        if courante is not None:
+            remplacantes = [c for c in clotures or () if c.ouverture_ms == courante.ouverture_ms and c.complet]
+            retenue = remplacantes[0] if remplacantes else courante
+            appliquees += len(remplacantes)
+            appliquee = (retenue, self._etat.appliquer(retenue.bougie))
         self._sortir_du_trou()
-        evenements = [self._evenement(NatureEvenementDonnees.RECUPERATION, fin_ms, debut, fin_ms,
-                                      {'bougies': len(clotures)})]
+        if complet:
+            evenements = [self._evenement(NatureEvenementDonnees.RECUPERATION, fin_ms, debut, fin_ms,
+                                          {'bougies': appliquees})]
+        else:
+            evenements = [self._evenement(NatureEvenementDonnees.RECALCUL, fin_ms, debut, fin_ms,
+                                          {'motif': motif, 'bougies': appliquees})]
         evenements += self._signaler_prechargement(fin_ms)
-        return evenements, derniere if ouverture_courante is not None else None
+        return evenements, appliquee
 
     def _reconstruire(self, historique, debut: int, fin: int) -> list[ClotureIntervalle] | None:
         constructeur = ConstructeurBougies(self.symbole, self._periode_s, self._seances, debut)
@@ -169,14 +180,6 @@ class PipelineMarche:
         except (TickHorsOrdre, ValueError):
             return None
         return clotures
-
-    def _reinitialiser(self, instant_ms: int, motif: str) -> list[Sortie]:
-        debut = self._debut_trou
-        self._etat.reinitialiser()
-        self._prechargement_signale = False
-        self._sortir_du_trou()
-        return [self._evenement(NatureEvenementDonnees.REINITIALISATION, instant_ms, debut, instant_ms,
-                                {'motif': motif, 'debut_trou_utc': iso_depuis_ms(debut)})]
 
     def _sortir_du_trou(self):
         self._en_trou = False
