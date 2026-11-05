@@ -102,5 +102,8 @@ python tools/verify_project.py
 - Copilot ne transmet pas le message final au hook de fin : sans transcription lisible, le marqueur et le pied ne
   sont pas vérifiés (les portes machine restent appliquées).
 - Aucun outil de graphe de code n'est configuré : l'audit d'impact repose sur des recherches ciblées (`rg`).
+- L'instantané compare date de modification et taille : un `git checkout` ou un `merge` qui réécrit des fichiers
+  au contenu identique les fait apparaître comme modifiés. Les portes concernées s'exécutent alors en plus ; elles
+  ne jugent toujours que le contenu courant, sans faux blocage.
 - Disque saturé : les hooks échouent ouverts et n'injectent plus rien ; vérifier l'espace libre et le journal
   d'erreurs avant de soupçonner le code.

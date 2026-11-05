@@ -55,6 +55,8 @@ class LedgerGeneratorTests(unittest.TestCase):
         return {path: path.read_bytes() for path in self.repo.root.rglob('*') if path.is_file()}
 
     def test_record_promotes_at_second_occurrence(self):
+        # The copy carries the real ledger: count relative to its initial content, never assume it is empty.
+        initial = len(self.repo.read_json('.agents/skill-gap-ledger.json')['entries'])
         code, entry = self.run_script(LEDGER, 'record', '--label', 'Analyse des slippages réels', '--evidence', 'p1')
         self.assertEqual((code, entry['decision'], entry['occurrences']), (0, 'consignee', 1))
         self.assertEqual(entry['id'], 'analyse-des-slippages-reels')
@@ -64,7 +66,8 @@ class LedgerGeneratorTests(unittest.TestCase):
         code, shown = self.run_script(LEDGER, 'show', '--id', 'analyse-des-slippages-reels')
         self.assertEqual(shown['evidence'], ['p1', 'p2'])
         code, listed = self.run_script(LEDGER, 'list')
-        self.assertEqual(len(listed), 1)
+        self.assertEqual(len(listed), initial + 1)
+        self.assertEqual([item['id'] for item in listed].count('analyse-des-slippages-reels'), 1)
 
     def test_decision_outside_vocabulary_refused(self):
         self.run_script(LEDGER, 'record', '--label', 'X')
