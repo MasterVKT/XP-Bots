@@ -420,6 +420,8 @@ sondes se jette ; seules leurs preuves sont conservées dans le rapport de quali
 | S-06 | `order_send` bloquant | Appel synchrone ; durée et comportement en déconnexion inconnus ; appels concurrents non documentés | Exécutant dédié avec délai de 5 s, rapprochement possible pendant un envoi bloqué, ou repli documenté |
 | S-07 | `order_calc_margin`, `order_calc_profit`, `order_check` | `OrderCalcMargin` évalue un ordre isolé (C04) | Marge totale = marge du compte + marge du nouvel ordre + contrôle natif |
 | S-08 | `copy_ticks_from` | Date de départ à la seconde ; ticks de même milliseconde possibles ; profondeur d'historique propre au courtier | Dédoublonnage par `time_msc` et ordre natif ; préchargement en bougies natives Bid seulement après comparaison (P-01) |
+| S-09 | Export de ticks du terminal (Affichage, Symboles, onglet Ticks) | Fichier texte en heure du serveur ; colonnes, séparateur et traitement d'un Bid ou d'un Ask inchangé à relever sur un export réel | Convertisseur adapté au format relevé ; un tick sans Bid ni Ask connu est écarté et journalisé, jamais complété par une valeur inventée |
+| S-10 | Export de la source tierce de ticks (D-14) | Format à relever (colonnes, fuseau, précision) sur un fichier réel avant conversion | Convertisseur dédié ; la source reste déclarée contrefactuelle |
 
 Le paquet Python ne fournit ni le calendrier économique ni les horaires de séance : D-12 retient le service MQL5
 d'export du §2.2. Le chemin du dossier commun vient de `terminal_info().commondata_path`.

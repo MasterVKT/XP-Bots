@@ -161,7 +161,12 @@ python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossie
 
 ## 7. Tests de contrat des frontières réelles
 
-- **MT5 (poste Windows, compte démo, `XPBOTS_CONTRATS_MT5=1`)** : confirmation des sondes S-01 à S-08 ; lecture
+- **Convertisseurs d'exports de ticks** : en catégorie 1, fixtures reproduisant le format relevé par les sondes
+  S-09 (export du terminal, heure du serveur) et S-10 (source tierce) ; attendus : fichiers canoniques
+  identiques à une référence calculée à la main, ordre natif conservé, heure UTC exacte de part et d'autre
+  d'un changement d'heure du serveur, tick sans Bid ni Ask connu écarté et journalisé ; en contrat, conversion
+  d'un mois réel sur le poste.
+- **MT5 (poste Windows, compte démo, `XPBOTS_CONTRATS_MT5=1`)** : confirmation des sondes S-01 à S-10 ; lecture
   complète du profil C04 ; entrée protégée de volume minimal sur compte démo ; ajustement du TP ; clôture ;
   rapprochement après déconnexion provoquée ; détection d'une position externe ouverte à la main sur le compte
   démo ; chemin du dossier commun. Jamais sur un compte réel.

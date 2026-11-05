@@ -241,13 +241,13 @@ actions humaines du plan directeur, §5, restent à accomplir, aux phases indiqu
   (document 02, §6.9, §6.10 et §6.12).
 - **Skills** : `xp-bots-broker-account-qualification`, `xp-bots-deployment-readiness`,
   `xp-bots-market-data-causality`, MCL.
-- **Prérequis humains** (plan directeur, §5) : poste Windows avec Python 3.13 x64 et le terminal MT5 de Deriv
+- **Prérequis humains** (plan directeur, §5 ; procédures H-02 à H-07 du [document 07](07_procedures_humaines.md)) : poste Windows avec Python 3.13 x64 et le terminal MT5 de Deriv
   connecté à un **compte de démonstration** standard en USD ; accès de l'agent au poste (dossier partagé) ou
   exécution par l'humain des commandes fournies ; module fondamental configuré pour écrire dans le dossier
   d'échange (D-11) ; fichier des fermetures exceptionnelles initialisé (D-12). La dépendance `MetaTrader5` est
   autorisée (D-05).
 - **Étapes**
-  1. **Sondes jetables** S-01 à S-08 (document 01, §10), exécutées sur le poste Windows, code placé dans un
+  1. **Sondes jetables** S-01 à S-10 (document 01, §10 ; procédure H-07), exécutées sur le poste Windows, code placé dans un
      dossier ignoré par Git et supprimé ensuite ; preuves dans `.local/reports/qualification/`. Toute sonde en
      échec est rapportée avant de construire la couche concernée ; si l'entrée protégée n'est pas attachable,
      le profil est déclaré non prêt (C06) et la phase s'arrête sur décision humaine.
@@ -277,7 +277,7 @@ actions humaines du plan directeur, §5, restent à accomplir, aux phases indiqu
 - **Objectif** : service IA partagé, en arrière-plan, sans inférence locale (document 02, §6.11 ; A04 à A11).
 - **Skills** : `xp-bots-llm-integration-contracts`, MCL.
 - **Prérequis** : phase 11. **Au début de la phase, l'agent redemande l'autorisation des appels d'API réels
-  (D-17, non accordée au 05/11/2026).** Avec autorisation : clés des routes gratuites placées par l'humain dans
+  (D-17, refusée au 05/11/2026 ; procédure H-08).** Avec autorisation : clés des routes gratuites placées par l'humain dans
   `.env` (jamais lues ni affichées par l'agent), requêtes de conformité, puis fonctionnement réel. Sans
   autorisation : service construit et testé entièrement hors ligne, laissé arrêté ; le bras IA de `PAPER_AB`
   reste `NEUTRAL`. La route payante reste désactivée sauf décision explicite.
@@ -298,8 +298,8 @@ Chaque sous-étape est un point d'arrêt. Aucune ne valide une rentabilité par 
 |---|---|---|---|
 | 13.1 | Qualification C04 sur le compte démo Deriv : fiche d'environnement, règle de liaison d'un symbole par sous-jacent, disponibilité des contrats micro, levier du compte, faisabilité du volume minimal à 0,5 %, liste `ENVIRONMENT_NOT_READY` vide pour EURUSD et GBPUSD | Phase 11 | Profil admissible, ou verdict « compte incompatible avec la fréquence visée » (C10), sans déformer le risque |
 | 13.2 | Acceptation sur plateforme : cas C11 qui exigent le courtier (5, 7, 11, 12, 13), en démo ; égalité C11.14 par rejeu des journaux d'entrées de plusieurs séances | 13.1 | Rapport d'acceptation |
-| 13.3 | Données historiques (D-14) : ticks du 02/12/2019 au 03/11/2026 (ceux de Deriv s'ils couvrent la période, sinon source tierce déclarée contrefactuelle), caractéristiques et coûts datés, calendrier avec heures de connaissance (approximation déclarée pour l'historique), permissions historiques causales si elles existent ; formats, registres de trous, empreintes | Données fournies par l'humain | Données validées dans `data/raw/` (jamais commitées) |
-| 13.4 | Portage de la V1 London (D-15) : spécification fournie par l'humain, versée en contexte avec son empreinte, puis artefact `moteur-london-v1` construit au protocole MCL (document 02, §6.13) et injecté dans le seul rejeu | Fichier V1 fourni | Moteur V1 figé, refusé hors rejeu |
+| 13.3 | Données historiques (D-14) : ticks du 02/12/2019 au 03/11/2026 (ceux de Deriv s'ils couvrent toute la période, sinon la source tierce pour toute la période, déclarée contrefactuelle, sans mélange d'historiques), caractéristiques et coûts datés, calendrier avec heures de connaissance (approximation déclarée pour l'historique), permissions historiques causales si elles existent ; conversion par `cli_donnees` ; formats, registres de trous, empreintes | Données fournies par l'humain (H-09) | Données validées dans `data/raw/` (jamais commitées) |
+| 13.4 | Portage de la V1 London (D-15) : spécification fournie par l'humain, versée en contexte avec son empreinte, puis artefact `moteur-london-v1` construit au protocole MCL (document 02, §6.13) et injecté dans le seul rejeu | Fichier V1 fourni (H-10) | Moteur V1 figé, refusé hors rejeu |
 | 13.5 | Rejeux C10 : contrôle d'implémentation 2020–2022, validation 2023–2024, rejeu continu 2020–2026, stress, six perturbations, compte London seul ; comparaison V3/V1 sur le même moteur ; ouverture **unique** du test réservé après gel du robot (empreinte consignée) ; période 01/05–03/11/2026 en diagnostic | 13.3, 13.4 | Rapport C10 ; « non validé » si un critère manque, sans retouche |
-| 13.6 | Qualification sémantique A13 : 200 textes annotés par un humain, seuils `model_min_material_event_precision` et `model_min_material_event_recall`, zéro citation non vérifiée ; comparaison gratuit et payant seulement si le payant est configuré | Phase 12 avec appels autorisés, annotateur humain | `QUALIFIE` ou `NON_QUALIFIE` par fournisseur |
-| 13.7 | Collecte prospective `PAPER_AB` puis démonstration : effectifs minimaux de A13 et de C10 ; checklist go/no-go (`xp-bots-deployment-readiness`) ; le veto réel reste désactivé sans validation financière A13 ; le réel n'est décidé que par l'humain | 13.1 à 13.6 | Décision tracée de l'humain |
+| 13.6 | Qualification sémantique A13 : 200 textes annotés par un humain, seuils `model_min_material_event_precision` et `model_min_material_event_recall`, zéro citation non vérifiée ; comparaison gratuit et payant seulement si le payant est configuré | Phase 12 avec appels autorisés, annotateur humain (H-11) | `QUALIFIE` ou `NON_QUALIFIE` par fournisseur |
+| 13.7 | Collecte prospective `PAPER_AB` puis démonstration : effectifs minimaux de A13 et de C10 ; checklist go/no-go (`xp-bots-deployment-readiness`) ; le veto réel reste désactivé sans validation financière A13 ; le réel n'est décidé que par l'humain | 13.1 à 13.6 | Décision tracée de l'humain (H-12) |

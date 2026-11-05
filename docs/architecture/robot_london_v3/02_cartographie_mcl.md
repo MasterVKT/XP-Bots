@@ -498,7 +498,7 @@ Esquisses de contrat :
 
 ### 6.9 Artefact `infrastructure` (paquet `xpbots.infra`, phase 11)
 
-Rôle : seules implémentations réelles des frontières externes. Précédé des sondes jetables S-01 à S-08.
+Rôle : seules implémentations réelles des frontières externes. Précédé des sondes jetables S-01 à S-10.
 
 | Unité | Couche | Responsabilité | Entrée → sortie | Dépend de | Frontière réelle | Sources |
 |---|---|---|---|---|---|---|
@@ -509,13 +509,14 @@ Rôle : seules implémentations réelles des frontières externes. Précédé de
 | `lecteur_snapshot` | 0e | Lire les octets du snapshot IA au chemin réel, avec plafond de taille | chemin → octets, heure de lecture | — | système de fichiers | A10 |
 | `lecteur_ticks` | 0f | Lire en flux les fichiers de ticks mensuels et calculer leur empreinte | fichiers → lignes, SHA-256 | — | système de fichiers | C10 |
 | `sources_controles` | 0g | Lire le dossier d'échange des permissions (D-11), les exports MQL5 du calendrier et des séances et le fichier des fermetures exceptionnelles (D-12) | fichiers → octets horodatés à la lecture | — | système de fichiers | C04, C05 |
-| `mt5_session` | 1 | S'attacher au terminal, lire version, état, compte et dossier commun | — → session et informations | `types_infra` | `MetaTrader5` | C04 |
+| `mt5_session` | 1a | S'attacher au terminal, lire version, état, compte et dossier commun | — → session et informations | `types_infra` | `MetaTrader5` | C04 |
+| `conversion_exports_ticks` | 1b | Convertir les exports de ticks du terminal (S-09) et de la source tierce (S-10) en fichiers mensuels canoniques (données requises, §2) : heure convertie en UTC par la table qualifiée, ordre natif et numéro de séquence conservés, manifeste SHA-256, aucun tick inventé | exports bruts → fichiers canoniques et manifeste | `types_infra` | système de fichiers | C10, C03.1 |
 | `mt5_specifications` | 2a | Lire et contrôler les caractéristiques C04 et produire les profils | symbole → profils, liste `ENVIRONMENT_NOT_READY` | `mt5_session` | `MetaTrader5` | C04 |
 | `mt5_flux` | 2b | Récupérer les ticks incrémentalement, convertir l'heure, signaler la connexion | symbole, curseur → ticks, états de connexion | `mt5_session`, `types_infra` | `MetaTrader5` | C03, S-01, S-08 |
 | `mt5_calculs` | 2c | Implémenter le port de calcul avec les fonctions natives | requêtes → résultats | `mt5_session` | `MetaTrader5` | C04, C07, S-07 |
 | `mt5_execution` | 2d | Exécuter les commandes d'ordre avec délai d'accusé et rapprochement | commandes → réponses | `mt5_session` | `MetaTrader5`, `threading` | C08, S-02 à S-06 |
 | `courtier_mt5` | 3 | Composer les adaptateurs MT5 en exécutant de commandes et en qualification de l'environnement au démarrage et avant ordre | commandes, contrôles → réponses, rapports | 2a, 2b, 2c, 2d | — | C04, C08 |
-| `assemblage` | 4 | Enveloppe : fournir à la coquille l'ensemble configuré des adaptateurs réels | configuration d'exécution → adaptateurs prêts | 0b à 0g, 3 | — | C08, A10 |
+| `assemblage` | 4 | Enveloppe : fournir à la coquille l'ensemble configuré des adaptateurs réels | configuration d'exécution → adaptateurs prêts | 0b à 0g, 1b, 3 | — | C08, A10 |
 
 Chaque adaptateur feuille déclare sa frontière réelle dans `depend_de` (horloge, SQLite, système de fichiers,
 `MetaTrader5`) : une simulation de cette carte avec `mcl.py analyser` donne alors une racine unique,
@@ -536,7 +537,8 @@ avant chaque ordre (C04) ; aucun secret journalisé.
 | `cli_rejeu` | 1b | Lancer un rejeu C10 | arguments → résultats et rapports | `configuration_application` | journal-rejeu, infrastructure | C10 |
 | `cli_qualification` | 1c | Qualifier l'environnement C04 et exécuter les contrôles de qualification | arguments → rapport | `configuration_application` | infrastructure | C04 |
 | `cli_rapports` | 1d | Produire les rapports à partir des journaux | journaux → rapports | `configuration_application` | journal-rejeu, infrastructure | C09, A11 |
-| `principal` | 2 | Points d'entrée `python -m` et refus des modes non autorisés | arguments → code de sortie | 1a, 1b, 1c, 1d | — | C01 |
+| `cli_donnees` | 1e | Convertir et valider les données historiques de la sous-étape 13.3 (exports de ticks, manifeste, registre des trous) | dossiers d'exports → données canoniques validées, rapport | `configuration_application` | infrastructure, journal-rejeu | C10 |
+| `principal` | 2 | Points d'entrée `python -m` et refus des modes non autorisés | arguments → code de sortie | 1a, 1b, 1c, 1d, 1e | — | C01 |
 
 ### 6.11 Artefact `service-ia` (paquet `xpbots.service_ia`, phase 12, processus séparé)
 

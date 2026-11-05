@@ -14,13 +14,18 @@ paramètres des [exports techniques](../../../config/parametres_figes_v3.json) e
    §9.3 ; que les 14 cas C11, les 8 cas S02.6 et les 18 cas A14 sont affectés dans le
    [document 03](03_acceptation_et_tests.md) ; que chaque section de la spécification (C01 à C11, C03.1 à C03.12,
    S02.1 à S02.6, A01 à A15) figure dans la matrice du §4 ; que chaque ligne de cette matrice et de la table des
-   consignes d'expert (§5) désigne un emplacement du plan. Code de sortie non nul au moindre manque.
+   consignes d'expert (§5) désigne un emplacement du plan ; que les décisions D-xx du plan directeur sont toutes
+   arrêtées, autorisées ou de simple note ; que chaque action humaine H-xx du plan directeur a sa procédure au
+   [document 07](07_procedures_humaines.md) ; que chaque étape et chaque garde-fou de la skill de planification a
+   sa ligne au §8. Code de sortie non nul au moindre manque.
 2. **Relecture exigence par exigence** : chaque phrase normative de la spécification a été relue et rattachée à
    une unité, une phase et un test (§4).
 3. **Confrontation à la skill d'expert** : chaque consigne de la skill (fichier principal et ses quatre
    références) est classée et rattachée au plan (§5), puis chaque règle est soumise au contrôle de codifiabilité
    que la skill exige pour un robot (§6).
-4. **Résultat** : six manques ont été trouvés et corrigés dans le plan (§7) ; aucun écart avec une règle figée
+4. **Application de la skill de planification** : chaque étape et chaque garde-fou de
+   `xp-bots-mcl-robot-planning` est rattaché à sa preuve dans le plan (§8).
+5. **Résultat** : neuf manques ont été trouvés et corrigés dans le plan (§7) ; aucun écart avec une règle figée
    n'a été introduit.
 
 ## 2. Paramètres techniques figés
@@ -183,7 +188,7 @@ paramètres des [exports techniques](../../../config/parametres_figes_v3.json) e
 | C09-2 | Motifs minimaux (20 codes) | Document 01, §9.3 | Contrôle mécanique |
 | C09-3 | Mesurer séparément configurations, signaux négociables, refus, entrées remplies, positions closes, résultats nets, drawdown de fonds propres | `journal-rejeu` 1c, 3 | Rapport C10 |
 | C09-4 | Fréquence d'au moins une entrée par jour de marché pour EURUSD et GBPUSD des deux robots, rétention de 80 % ; jamais un quota ; jours à zéro inclus | `journal-rejeu` 1c ; `combined_mean_fills_per_trading_day_target`, `trade_count_retention_target` | Rapport C10 |
-| C10-1 | Ticks Bid/Ask exacts EURUSD, GBPUSD, XAUUSD du 02/12/2019 au 03/11/2026 | Sous-étape 13.3 ; D-14 | Données validées |
+| C10-1 | Ticks Bid/Ask exacts EURUSD, GBPUSD, XAUUSD du 02/12/2019 au 03/11/2026 | Sous-étape 13.3 ; D-14 ; procédure H-09 ; convertisseurs `infrastructure` 1b et `points-entree` 1e (sondes S-09, S-10) | Données validées |
 | C10-2 | Blocs de dates fixés, test réservé non consulté, période explorée en diagnostic, démonstration prospective | `journal-rejeu` 0b, 2 (verrou) ; D-16 | Verrou du test réservé |
 | C10-3 | Exiger ticks ordonnés, contrats et coûts datés, calendriers avec heures de connaissance, permissions horodatées, sinon contrôle technique neutre seulement | Sous-étape 13.3 ; `journal-rejeu` 2 | Rapport de données |
 | C10-4 | M1 pour un premier diagnostic seulement ; aucun tick généré en silence ; ordre intrabougie, spread variable et TTL reproduits | `journal-rejeu` 1a, 1b | C11.12 |
@@ -375,3 +380,26 @@ de D-12, tolérance d'arrondi ε du document 01, §6.
 | 4 | C10 : effet propre du fondamental, fréquences brutes avant filtrage, comparaison aux journaux de démonstration, pertes et arrêts de chaque perturbation | Document 02, §6.8 (`rapports`) |
 | 5 | A02 : le service écrit sous `XPBOTS_COMMON_FILES_DIR`, qui doit désigner le dossier commun lu par le robot | Document 01, §2 : contrôle au démarrage et alerte en cas d'écart ; un snapshot absent ou périmé laisse le complément `NEUTRAL` |
 | 6 | A13.10 et A12 : mécanisme de suspension des vetos d'un fournisseur en dérive non décrit | Document 02, §6.11 : le service cesse de publier les vetos de ce fournisseur et poursuit l'observation dans son journal |
+| 7 | Les exports de ticks réellement disponibles (terminal MT5, source tierce) ne sont pas au format canonique exigé par le rejeu ; aucun convertisseur n'était prévu | Document 02, §6.9 (`conversion_exports_ticks`) et §6.10 (`cli_donnees`) ; sondes S-09 et S-10 (document 01, §10) ; tests (document 03, §7) ; procédure H-09 |
+| 8 | Les actions humaines étaient citées sans procédure ni comportement prévu en leur absence | [Document 07](07_procedures_humaines.md), procédures H-01 à H-12 ; plan directeur, §5 |
+| 9 | Les refus D-10 et D-17 pouvaient se lire comme des décisions en attente | Plan directeur, §3 (statut « Arrêtée : refus ») et §2.4 (complétude) |
+
+## 8. Application de la skill `xp-bots-mcl-robot-planning`, étape par étape
+
+| Id | Étape ou garde-fou de la skill | Application dans le plan | Preuve |
+|---|---|---|---|
+| M-01 | Périmètre : artefact, échelle ; système complet en mode composite ; ordre de livraison venant du guide | Application en mode composite, onze artefacts, ordre du guide | Plan directeur, §2 ; [document 02](02_cartographie_mcl.md), §1, §3 et §5 |
+| M-02 | Décisions ouvertes : plateforme, langage et répertoire des sources demandés à l'humain avant toute carte | Questions posées le 05/11/2026 ; réponses consignées | Plan directeur, §3, D-01 et D-02 |
+| M-03 | Applicabilité : test en trois questions ; spécification figée applicable, recherche de variante exclue | Verdict applicable, sondes jetables pour l'adaptateur MT5 | Document 02, §1 |
+| M-04 | Initialiser les dossiers MCL en mode écriture seulement ; en planification, ne rien écrire | Aucun dossier `mcl/` créé pendant la planification ; initialisation en phase 0 | [Document 04](04_phases.md), phase 0 |
+| M-05 | Cartographier : unités candidates recoupées avec la spécification, question-test, `analyser` jusqu'à zéro divergence | Unités de chaque artefact ; cartes simulées par `mcl.py analyser` | Document 02, §5 et §6 |
+| M-06 | Frontières et contrats : port, doublure, infrastructure réelle, test de contrat ; esquisse de tous les contrats | Table des frontières ; contrats esquissés ; contrats d'échange finalisés tôt (exception MCL) | Document 02, §6 et §7 ; [document 01](01_architecture.md), §2.1 et §2.2 |
+| M-07 | Affecter les cas d'acceptation C11, S02.6 et A14 aux couches et aux catégories ; aucun cas sans couche | Quarante cas affectés | [Document 03](03_acceptation_et_tests.md), §5 ; contrôle mécanique |
+| M-08 | Plan de gate : catégorie 1, catégorie 2, régression intégrale avec `python tools/verify_project.py` | Commandes de gate et de gel | Document 03, §3 ; document 04, gabarit commun |
+| M-09 | Présenter avant la couche 0 : applicabilité, carte avec groupes parallèles, frontières, décisions, coûts | Plan directeur et documents 02 et 05 ; arrêt avant la phase 0 | Plan directeur, §1 et §2 ; [document 05](05_expert_risques_tracabilite.md), §3 |
+| G-01 | Paramètres chargés depuis `config/`, jamais recopiés en dur ni optimisés | Chargement strict, contrôle d'empreinte, test de non-recopie | Document 01, §1 et §6 ; document 03, §8 |
+| G-02 | Le code de `reference/` est un oracle, pas une couche | `reference` interdit dans toutes les cartes du code | Document 01, §5 ; document 02, §8 |
+| G-03 | Ordre de dépendance, jamais ordre du flux ; types du flux en couche 0, adaptateur réel en infrastructure | Types du flux dans le noyau, flux MT5 dans `infrastructure` | Document 02, §5 et §6 |
+| G-04 | Doublures seulement aux frontières externes ; même moteur pour le rejeu et la plateforme | Doublures limitées aux frontières ; cœur unique | Document 02, §7 ; document 01, §1 |
+| G-05 | `mcl.py` n'analyse pas MQL5 : convention de modules et revue de code, à signaler | Service MQL5 isolé, contrôlé par convention, revue et tests de format | Document 02, §6.12 |
+| G-06 | Les deux méthodes restent deux artefacts ; seul le coordinateur de compte est partagé | Moteurs London, V1 et futur EMA parallèles ; stratégies injectées | Document 02, §5 ; plan directeur, D-18 |

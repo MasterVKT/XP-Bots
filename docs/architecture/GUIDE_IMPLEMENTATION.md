@@ -37,7 +37,7 @@ L'analyse fondamentale externe et le complément LLM ont des rôles distincts. U
 
 Les dates et champs de collecte sont décrits dans les [données historiques requises](../data/03_Donnees_Historiques_Requises_et_Validation.md). Un calendrier de collecte ne prouve pas à lui seul que l'effectif de validation sera atteint.
 
-Le [plan d'implémentation intégrale du robot London](robot_london_v3/README.md) (`LONDON_V3`, version 1.2.0 du 5 novembre 2026, validé par l'utilisateur) décline cet ordre en phases MCL avec points d'arrêt ; ses décisions et arbitrages de spécification sont arrêtés.
+Le [plan d'implémentation intégrale du robot London](robot_london_v3/README.md) (`LONDON_V3`, version 1.3.0 du 5 novembre 2026, validé par l'utilisateur) décline cet ordre en phases MCL avec points d'arrêt ; ses décisions et arbitrages de spécification sont arrêtés.
 
 ## Emploi des fonctions de référence
 

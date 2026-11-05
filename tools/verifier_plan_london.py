@@ -2,8 +2,10 @@
 
 Sans réseau ni dépendance. Vérifie que le document 06 rattache chaque paramètre figé, chaque section de la
 spécification 02 et chaque consigne d'expert à un emplacement du plan ; que les motifs minimaux de C09 sont
-traités par le document 01 ; que les cas d'acceptation C11, S02.6 et A14 sont affectés par le document 03.
-Les listes attendues sont dérivées des sources (spécification et exports), jamais recopiées ici.
+traités par le document 01 ; que les cas d'acceptation C11, S02.6 et A14 sont affectés par le document 03 ; que
+les décisions du plan directeur sont toutes arrêtées ; que chaque action humaine a sa procédure (document 07) ;
+que chaque étape et chaque garde-fou de la skill de planification a sa preuve (document 06, §8).
+Les listes attendues sont dérivées des sources (spécification, exports, skill), jamais recopiées ici.
 Code de sortie 0 si tout est couvert, 1 sinon.
 """
 from __future__ import annotations
@@ -18,7 +20,13 @@ PLAN = ROOT / 'docs' / 'architecture' / 'robot_london_v3'
 SPEC = ROOT / 'livrables' / 'strategies_m15' / '02_London_Breakout_M15_Specification_IA.md'
 CONFIG = ROOT / 'config' / 'parametres_figes_v3.json'
 CONFIG_IA = ROOT / 'config' / 'parametres_IA_integration_v1.json'
+SKILL_PLANIFICATION = ROOT / '.agents' / 'skills' / 'xp-bots-mcl-robot-planning' / 'SKILL.md'
 VERDICTS = ('aligné', 'écart figé', 'instrumenté', 'hors robot')
+STATUTS_ARRETES = ('Arrêtée', 'Autorisée', 'Note')
+
+
+def identifiants_contigus(ids: list[str], prefixe: str) -> bool:
+    return ids == [f'{prefixe}{i:02d}' for i in range(1, len(ids) + 1)]
 
 
 def lire(path: Path) -> str:
@@ -145,6 +153,40 @@ def verifier() -> tuple[dict, list[str]]:
         if len(ligne) < 5 or not any(v in ligne[3].lower() for v in VERDICTS) or not ligne[4]:
             problemes.append(f'consigne « {ligne[0]} » : verdict non reconnu ou traitement vide')
     resume['consignes_expert'] = len(consignes)
+
+    # 6. Les décisions du plan directeur sont toutes arrêtées, autorisées ou de simple note.
+    plan_directeur = lire(PLAN / 'README.md')
+    decisions = lignes_tableau(section(plan_directeur, '3.'))
+    if not identifiants_contigus([ligne[0] for ligne in decisions], 'D-'):
+        problemes.append('plan directeur, §3 : identifiants de décision non contigus ou en double')
+    for ligne in decisions:
+        statut = ligne[2].replace('*', '').strip() if len(ligne) > 2 else ''
+        if not statut.startswith(STATUTS_ARRETES):
+            problemes.append(f'décision « {ligne[0]} » non arrêtée (statut : « {statut[:40]} »)')
+    resume['decisions'] = len(decisions)
+
+    # 7. Chaque action humaine du plan directeur a sa procédure dans le document 07, et réciproquement.
+    actions = [ligne[0] for ligne in lignes_tableau(section(plan_directeur, '5.'))]
+    if not identifiants_contigus(actions, 'H-'):
+        problemes.append('plan directeur, §5 : identifiants d\'action humaine non contigus ou en double')
+    procedures = re.findall(r'^## (H-\d\d) — ', lire(PLAN / '07_procedures_humaines.md'), re.M)
+    problemes += [f'action « {a} » sans procédure (document 07)' for a in actions if a not in procedures]
+    problemes += [f'procédure « {p} » absente du plan directeur, §5' for p in procedures if p not in actions]
+    resume['actions_humaines'] = {'plan_directeur': len(actions), 'procedures': len(procedures)}
+
+    # 8. Chaque étape et chaque garde-fou de la skill de planification a sa preuve (document 06, §8).
+    skill = lire(SKILL_PLANIFICATION)
+    etapes = len(re.findall(r'^\d+\. ', section(skill, 'Workflow'), re.M))
+    garde_fous = len(re.findall(r'^- ', section(skill, 'Garde-fous'), re.M))
+    application = {ligne[0]: ligne for ligne in lignes_tableau(section(doc06, '8.'))}
+    attendus_skill = ([f'M-{i:02d}' for i in range(1, etapes + 1)]
+                      + [f'G-{i:02d}' for i in range(1, garde_fous + 1)])
+    for ident in attendus_skill:
+        ligne = application.get(ident)
+        if not ligne or len(ligne) < 4 or not ligne[2] or not ligne[3]:
+            problemes.append(f'skill de planification : « {ident} » sans application ni preuve (document 06, §8)')
+    resume['skill_planification'] = {'etapes': etapes, 'garde_fous': garde_fous,
+                                     'lignes': len(application)}
     return resume, problemes
 
 
