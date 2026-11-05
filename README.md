@@ -36,7 +36,12 @@ Utiliser Python **3.13**. Les contrôles IA et documentaires utilisent la biblio
 ```powershell
 python -m pip install -r requirements-dev.txt
 python tools/verify_project.py
+python tools/run_robot_tests.py
 ```
+
+La seconde commande vérifie les ressources de référence ; la troisième exécute la suite du robot en
+construction, dont le test de bout en bout du squelette (rejeu d'une journée synthétique par
+`python -m xpbots.app.rejeu_squelette`).
 
 Ces commandes ne passent aucun ordre et n'appellent aucune API. Les séries de contrôle sont synthétiques ; les anciens caches de prix ne sont pas nécessaires. Le rapport de la dernière vérification se trouve dans `.local/reports/verification_projet.json`, exclu de Git. Une copie datée de l'audit de réorganisation est conservée dans [docs/validation/verification_projet.json](docs/validation/verification_projet.json).
 

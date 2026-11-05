@@ -32,16 +32,20 @@ pas l'exécution de ces cas sur un robot : ils restent verts et inchangés.
 ## 2. Conventions
 
 - Fichiers : `tests/robot/<artefact>/test_cat1_c<couche>_<theme>.py` et
-  `tests/robot/<artefact>/test_cat2_c<couche>_<theme>.py` ; squelette : `tests/robot/squelette/` ; outils de
-  test (doublures des seules frontières externes) : `tests/robot/outils/`.
+  `tests/robot/<artefact>/test_cat2_c<couche>_<theme>.py` ; squelette : `tests/robot/squelette/` ; gardes
+  transverses du §8 : `tests/robot/transverses/` ; outils de test (fabriques et doublures des seules frontières
+  externes) : `tests/robot/outils/`. `tests/robot/` est un paquet découvert depuis `tests/` : les tests importent
+  leurs outils par `robot.outils.<module>` et le code par `xpbots.<paquet>`.
 - Tests de contrat des frontières réelles : `test_contrat_<frontiere>_<theme>.py`, ignorés sauf si
   `XPBOTS_CONTRATS_MT5=1` (Windows, terminal connecté au compte démo Deriv) ou `XPBOTS_CONTRATS_API=1` (appels
   d'API réels : non autorisés au 05/11/2026, D-17, redemandés en sous-étape 13.6). Ils sont écrits avec la
   couche qu'ils confrontent (phases 11 et 12) et exécutés en phase 13 ; leur absence d'exécution n'empêche aucun
   gel antérieur, et une divergence constatée ouvre un défigeage « correction » (document 08).
-- Lanceur `tools/run_robot_tests.py` (bibliothèque standard) : ajoute `src` au chemin d'import ; découvre les
-  tests ; options `--artefact`, `--couche`, `--categorie 1|2` ; code de sortie non nul au moindre échec ; résumé
-  écrit dans `.local/reports/robot_tests.json` (ignoré par Git).
+- Lanceur `tools/run_robot_tests.py` (bibliothèque standard) : ajoute `src` et la racine du dépôt au chemin
+  d'import ; découvre les tests ; options `--artefact`, `--couche` (exige `--artefact`), `--categorie 1|2`,
+  `--verbeux`, et, pour le test du lanceur lui-même, `--racine-tests` et `--rapport` ; aucun fichier de
+  bytecode écrit ; code de sortie 1 au moindre échec, à la moindre erreur d'import ou si la sélection est vide,
+  2 pour un usage invalide ; résumé écrit dans `.local/reports/robot_tests.json` (ignoré par Git).
 - Chaque couche liste ses fichiers de tests dans le champ `contrats` de sa carte : ils sont figés avec elle.
 
 ## 3. Commandes de gate
@@ -191,8 +195,11 @@ python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossie
 
 ## 8. Gardes transverses
 
-- **Pureté du cœur** : test qui parcourt les paquets du cœur et refuse tout appel à l'horloge système,
-  `datetime.now`, `datetime.utcnow`, `date.today`, ainsi que toute ouverture de fichier.
+- **Pureté du cœur** : test qui parcourt les paquets du cœur (y compris `journal-rejeu`, où seul le hasard du
+  bootstrap est admis) et refuse tout appel à l'horloge système, `datetime.now`, `datetime.utcnow`,
+  `date.today`, toute ouverture, lecture ou écriture de fichier, les modules des frontières réelles et tout
+  chargement dynamique de module (`importlib`, `__import__`), qui contournerait la carte ; chaque règle a son
+  cas négatif (`tests/robot/transverses/test_purete_coeur.py`).
 - **Architecture** : `mcl.py verifier` de chaque carte, exécuté par chaque gate ; celui de la carte composite
   `mcl/robot-london-v3/` à chaque fin de phase (aucune intégration continue distante, D-10).
 - **Configuration figée** : le robot refuse de démarrer sur une copie modifiée de l'un des deux exports, et sur

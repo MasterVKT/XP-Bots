@@ -173,3 +173,4 @@ chaque artefact au début de sa phase.
 | Phase | Statut | Date | Preuves |
 |---|---|---|---|
 | 0 | Terminée | 05/11/2026 | Dossier composite initialisé ; carte sans divergence ; `verifier` vert ; encodage éprouvé par six violations détectées ; guide, règles du projet et skill de planification alignés sur D-01 et D-02 ; rapport d'arrêt de la phase |
+| 1 | Terminée | 05/11/2026 | Squelette déployable : segments S1 à S7 dans leurs paquets définitifs ([registre des coutures](../squelette/COUTURES.md)) ; lanceur `tools/run_robot_tests.py` ; fabrique de ticks ; test de bout en bout ; gardes de pureté et de carte composite ; 50 tests verts ; neuf mutations volontaires du squelette détectées sur copie jetable ; `verifier` vert sur le code réel |

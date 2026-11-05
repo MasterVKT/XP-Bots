@@ -263,7 +263,8 @@ src/xpbots/
   donnees_historiques/              artefact donnees-historiques (sous-étape 13.3) : exports de ticks → format canonique
 tests/robot/
   outils/                           fabriques synthétiques, courtier scénarisé, faux module MetaTrader5
-  squelette/                        test de bout en bout du squelette
+  squelette/                        segments minimaux S1 à S7 et test de bout en bout du squelette
+  transverses/                      gardes transverses : lanceur, pureté du cœur, carte composite
   noyau/ donnees_temps/ moteur_london/ execution_coordinateur/ controles_fondamentaux/
   contexte_ia/ orchestration/ journal_rejeu/ infrastructure/ points_entree/ service_ia/
   moteur_london_v1/ donnees_historiques/
