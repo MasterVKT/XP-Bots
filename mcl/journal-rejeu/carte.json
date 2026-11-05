@@ -1,0 +1,305 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "journal-rejeu",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": "Journal C09, simulateur d'exécution de référence et de stress, rejeu, métriques, bootstrap, PAPER_AB."
+  },
+  "langage": "python",
+  "sources": [
+    "src"
+  ],
+  "exclure": [],
+  "couches": [
+    {
+      "id": "0",
+      "profondeur": 0,
+      "nom": "types-rejeu",
+      "chemins": [
+        "src/xpbots/journal_rejeu/c0_types.py"
+      ],
+      "imports": [
+        "xpbots.journal_rejeu.c0_types"
+      ],
+      "contrats": [
+        "mcl/journal-rejeu/contrats/couche-0.md",
+        "tests/robot/journal_rejeu/test_c0_*.py"
+      ]
+    },
+    {
+      "id": "1a",
+      "profondeur": 1,
+      "nom": "journal",
+      "chemins": [
+        "src/xpbots/journal_rejeu/c1a_journal.py"
+      ],
+      "imports": [
+        "xpbots.journal_rejeu.c1a_journal"
+      ],
+      "contrats": [
+        "mcl/journal-rejeu/contrats/couche-1a.md",
+        "tests/robot/journal_rejeu/test_c1a_*.py"
+      ]
+    },
+    {
+      "id": "1b",
+      "profondeur": 1,
+      "nom": "simulateur",
+      "chemins": [
+        "src/xpbots/journal_rejeu/c1b_simulateur.py"
+      ],
+      "imports": [
+        "xpbots.journal_rejeu.c1b_simulateur"
+      ],
+      "contrats": [
+        "mcl/journal-rejeu/contrats/couche-1b.md",
+        "tests/robot/journal_rejeu/test_c1b_*.py"
+      ]
+    },
+    {
+      "id": "1c",
+      "profondeur": 1,
+      "nom": "import-ticks",
+      "chemins": [
+        "src/xpbots/journal_rejeu/c1c_import_ticks.py"
+      ],
+      "imports": [
+        "xpbots.journal_rejeu.c1c_import_ticks"
+      ],
+      "contrats": [
+        "mcl/journal-rejeu/contrats/couche-1c.md",
+        "tests/robot/journal_rejeu/test_c1c_*.py"
+      ]
+    },
+    {
+      "id": "2a",
+      "profondeur": 2,
+      "nom": "metriques",
+      "chemins": [
+        "src/xpbots/journal_rejeu/c2a_metriques.py"
+      ],
+      "imports": [
+        "xpbots.journal_rejeu.c2a_metriques"
+      ],
+      "contrats": [
+        "mcl/journal-rejeu/contrats/couche-2a.md",
+        "tests/robot/journal_rejeu/test_c2a_*.py"
+      ]
+    },
+    {
+      "id": "2b",
+      "profondeur": 2,
+      "nom": "rejeu",
+      "chemins": [
+        "src/xpbots/journal_rejeu/c2b_rejeu.py"
+      ],
+      "imports": [
+        "xpbots.journal_rejeu.c2b_rejeu"
+      ],
+      "contrats": [
+        "mcl/journal-rejeu/contrats/couche-2b.md",
+        "tests/robot/journal_rejeu/test_c2b_*.py"
+      ]
+    },
+    {
+      "id": "3a",
+      "profondeur": 3,
+      "nom": "bootstrap",
+      "chemins": [
+        "src/xpbots/journal_rejeu/c3a_bootstrap.py"
+      ],
+      "imports": [
+        "xpbots.journal_rejeu.c3a_bootstrap"
+      ],
+      "contrats": [
+        "mcl/journal-rejeu/contrats/couche-3a.md",
+        "tests/robot/journal_rejeu/test_c3a_*.py"
+      ]
+    },
+    {
+      "id": "3b",
+      "profondeur": 3,
+      "nom": "paper-ab",
+      "chemins": [
+        "src/xpbots/journal_rejeu/c3b_paper_ab.py"
+      ],
+      "imports": [
+        "xpbots.journal_rejeu.c3b_paper_ab"
+      ],
+      "contrats": [
+        "mcl/journal-rejeu/contrats/couche-3b.md",
+        "tests/robot/journal_rejeu/test_c3b_*.py"
+      ]
+    },
+    {
+      "id": "4",
+      "profondeur": 4,
+      "nom": "rapport",
+      "chemins": [
+        "src/xpbots/journal_rejeu/c4_rapport.py"
+      ],
+      "imports": [
+        "xpbots.journal_rejeu.c4_rapport"
+      ],
+      "contrats": [
+        "mcl/journal-rejeu/contrats/couche-4.md",
+        "tests/robot/journal_rejeu/test_c4_*.py"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "types_rejeu",
+      "responsabilite": "Représenter scénarios, blocs de dates C10 et manifestes de données.",
+      "depend_de": [
+        "amont-noyau"
+      ],
+      "couche": "0"
+    },
+    {
+      "id": "journal",
+      "responsabilite": "Valider et sérialiser les enregistrements C09.",
+      "depend_de": [
+        "types_rejeu",
+        "journal-persistant"
+      ],
+      "couche": "1a"
+    },
+    {
+      "id": "simulateur_execution",
+      "responsabilite": "Simuler les exécutions de référence et de stress à partir des ticks (port Courtier).",
+      "depend_de": [
+        "types_rejeu",
+        "amont-execution"
+      ],
+      "couche": "1b"
+    },
+    {
+      "id": "import_ticks",
+      "responsabilite": "Lire les ticks historiques et leur manifeste de couverture.",
+      "depend_de": [
+        "types_rejeu",
+        "ticks-historiques"
+      ],
+      "couche": "1c"
+    },
+    {
+      "id": "metriques",
+      "responsabilite": "Calculer les métriques de C09, C10 et A13 depuis le journal.",
+      "depend_de": [
+        "journal"
+      ],
+      "couche": "2a"
+    },
+    {
+      "id": "rejeu",
+      "responsabilite": "Rejouer causalement des ticks à travers le coordinateur et le simulateur.",
+      "depend_de": [
+        "simulateur_execution",
+        "import_ticks",
+        "journal",
+        "amont-donnees-temps"
+      ],
+      "couche": "2b"
+    },
+    {
+      "id": "bootstrap",
+      "responsabilite": "Estimer l'incertitude par bootstrap de blocs de cinq jours de marché.",
+      "depend_de": [
+        "metriques"
+      ],
+      "couche": "3a"
+    },
+    {
+      "id": "paper_ab",
+      "responsabilite": "Rejouer deux portefeuilles indépendants référence et veto IA.",
+      "depend_de": [
+        "rejeu",
+        "metriques"
+      ],
+      "couche": "3b"
+    },
+    {
+      "id": "rapport_validation",
+      "responsabilite": "Assembler les rapports de validation C10 et A13.",
+      "depend_de": [
+        "bootstrap",
+        "paper_ab"
+      ],
+      "couche": "4"
+    }
+  ],
+  "externes": [
+    {
+      "id": "amont-noyau",
+      "imports": [
+        "xpbots.noyau"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1a",
+        "1b",
+        "1c",
+        "2a",
+        "2b",
+        "3a",
+        "3b",
+        "4"
+      ]
+    },
+    {
+      "id": "amont-donnees-temps",
+      "imports": [
+        "xpbots.donnees_temps"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1a",
+        "1b",
+        "1c",
+        "2a",
+        "2b",
+        "3a",
+        "3b",
+        "4"
+      ]
+    },
+    {
+      "id": "amont-execution",
+      "imports": [
+        "xpbots.execution"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1a",
+        "1b",
+        "1c",
+        "2a",
+        "2b",
+        "3a",
+        "3b",
+        "4"
+      ]
+    },
+    {
+      "id": "journal-persistant",
+      "imports": [],
+      "couches_autorisees": []
+    },
+    {
+      "id": "ticks-historiques",
+      "imports": [],
+      "couches_autorisees": []
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "warn",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}

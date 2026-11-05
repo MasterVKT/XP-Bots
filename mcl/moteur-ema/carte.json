@@ -1,0 +1,233 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "moteur-ema",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": "Méthode S01 : tendance, armement, repli, reprise, stop structurel, machine à états, compteur journalier."
+  },
+  "langage": "python",
+  "sources": [
+    "src"
+  ],
+  "exclure": [],
+  "couches": [
+    {
+      "id": "0",
+      "profondeur": 0,
+      "nom": "parametres-ema",
+      "chemins": [
+        "src/xpbots/moteur_ema/c0_parametres.py"
+      ],
+      "imports": [
+        "xpbots.moteur_ema.c0_parametres"
+      ],
+      "contrats": [
+        "mcl/moteur-ema/contrats/couche-0.md",
+        "tests/robot/moteur_ema/test_c0_*.py"
+      ]
+    },
+    {
+      "id": "1a",
+      "profondeur": 1,
+      "nom": "tendance",
+      "chemins": [
+        "src/xpbots/moteur_ema/c1a_tendance.py"
+      ],
+      "imports": [
+        "xpbots.moteur_ema.c1a_tendance"
+      ],
+      "contrats": [
+        "mcl/moteur-ema/contrats/couche-1a.md",
+        "tests/robot/moteur_ema/test_c1a_*.py"
+      ]
+    },
+    {
+      "id": "1b",
+      "profondeur": 1,
+      "nom": "conditions-repli",
+      "chemins": [
+        "src/xpbots/moteur_ema/c1b_repli.py"
+      ],
+      "imports": [
+        "xpbots.moteur_ema.c1b_repli"
+      ],
+      "contrats": [
+        "mcl/moteur-ema/contrats/couche-1b.md",
+        "tests/robot/moteur_ema/test_c1b_*.py"
+      ]
+    },
+    {
+      "id": "1c",
+      "profondeur": 1,
+      "nom": "bougie-reprise",
+      "chemins": [
+        "src/xpbots/moteur_ema/c1c_reprise.py"
+      ],
+      "imports": [
+        "xpbots.moteur_ema.c1c_reprise"
+      ],
+      "contrats": [
+        "mcl/moteur-ema/contrats/couche-1c.md",
+        "tests/robot/moteur_ema/test_c1c_*.py"
+      ]
+    },
+    {
+      "id": "1d",
+      "profondeur": 1,
+      "nom": "stop-objectif",
+      "chemins": [
+        "src/xpbots/moteur_ema/c1d_stop.py"
+      ],
+      "imports": [
+        "xpbots.moteur_ema.c1d_stop"
+      ],
+      "contrats": [
+        "mcl/moteur-ema/contrats/couche-1d.md",
+        "tests/robot/moteur_ema/test_c1d_*.py"
+      ]
+    },
+    {
+      "id": "2",
+      "profondeur": 2,
+      "nom": "machine-etats",
+      "chemins": [
+        "src/xpbots/moteur_ema/c2_machine_etats.py"
+      ],
+      "imports": [
+        "xpbots.moteur_ema.c2_machine_etats"
+      ],
+      "contrats": [
+        "mcl/moteur-ema/contrats/couche-2.md",
+        "tests/robot/moteur_ema/test_c2_*.py"
+      ]
+    },
+    {
+      "id": "3",
+      "profondeur": 3,
+      "nom": "moteur",
+      "chemins": [
+        "src/xpbots/moteur_ema/c3_moteur.py"
+      ],
+      "imports": [
+        "xpbots.moteur_ema.c3_moteur"
+      ],
+      "contrats": [
+        "mcl/moteur-ema/contrats/couche-3.md",
+        "tests/robot/moteur_ema/test_c3_*.py"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "parametres_ema",
+      "responsabilite": "Charger et valider le bloc ema de la configuration figée.",
+      "depend_de": [
+        "amont-noyau"
+      ],
+      "couche": "0"
+    },
+    {
+      "id": "tendance_ema",
+      "responsabilite": "Évaluer l'ordre EMA15/25/50 et la pente de l'EMA50 sur quatre bougies.",
+      "depend_de": [
+        "parametres_ema"
+      ],
+      "couche": "1a"
+    },
+    {
+      "id": "conditions_repli",
+      "responsabilite": "Tester le contexte d'armement, la validité du repli et le contact avec la zone EMA15–EMA50.",
+      "depend_de": [
+        "parametres_ema"
+      ],
+      "couche": "1b"
+    },
+    {
+      "id": "bougie_reprise",
+      "responsabilite": "Tester la bougie de reprise de S01.3.",
+      "depend_de": [
+        "parametres_ema"
+      ],
+      "couche": "1c"
+    },
+    {
+      "id": "stop_objectif_ema",
+      "responsabilite": "Calculer buffer, B_SL non arrondi, refus au-delà de 2,50 A et multiple d'objectif.",
+      "depend_de": [
+        "parametres_ema"
+      ],
+      "couche": "1d"
+    },
+    {
+      "id": "machine_etats_ema",
+      "responsabilite": "Gérer armement, contact, repli de 1 à 8 bougies, cooldown, position possédée et compteur journalier par symbole.",
+      "depend_de": [
+        "tendance_ema",
+        "conditions_repli",
+        "bougie_reprise",
+        "amont-noyau"
+      ],
+      "couche": "2"
+    },
+    {
+      "id": "moteur_ema",
+      "responsabilite": "Produire à chaque clôture admissible un signal ou un motif technique et appliquer l'issue reçue.",
+      "depend_de": [
+        "machine_etats_ema",
+        "stop_objectif_ema",
+        "amont-donnees-temps",
+        "stockage-etat"
+      ],
+      "couche": "3"
+    }
+  ],
+  "externes": [
+    {
+      "id": "amont-noyau",
+      "imports": [
+        "xpbots.noyau"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1a",
+        "1b",
+        "1c",
+        "1d",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "id": "amont-donnees-temps",
+      "imports": [
+        "xpbots.donnees_temps"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1a",
+        "1b",
+        "1c",
+        "1d",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "id": "stockage-etat",
+      "imports": [
+        "sqlite3"
+      ],
+      "couches_autorisees": []
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "warn",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}

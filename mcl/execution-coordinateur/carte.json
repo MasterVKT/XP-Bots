@@ -1,0 +1,368 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "execution-coordinateur",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": "Contrats C06–C09 : cotation, prix exécutables, risque all-in, réservations, dimensionnement, arbitrage, cycle d'ordre, sorties obligatoires, coordinateur."
+  },
+  "langage": "python",
+  "sources": [
+    "src"
+  ],
+  "exclure": [],
+  "couches": [
+    {
+      "id": "0",
+      "profondeur": 0,
+      "nom": "types-execution",
+      "chemins": [
+        "src/xpbots/execution/c0_types.py"
+      ],
+      "imports": [
+        "xpbots.execution.c0_types"
+      ],
+      "contrats": [
+        "mcl/execution-coordinateur/contrats/couche-0.md",
+        "tests/robot/execution/test_c0_*.py"
+      ]
+    },
+    {
+      "id": "1a",
+      "profondeur": 1,
+      "nom": "garde-cotation",
+      "chemins": [
+        "src/xpbots/execution/c1a_cotation.py"
+      ],
+      "imports": [
+        "xpbots.execution.c1a_cotation"
+      ],
+      "contrats": [
+        "mcl/execution-coordinateur/contrats/couche-1a.md",
+        "tests/robot/execution/test_c1a_*.py"
+      ]
+    },
+    {
+      "id": "1b",
+      "profondeur": 1,
+      "nom": "prix-executables",
+      "chemins": [
+        "src/xpbots/execution/c1b_prix.py"
+      ],
+      "imports": [
+        "xpbots.execution.c1b_prix"
+      ],
+      "contrats": [
+        "mcl/execution-coordinateur/contrats/couche-1b.md",
+        "tests/robot/execution/test_c1b_*.py"
+      ]
+    },
+    {
+      "id": "1c",
+      "profondeur": 1,
+      "nom": "gardes-compte",
+      "chemins": [
+        "src/xpbots/execution/c1c_gardes_compte.py"
+      ],
+      "imports": [
+        "xpbots.execution.c1c_gardes_compte"
+      ],
+      "contrats": [
+        "mcl/execution-coordinateur/contrats/couche-1c.md",
+        "tests/robot/execution/test_c1c_*.py"
+      ]
+    },
+    {
+      "id": "1d",
+      "profondeur": 1,
+      "nom": "registre-reservations",
+      "chemins": [
+        "src/xpbots/execution/c1d_reservations.py"
+      ],
+      "imports": [
+        "xpbots.execution.c1d_reservations"
+      ],
+      "contrats": [
+        "mcl/execution-coordinateur/contrats/couche-1d.md",
+        "tests/robot/execution/test_c1d_*.py"
+      ]
+    },
+    {
+      "id": "2a",
+      "profondeur": 2,
+      "nom": "risque-all-in",
+      "chemins": [
+        "src/xpbots/execution/c2a_risque.py"
+      ],
+      "imports": [
+        "xpbots.execution.c2a_risque"
+      ],
+      "contrats": [
+        "mcl/execution-coordinateur/contrats/couche-2a.md",
+        "tests/robot/execution/test_c2a_*.py"
+      ]
+    },
+    {
+      "id": "2b",
+      "profondeur": 2,
+      "nom": "arbitrage",
+      "chemins": [
+        "src/xpbots/execution/c2b_arbitrage.py"
+      ],
+      "imports": [
+        "xpbots.execution.c2b_arbitrage"
+      ],
+      "contrats": [
+        "mcl/execution-coordinateur/contrats/couche-2b.md",
+        "tests/robot/execution/test_c2b_*.py"
+      ]
+    },
+    {
+      "id": "3",
+      "profondeur": 3,
+      "nom": "dimensionnement",
+      "chemins": [
+        "src/xpbots/execution/c3_dimensionnement.py"
+      ],
+      "imports": [
+        "xpbots.execution.c3_dimensionnement"
+      ],
+      "contrats": [
+        "mcl/execution-coordinateur/contrats/couche-3.md",
+        "tests/robot/execution/test_c3_*.py"
+      ]
+    },
+    {
+      "id": "4",
+      "profondeur": 4,
+      "nom": "cycle-ordre",
+      "chemins": [
+        "src/xpbots/execution/c4_cycle_ordre.py"
+      ],
+      "imports": [
+        "xpbots.execution.c4_cycle_ordre"
+      ],
+      "contrats": [
+        "mcl/execution-coordinateur/contrats/couche-4.md",
+        "tests/robot/execution/test_c4_*.py"
+      ]
+    },
+    {
+      "id": "5",
+      "profondeur": 5,
+      "nom": "sorties-obligatoires",
+      "chemins": [
+        "src/xpbots/execution/c5_sorties.py"
+      ],
+      "imports": [
+        "xpbots.execution.c5_sorties"
+      ],
+      "contrats": [
+        "mcl/execution-coordinateur/contrats/couche-5.md",
+        "tests/robot/execution/test_c5_*.py"
+      ]
+    },
+    {
+      "id": "6",
+      "profondeur": 6,
+      "nom": "coordinateur",
+      "chemins": [
+        "src/xpbots/execution/c6_coordinateur.py"
+      ],
+      "imports": [
+        "xpbots.execution.c6_coordinateur"
+      ],
+      "contrats": [
+        "mcl/execution-coordinateur/contrats/couche-6.md",
+        "tests/robot/execution/test_c6_*.py"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "types_execution",
+      "responsabilite": "Représenter profil d'instrument C04, positions possédées, réservations, état du compte et paramètres d'exécution.",
+      "depend_de": [
+        "amont-noyau",
+        "amont-donnees-temps"
+      ],
+      "couche": "0"
+    },
+    {
+      "id": "garde_cotation",
+      "responsabilite": "Contrôler fraîcheur, croisement, plafond de spread, écart d'entrée et TTL d'un signal.",
+      "depend_de": [
+        "types_execution"
+      ],
+      "couche": "1a"
+    },
+    {
+      "id": "prix_executables",
+      "responsabilite": "Convertir B_SL en SL exécutable, choisir E et calculer TP avec les arrondis au tick de C06.",
+      "depend_de": [
+        "types_execution"
+      ],
+      "couche": "1b"
+    },
+    {
+      "id": "gardes_compte",
+      "responsabilite": "Suivre base quotidienne UTC et pic de fonds propres et imposer les arrêts quotidien et global persistants.",
+      "depend_de": [
+        "types_execution",
+        "stockage-etat"
+      ],
+      "couche": "1c"
+    },
+    {
+      "id": "registre_reservations",
+      "responsabilite": "Réserver et libérer le risque initial de façon atomique et persistante par clé d'intention.",
+      "depend_de": [
+        "types_execution",
+        "stockage-etat"
+      ],
+      "couche": "1d"
+    },
+    {
+      "id": "risque_all_in",
+      "responsabilite": "Calculer la perte pessimiste au stop et les frais aller-retour pour un volume.",
+      "depend_de": [
+        "prix_executables",
+        "calcul-courtier"
+      ],
+      "couche": "2a"
+    },
+    {
+      "id": "arbitrage",
+      "responsabilite": "Ordonner les signaux simultanés selon les priorités figées et l'occupation des sous-jacents.",
+      "depend_de": [
+        "registre_reservations"
+      ],
+      "couche": "2b"
+    },
+    {
+      "id": "dimensionnement",
+      "responsabilite": "Retenir le plus grand volume de la grille native qui respecte simultanément les cinq contraintes C07.",
+      "depend_de": [
+        "risque_all_in",
+        "registre_reservations",
+        "gardes_compte",
+        "calcul-courtier"
+      ],
+      "couche": "3"
+    },
+    {
+      "id": "cycle_ordre",
+      "responsabilite": "Envoyer l'ordre protégé et gérer accusé ambigu, rapprochement, fill partiel et rétablissement des protections.",
+      "depend_de": [
+        "dimensionnement",
+        "prix_executables",
+        "courtier-execution",
+        "horloge-os"
+      ],
+      "couche": "4"
+    },
+    {
+      "id": "sorties_obligatoires",
+      "responsabilite": "Déterminer la première échéance de sortie et produire les clôtures prioritaires.",
+      "depend_de": [
+        "cycle_ordre",
+        "amont-donnees-temps"
+      ],
+      "couche": "5"
+    },
+    {
+      "id": "coordinateur",
+      "responsabilite": "Ordonner les traitements C08 pour chaque événement et journaliser chaque décision C09.",
+      "depend_de": [
+        "sorties_obligatoires",
+        "arbitrage",
+        "garde_cotation",
+        "amont-noyau",
+        "journal-persistant"
+      ],
+      "couche": "6"
+    }
+  ],
+  "externes": [
+    {
+      "id": "amont-noyau",
+      "imports": [
+        "xpbots.noyau"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1a",
+        "1b",
+        "1c",
+        "1d",
+        "2a",
+        "2b",
+        "3",
+        "4",
+        "5",
+        "6"
+      ]
+    },
+    {
+      "id": "amont-donnees-temps",
+      "imports": [
+        "xpbots.donnees_temps"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1a",
+        "1b",
+        "1c",
+        "1d",
+        "2a",
+        "2b",
+        "3",
+        "4",
+        "5",
+        "6"
+      ]
+    },
+    {
+      "id": "stockage-etat",
+      "imports": [
+        "sqlite3"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "calcul-courtier",
+      "imports": [
+        "MetaTrader5"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "courtier-execution",
+      "imports": [
+        "MetaTrader5"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "journal-persistant",
+      "imports": [],
+      "couches_autorisees": []
+    },
+    {
+      "id": "horloge-os",
+      "imports": [
+        "time"
+      ],
+      "couches_autorisees": []
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "warn",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}

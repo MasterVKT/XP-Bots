@@ -15,7 +15,7 @@ Résultat visé : un robot Python qui, sur les mêmes ticks, prend les mêmes d�
 MT5 démo (C04), et un service IA partagé (A04–A11) en dernière phase. **La rentabilité reste non validée** :
 elle relève du protocole C10/A13 sur les données réelles de l'utilisateur.
 
-Après approbation : exécution de la **phase 0 seule**, puis arrêt. Chaque phase suivante ne démarre que sur
+Avancement : **phase 0 terminée le 2026-11-05** (cartographie confirmée par `mcl.py`, tableau de suivi dans `mcl/robot-ema-v3/PLAN-MCL.md`). Chaque phase suivante ne démarre que sur
 demande explicite de l'utilisateur.
 
 ## 1. Décisions arrêtées
@@ -42,7 +42,7 @@ registre d'interprétation §10 (phase 0, avant le code concerné).
 | Construire pour comprendre ? | non | Aucune recherche d'avantage : la variante est imposée |
 
 - **Verdict : applicable.** Chercher une variante plus rentable serait exploratoire et reste hors plan.
-- **Échelle : application** (sept composants) → **mode composite** : squelette déployable outside-in, puis un
+- **Échelle : application** (squelette + huit artefacts de chair) → **mode composite** : squelette déployable outside-in, puis un
   artefact MCL de chair par composant, branché en remplaçant un segment minimal.
 - **Bénéfice dégradé assumé** : frontières externes dominantes (courtier, flux, calendrier, permissions, API LLM,
   IPC, horloge, stockage) → nombreuses doublures ; risque de dérive de fidélité traité par une même suite de
@@ -190,11 +190,12 @@ contrats finalisés ensemble, gates et gels séparés.
 
 | Couche | Unité (module) | Contrat | Cat. 1 | Cat. 2 |
 |---|---|---|---|---|
-| 0 | `parametres_techniques` (`c0_parametres`) | bloc `common` → objet immuable ; clés exactes, types, aucune valeur nulle ; empreinte du bundle pour le journal | clés manquantes/en trop, types, empreinte | — |
+| 0 | `parametres_techniques`, `calendrier_seances` (`c0_parametres_seances`) | bloc `common` → objet immuable ; clés exactes, types, aucune valeur nulle ; empreinte du bundle pour le journal + séances natives du symbole (C04, jamais devinées) | clés manquantes/en trop, types, empreinte | — |
 | 1a | `sessions_londres` (`c1a_sessions`) | jour Londres, jour UTC, jour ouvré 0–4 ; bougie (ouverture ≥ début, clôture < fin, même jour Londres) dans la fenêtre d'un bloc ; instant UTC de l'heure de sortie forcée d'un jour ; appartenance au blackout `[21:00,23:00)` UTC | changements d'heure 2025/2026 (08:00 Londres = 07:00 UTC l'été, 08:00 l'hiver), première clôture 08:15, dernière 15:45, 16:00 exclue, week-end exclu, jour UTC ≠ jour Londres, concordance `local_decision_in_window` | avec 1b et 1c |
 | 1b | `constructeur_bougies` (`c1b_bougies`) | ticks ordonnés + événements de couverture + séances natives → M15/H1 clôturées `[T,T+d)` alignées sur l'époque UTC, OHLC Bid, validité ; événements de trou | tick à T+900 dans la bougie suivante, égalités de ms départagées par séquence, minute inchangée ≠ trou, fermeture officielle ≠ trou, interruption inexpliquée = trou, H1 invisible avant clôture, clôture déclenchée par l'horloge sans tick, bougie sans Bid (R4) | — |
 | 1c | `indicateurs` (`c1c_indicateurs`) | états incrémentaux EMA(n) graine SMA, RSI Wilder (50/100/0), TR (premier = H−L), ATR Wilder, `A_t` = ATR de t−1, historique EMA50 sur 4 bougies | valeurs = `reference.technical` (`ema`, `wilder`, `rsi`, `add_indicators`) à 1e-12 près et **mêmes comparaisons de seuil** ; indisponibilité avant graine ; cas RSI nuls | — |
-| 2 | `etat_indicateurs` (`c2_etat_indicateurs`) | préchargement ≥ `warmup_closed_m15_bars` M15 (H1 inutile pour EMA) → état + empreinte (premier horodatage, SHA-256) ; persistance via `Stockage` ; reprise sur les seules nouvelles bougies ; trou → R6 | préchargement insuffisant = `WARMUP` ; préchargement différent journalisé | **C11.1** préfixe causal ; redémarrage = flux continu ; trou puis récupération |
+| 2 | `etat_indicateurs` (`c2_etat_indicateurs`) | préchargement ≥ `warmup_closed_m15_bars` M15 (H1 inutile pour EMA) → état + empreinte (premier horodatage, SHA-256) ; persistance via `Stockage` ; reprise sur les seules nouvelles bougies ; trou → R6 | préchargement insuffisant = `WARMUP` ; préchargement différent journalisé | redémarrage = flux continu |
+| 3 | `pipeline_marche` (`c3_pipeline`) | par symbole : ticks + couverture + horloge → `BougieEnrichie` (bougie, indicateurs, `A_t`, jour Londres, statut OK/WARMUP/DATA_GAP) ou événement de trou | statuts, effacement après trou (R5, R6) | **C11.1** préfixe causal ; trou puis récupération ; changement d'heure |
 
 ### 7.B `moteur_ema` (S01) — phase 3
 
@@ -230,10 +231,10 @@ Cat. 2 (bloc A+B réel) : équivalence avec `reference.technical.ema_setups` sur
 | 1a | `garde_cotation` | cotation valide non croisée (R3), âge ≤2 s, spread ≤ plafond du symbole (inclus), \|Bid − C_signal\| ≤0,25A, TTL `[T, T+5 s)` ; attente d'une cotation conforme dans le TTL | spread au plafond admis ; TTL exactement 5 s expiré (**C11.2**) ; première cotation après clôture seule exécutable (**C11.3**) |
 | 1b | `prix_executables` | E = Ask (achat) / Bid (vente) ; SL achat = plancher de B_SL au tick ; SL vente = plafond de B_SL+S ; D>0 ; TP = E + sens·k·D (plafond achat, plancher vente) ; contraintes natives SL/TP (stops/freeze) → refus avant ordre (R7) | S01.5 : E 1,10010, SL 1,09945, D 0,00065, TP **1,10108** ; vente SL 1,10065, TP **1,09902** ; concordance `rounded_levels` ; spread compté une fois (**C11.5**) |
 | 1c | `gardes_compte` | base des fonds propres à 00:00 UTC ; ≤98 % → `DAILY_LOSS_LOCK` jusqu'au jour UTC suivant ; pic depuis activation ; ≤90 % → `GLOBAL_DRAWDOWN_HALT` persistant, levée seulement par décision de déploiement tracée ; neutralisation des flux externes | seuils exacts, pertes flottantes et frais inclus, redémarrage sans remise à zéro (**C11.13**) |
+| 1d | `registre_reservations` | intention et réservation enregistrées atomiquement avant envoi ; idempotence par clé ; réserve liée à la position jusqu'à sa clôture | message répété sans doublon |
 | 2a | `risque_all_in` | g = max(tick, 0,05A) ; entrée E+sens·g, sortie SL−sens·g ; perte via `CalculCourtier` ; + frais aller-retour non inclus dans les prix (minimum par ordre, paliers) | g = 0,000025 et distance budgétée 0,00070 (S01.5) ; frais non linéaires (**C11.7**) |
-| 2b | `registre_reservations` | intention et réservation enregistrées atomiquement avant envoi ; idempotence par clé ; réserve liée à la position jusqu'à sa clôture | message répété sans doublon |
-| 3a | `dimensionnement` | plus grand volume de la grille (min, pas, max, limite agrégée) respectant les 5 contraintes C07, arrondi vers le bas ; motifs `MIN_VOLUME_OR_RISK_REJECT`, `ACCOUNT_RISK_CAP`, `MARGIN_REJECT`, `SYMBOL_BUSY` ; positions externes → R8 | 0,01 lot de 100 000 → 0,70 USD > 0,50 refusé (**C11.6**) ; micro 1 000 unités, min 0,1 lot → 0,07 USD admis ; marge cumulée ≤ Eqt/3 |
-| 3b | `arbitrage` | même instant : priorité `simultaneous_strategy_priority` puis `universe_priority` ; réévaluation après chaque réservation ; une position par sous-jacent ; ni fusion ni couverture | signaux `LONDON_V3` synthétiques simultanés (**C11.10**, R17) |
+| 2b | `arbitrage` | même instant : priorité `simultaneous_strategy_priority` puis `universe_priority` ; réévaluation après chaque réservation ; une position par sous-jacent ; ni fusion ni couverture | signaux `LONDON_V3` synthétiques simultanés (**C11.10**, R17) |
+| 3 | `dimensionnement` | plus grand volume de la grille (min, pas, max, limite agrégée) respectant les 5 contraintes C07, arrondi vers le bas ; motifs `MIN_VOLUME_OR_RISK_REJECT`, `ACCOUNT_RISK_CAP`, `MARGIN_REJECT`, `SYMBOL_BUSY` ; positions externes → R8 | 0,01 lot de 100 000 → 0,70 USD > 0,50 refusé (**C11.6**) ; micro 1 000 unités, min 0,1 lot → 0,07 USD admis ; marge cumulée ≤ Eqt/3 |
 | 4 | `cycle_ordre` | ordre protégé (SL+TP attachés, tolérance g) ; accusé 5 s ; réponse inconnue → verrou du symbole, rapprochement 1 s pendant 30 s puis 5 s sans limite, alerte >30 s, aucune retransmission ; fill partiel → annulation du reliquat, une entrée comptée ; TP recalculé au prix réel, 3 corrections (0,25/1/3 s, échéance 15 s) ; SL absent → clôture d'urgence immédiate ; TP déjà dépassé → clôture ; risque recalculé avec la seule réserve de sortie, réduction ou clôture | **C11.11**, **C11.12** (doublure scénarisée) |
 | 5 | `sorties_obligatoires` | première échéance : SL/TP natif, 7 200 s après le premier fill, 16:00 Londres, début de fenêtre d'annonce, FLATTEN, gardes de perte, 60 s avant fermeture native, début du blackout ; réessai chaque seconde quand négociable ; toute clôture en attente bloque les entrées du symbole | égalités d'échéances ; flux absent à l'heure de sortie |
 | 6 | `coordinateur` | ordre C08 par événement : rapprochement → sorties obligatoires → bougie et état technique → limites de méthode → fondamental et calendrier → contexte IA mémoire → cotation, stop, taille, marge, réservations → ordre protégé → issue au moteur ; second contrôle fondamental et IA juste avant envoi ; journal C09 de chaque décision ; redémarrage : journal rechargé, positions rapprochées, compteurs et risques restaurés avant toute décision ; verrou exclusif de propriété en netting ; jamais de clôture d'une position d'un autre propriétaire | **C11.11** redémarrage après envoi, position préexistante inconnue |
@@ -277,10 +278,11 @@ publication + 900 s exactement ; réponse postérieure à la décision sans effe
 | 1a | `journal` | validation et sérialisation des enregistrements C09 : version/empreinte des règles, courtier/contrat/volume, horodatages, OHLC, `A_t`, indicateurs, état du détecteur, niveaux, permission connue, version du calendrier, snapshot IA et preuves, bras A/B, coût IA alloué, Bid/Ask, frais, budget/réserves/marge, motif, requêtes, réponses, exécutions |
 | 1b | `simulateur_execution` (port `Courtier`) | référence : délai 250 ms, premier tick après délai + un tick adverse (R9) à l'entrée et aux sorties marché/stop ; TP/limite au niveau ou mieux si exécutable ; protections natives avant sorties logicielles ; gaps subis ; stress : Ask = Bid + 1,25 × spread, 1 000 ms, deux ticks adverses ; ordre intrabougie depuis les ticks |
 | 1c | `import_ticks` | CSV/CSV.gz du cahier de données §2 → ticks ordonnés + manifeste (source, fuseau, précision, trous connus, SHA-256) ; refus sans manifeste de couverture (R5) |
-| 2 | `metriques` | configurations, signaux, refus, fills, positions closes, P&L net, espérance, profit factor (pas de PF infini sur petit effectif), drawdown de fonds propres, fréquence avec jours à zéro, rétention N/A si référence nulle, faible si <50 |
-| 3 | `bootstrap` | blocs de 5 jours de marché contigus, 10 000 réplications, graine 20261104, percentiles 2,5/97,5 interpolation linéaire, réplications sans trade comptées |
-| 4 | `rejeu` | expériences par bloc (100 USD, préchargement sur le seul passé, arrêts non réinitialisés) et rejeu continu 01/01/2020–03/11/2026 ; robot seul puis compte commun |
-| 5 | `paper_ab` | deux portefeuilles complets indépendants à 100 USD (référence, référence + veto), réponses IA archivées rejouées, coût IA déduit une fois |
+| 2a | `metriques` | configurations, signaux, refus, fills, positions closes, P&L net, espérance, profit factor (pas de PF infini sur petit effectif), drawdown de fonds propres, fréquence avec jours à zéro, rétention N/A si référence nulle, faible si <50 |
+| 2b | `rejeu` | expériences par bloc (100 USD, préchargement sur le seul passé, arrêts non réinitialisés) et rejeu continu 01/01/2020–03/11/2026 ; robot seul puis compte commun |
+| 3a | `bootstrap` | blocs de 5 jours de marché contigus, 10 000 réplications, graine 20261104, percentiles 2,5/97,5 interpolation linéaire, réplications sans trade comptées |
+| 3b | `paper_ab` | deux portefeuilles complets indépendants à 100 USD (référence, référence + veto), réponses IA archivées rejouées, coût IA déduit une fois |
+| 4 | `rapport_validation` | rapports C10/A13 sous `.local/reports/`, sans secret ni numéro de compte ; précision JSON jamais présentée comme taux de réussite |
 
 Cas : **C11.12** (gap au stop, SL/TP même milliseconde, flux absent), **C11.14** (journaux de décision
 identiques entre `app.rejeu` et la boucle `app.paper` alimentée par les mêmes ticks via doublures), A14 « comptes
@@ -288,7 +290,7 @@ A/B séparés », « précision JSON jamais présentée comme taux de réussite 
 
 ### 7.I `infrastructure` — phase 9 (segments minimaux dès la phase 1)
 
-Unités : `mt5/flux_ticks`, `mt5/courtier` (magic par stratégie, commentaire = empreinte courte de la clé
+Couches confirmées : 0a fichiers et horloge, 0b SQLite du robot, 0c connexion MT5, 0d HTTP, 0e SQLite du service IA, 1a adaptateurs MT5, 1b adaptateurs IA, 2 qualification C04 (phase 9 : 0a, 0b, 0c, 1a, 2 ; phase 10 : 0d, 0e, 1b). Unités : `mt5/flux_ticks`, `mt5/courtier` (magic par stratégie, commentaire = empreinte courte de la clé
 d'intention, `type_filling` lu du symbole, rapprochement par historique), `mt5/calcul_courtier`, `mt5/compte`
 (netting/hedging, levier, stop-out), `mt5/qualification_c04` (fiche d'environnement horodatée sous
 `.local/reports/` sans numéro de compte, faisabilité du volume minimal à 0,5 %, règle de liaison d'un symbole par
@@ -301,7 +303,7 @@ lecture seule par défaut ; ordres démo seulement après accord explicite).
 
 ### 7.G `service_ia` (A04–A11) — phase 10
 
-Unités, de l'intérieur vers l'extérieur : paramètres et secrets lus de l'environnement (jamais journalisés) ;
+Couches confirmées : 0 paramètres ; 1a normalisation, 1b tokens, 1c validateurs, 1d budget ; 2a veto, 2b routeur ; 3a écrivain du snapshot, 3b planificateur ; 4 service. Unités, de l'intérieur vers l'extérieur : paramètres et secrets lus de l'environnement (jamais journalisés) ;
 normalisation des textes RSS (item_id, URL canonique, SHA-256, `published_at`/`first_seen`/`fetched_at`, date
 absente ou future → pas de veto) ; borne de tokens (octets UTF-8 + 512, ≤4 096) ; validateurs A05/A11 (portage de
 `parse_model_output`, `parse_advisory_output`) ; constructeur d'événement A06 (`build_policy_event`) avec table
@@ -320,24 +322,24 @@ par un humain) reste une tâche de l'utilisateur.
 
 | Cas | Artefact / couche | Cat. | Phase |
 |---|---|---|---|
-| C11.1 | A 1b, 2 ; B cat. 2 ; H 4 | 1, 2 | 2, 3, 8 |
+| C11.1 | A 1b, 3 ; B cat. 2 ; H 2b | 1, 2 | 2, 3, 8 |
 | C11.2 | D 1a (spread, TTL) ; A 1a (fin de fenêtre) ; B 1a (EMA égales) | 1 | 2–4 |
 | C11.3 | A 1b ; D 1a | 1 | 2, 4 |
 | C11.4 | A 1a ; B cat. 2 | 1, 2 | 2, 3 |
 | C11.5 | D 1b, 2a ; H 1b | 1 | 4, 8 |
-| C11.6 | D 3a | 1 | 4 |
-| C11.7 | D 2a, 3a ; I qualification micro | 1, 2 | 4, 9 |
+| C11.6 | D 3 | 1 | 4 |
+| C11.7 | D 2a, 3 ; I qualification micro | 1, 2 | 4, 9 |
 | C11.8 | E 1a–3 ; D 6 (FLATTEN prioritaire) | 1, 2 | 6 |
 | C11.9 | E 1b | 1 | 6 |
-| C11.10 | D 3b, 6 | 1, 2 | 4, 5 |
+| C11.10 | D 2b, 6 | 1, 2 | 4, 5 |
 | C11.11 | D 4, 6 ; I rapprochement démo | 1, 2 | 5, 9 |
 | C11.12 | D 4, 5 ; H 1b | 2 | 5, 8 |
 | C11.13 | D 1c, 5, 6 | 1, 2 | 4, 5 |
-| C11.14 | H 4 + app (rejeu vs paper) ; I (démo vs rejeu des ticks enregistrés) | 2 | 8, 9 |
+| C11.14 | H 2b + app (rejeu vs paper) ; I (démo vs rejeu des ticks enregistrés) | 2 | 8, 9 |
 | S01.6 (7 points) | B 1a–3 ; D cat. 2 (refus à l'exécution, 6ᵉ/7ᵉ entrée) | 1, 2 | 3, 5 |
 | A14 — chemin du robot (appel lent sans blocage, réponse tardive, veto expiré, panne neutre vs C05 bloquant, risque identique, A07, snapshot invalide et reprise) | F 1–3 ; D 6 ; E | 1, 2 | 6, 7 |
 | A14 — service (conditionnel/historique, citation inventée, discours, calendrier programmé, deux robots sans second appel, budget concurrent, coût inconnu, bornes 24/150 000/3/15, aucun modèle local ni outil) | G ; I (SQLite concurrent) | 1, 2 | 10 |
-| A14 — comptes A/B, précision JSON | H 2, 5 | 2 | 8 |
+| A14 — comptes A/B, précision JSON | H 3b, 4 | 2 | 8 |
 
 ## 9. Phases d'exécution (arrêt obligatoire à la fin de chacune)
 
@@ -351,13 +353,13 @@ pied d'audit et marqueur → **arrêt**.
 |---|---|---|---|
 | **0 — Cadrage** | Relevé initial (`git status`, `verify_project`, gouvernance) ; `mcl.py init` composite et par artefact ; `carte.json` (unités et externes de §5–7), `analyser --ecrire` puis `analyser` jusqu'à zéro divergence ; esquisse de tous les contrats de couche ; `COUTURES.md` ; registre `INTERPRETATIONS.md` (§10) | Cartes sans divergence, contrats esquissés, registre soumis à l'utilisateur ; aucun code produit | mcl-robot-planning, mcl, specification-consistency, ema-rsi-repli |
 | **1 — Squelette** | `noyau`, segments minimaux, infrastructure minimale, `tools/run_robot_tests.py`, CI, point d'entrée `app.rejeu` | Le squelette produit un journal C09 depuis une fixture ; CI verte | mcl, market-data-causality, risk-execution-contracts |
-| **2 — Données et temps (A)** | Couches 0 → {1a, 1b, 1c} → 2 ; remplacement de l'agrégateur minimal | A figé ; C11.1/3/4 et concordance des indicateurs verts | market-data-causality, ema-rsi-repli, mcl |
+| **2 — Données et temps (A)** | Couches 0 → {1a, 1b, 1c} → 2 → 3 ; remplacement de l'agrégateur minimal | A figé ; C11.1/3/4 et concordance des indicateurs verts | market-data-causality, ema-rsi-repli, mcl |
 | **3 — Moteur EMA (B)** | Couches 0 → {1a–1d} → 2 (T1–T12) → 3 ; remplacement de la stratégie neutre | B figé ; S01.6 et équivalence `ema_setups` verts ; signaux visibles dans le journal, refusés par le segment fondamental | ema-rsi-repli, expert-scalper-m15, mcl |
 | **4 — Exécution, partie 1 (D 0–3)** | Types, cotation, prix, gardes de compte, risque, réservations, dimensionnement, arbitrage | Chiffres S01.5 reproduits ; C11.2/5/6/7/10/13 (cat. 1) verts | risk-execution-contracts, broker-account-qualification |
 | **5 — Exécution, partie 2 (D 4–6)** | Cycle d'ordre, sorties obligatoires, coordinateur ; intégration B+D ; scénario `TECHNICAL_CONTROL_NEUTRAL` | Cycle de trade complet en rejeu avec courtier scripté ; C11.10–13 verts | risk-execution-contracts |
 | **6 — Fondamental (E)** | Décision R12–R13 en début de phase ; couches 0 → {1a, 1b} → 2 → 3 ; remplacement du segment fondamental | C11.8/9 verts ; FLATTEN prioritaire | fundamental-permissions |
 | **7 — Contexte IA (F)** | Couches 0 → 3 ; insertion A07 ; remplacement du segment IA | A14 côté robot verts | llm-integration-contracts, ema-rsi-repli |
-| **8 — Journal et rejeu (H)** | Couches 0 → 5 ; import des ticks et manifeste | C11.12/14 verts ; rapport de rejeu synthétique sous `.local/reports/` | validation-replay, market-data-causality |
+| **8 — Journal et rejeu (H)** | Couches 0 → 4 ; import des ticks et manifeste | C11.12/14 verts ; rapport de rejeu synthétique sous `.local/reports/` | validation-replay, market-data-causality |
 | **9 — Infrastructure et plateforme (I)** | Adaptateurs réels, SQLite, journal fichier, IPC, sources fondamentales, qualification C04, `app.paper`/`app.demo` ; choix du courtier | Contrats verts contre doublures en CI ; procédure de contrat MT5 démo remise à l'utilisateur (exécution sur son poste Windows) ; checklist go/no-go PAPER | broker-account-qualification, deployment-readiness, risk-execution-contracts |
 | **10 — Service IA (G)** | Logique du service puis adaptateurs HTTP/RSS/SQLite ; point d'entrée `app.service_ia` | A14 côté service verts sans aucun appel d'API ; procédure de test de conformité manuel avec les clés de l'utilisateur | llm-integration-contracts |
 | **11 — Préparation de la validation et de la démo** | Procédures C10 (blocs, référence, stress, perturbations, bootstrap) et PAPER_AB prospectif ; contrôles des données fournies ; checklist go/no-go démo | Outils et procédures prêts ; aucune conclusion économique sans les données réelles et la V1 (R11) | validation-replay, deployment-readiness |

@@ -1,0 +1,192 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "controles-fondamentaux",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": "Contrat C05 : permissions fondamentales externes et garde d'annonces HIGH."
+  },
+  "langage": "python",
+  "sources": [
+    "src"
+  ],
+  "exclure": [],
+  "couches": [
+    {
+      "id": "0",
+      "profondeur": 0,
+      "nom": "types-fondamentaux",
+      "chemins": [
+        "src/xpbots/fondamental/c0_types.py"
+      ],
+      "imports": [
+        "xpbots.fondamental.c0_types"
+      ],
+      "contrats": [
+        "mcl/controles-fondamentaux/contrats/couche-0.md",
+        "tests/robot/fondamental/test_c0_*.py"
+      ]
+    },
+    {
+      "id": "1a",
+      "profondeur": 1,
+      "nom": "message-permission",
+      "chemins": [
+        "src/xpbots/fondamental/c1a_message.py"
+      ],
+      "imports": [
+        "xpbots.fondamental.c1a_message"
+      ],
+      "contrats": [
+        "mcl/controles-fondamentaux/contrats/couche-1a.md",
+        "tests/robot/fondamental/test_c1a_*.py"
+      ]
+    },
+    {
+      "id": "1b",
+      "profondeur": 1,
+      "nom": "garde-annonces",
+      "chemins": [
+        "src/xpbots/fondamental/c1b_annonces.py"
+      ],
+      "imports": [
+        "xpbots.fondamental.c1b_annonces"
+      ],
+      "contrats": [
+        "mcl/controles-fondamentaux/contrats/couche-1b.md",
+        "tests/robot/fondamental/test_c1b_*.py"
+      ]
+    },
+    {
+      "id": "2",
+      "profondeur": 2,
+      "nom": "etat-permissions",
+      "chemins": [
+        "src/xpbots/fondamental/c2_etat_permissions.py"
+      ],
+      "imports": [
+        "xpbots.fondamental.c2_etat_permissions"
+      ],
+      "contrats": [
+        "mcl/controles-fondamentaux/contrats/couche-2.md",
+        "tests/robot/fondamental/test_c2_*.py"
+      ]
+    },
+    {
+      "id": "3",
+      "profondeur": 3,
+      "nom": "permissions",
+      "chemins": [
+        "src/xpbots/fondamental/c3_permissions.py"
+      ],
+      "imports": [
+        "xpbots.fondamental.c3_permissions"
+      ],
+      "contrats": [
+        "mcl/controles-fondamentaux/contrats/couche-3.md",
+        "tests/robot/fondamental/test_c3_*.py"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "types_fondamentaux",
+      "responsabilite": "Représenter messages de permission, événements et versions de calendrier et la table devises par symbole.",
+      "depend_de": [
+        "amont-noyau",
+        "amont-donnees-temps"
+      ],
+      "couche": "0"
+    },
+    {
+      "id": "message_permission",
+      "responsabilite": "Valider un message fundamental-permission-v1 et ses heures.",
+      "depend_de": [
+        "types_fondamentaux"
+      ],
+      "couche": "1a"
+    },
+    {
+      "id": "garde_annonces",
+      "responsabilite": "Contrôler fraîcheur et couverture du calendrier et les fenêtres HIGH par devise.",
+      "depend_de": [
+        "types_fondamentaux",
+        "source-calendrier"
+      ],
+      "couche": "1b"
+    },
+    {
+      "id": "etat_permissions",
+      "responsabilite": "Conserver la dernière permission valide par symbole avec séquence, expiration et heartbeat.",
+      "depend_de": [
+        "message_permission",
+        "stockage-etat",
+        "source-permissions"
+      ],
+      "couche": "2"
+    },
+    {
+      "id": "permissions",
+      "responsabilite": "Combiner direction, état de risque et annonces en autorisation ou motif de refus.",
+      "depend_de": [
+        "etat_permissions",
+        "garde_annonces"
+      ],
+      "couche": "3"
+    }
+  ],
+  "externes": [
+    {
+      "id": "amont-noyau",
+      "imports": [
+        "xpbots.noyau"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1a",
+        "1b",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "id": "amont-donnees-temps",
+      "imports": [
+        "xpbots.donnees_temps"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1a",
+        "1b",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "id": "stockage-etat",
+      "imports": [
+        "sqlite3"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "source-permissions",
+      "imports": [],
+      "couches_autorisees": []
+    },
+    {
+      "id": "source-calendrier",
+      "imports": [],
+      "couches_autorisees": []
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "warn",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}

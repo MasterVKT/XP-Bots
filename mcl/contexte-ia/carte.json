@@ -1,0 +1,147 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "contexte-ia",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": "Lecture du snapshot IA, cache persistant des vetos, décision BLOCK ou NEUTRAL (A07, A10, A12)."
+  },
+  "langage": "python",
+  "sources": [
+    "src"
+  ],
+  "exclure": [],
+  "couches": [
+    {
+      "id": "0",
+      "profondeur": 0,
+      "nom": "format-snapshot",
+      "chemins": [
+        "src/xpbots/contexte_ia/c0_format.py"
+      ],
+      "imports": [
+        "xpbots.contexte_ia.c0_format"
+      ],
+      "contrats": [
+        "mcl/contexte-ia/contrats/couche-0.md",
+        "tests/robot/contexte_ia/test_c0_*.py"
+      ]
+    },
+    {
+      "id": "1",
+      "profondeur": 1,
+      "nom": "snapshot",
+      "chemins": [
+        "src/xpbots/contexte_ia/c1_snapshot.py"
+      ],
+      "imports": [
+        "xpbots.contexte_ia.c1_snapshot"
+      ],
+      "contrats": [
+        "mcl/contexte-ia/contrats/couche-1.md",
+        "tests/robot/contexte_ia/test_c1_*.py"
+      ]
+    },
+    {
+      "id": "2",
+      "profondeur": 2,
+      "nom": "cache-vetos",
+      "chemins": [
+        "src/xpbots/contexte_ia/c2_cache_vetos.py"
+      ],
+      "imports": [
+        "xpbots.contexte_ia.c2_cache_vetos"
+      ],
+      "contrats": [
+        "mcl/contexte-ia/contrats/couche-2.md",
+        "tests/robot/contexte_ia/test_c2_*.py"
+      ]
+    },
+    {
+      "id": "3",
+      "profondeur": 3,
+      "nom": "contexte",
+      "chemins": [
+        "src/xpbots/contexte_ia/c3_contexte.py"
+      ],
+      "imports": [
+        "xpbots.contexte_ia.c3_contexte"
+      ],
+      "contrats": [
+        "mcl/contexte-ia/contrats/couche-3.md",
+        "tests/robot/contexte_ia/test_c3_*.py"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "format_snapshot",
+      "responsabilite": "Définir le format canonique xp-ai-context-v1 et les paramètres de lecture du snapshot.",
+      "depend_de": [
+        "amont-noyau"
+      ],
+      "couche": "0"
+    },
+    {
+      "id": "snapshot",
+      "responsabilite": "Valider un snapshot lu du fichier d'IPC.",
+      "depend_de": [
+        "format_snapshot",
+        "ipc-snapshot"
+      ],
+      "couche": "1"
+    },
+    {
+      "id": "cache_vetos",
+      "responsabilite": "Conserver les vetos validés jusqu'à leur échéance propre, redémarrage compris.",
+      "depend_de": [
+        "snapshot",
+        "stockage-etat"
+      ],
+      "couche": "2"
+    },
+    {
+      "id": "contexte",
+      "responsabilite": "Rendre BLOCK ou NEUTRAL pour un symbole et un instant, jamais ALLOW.",
+      "depend_de": [
+        "cache_vetos"
+      ],
+      "couche": "3"
+    }
+  ],
+  "externes": [
+    {
+      "id": "amont-noyau",
+      "imports": [
+        "xpbots.noyau"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "id": "ipc-snapshot",
+      "imports": [],
+      "couches_autorisees": []
+    },
+    {
+      "id": "stockage-etat",
+      "imports": [
+        "sqlite3"
+      ],
+      "couches_autorisees": []
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "warn",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}

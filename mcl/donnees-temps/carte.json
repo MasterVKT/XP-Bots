@@ -1,0 +1,209 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "donnees-temps",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": "Temps UTC et Londres, bougies M15 Bid, indicateurs EMA/RSI/ATR et état récursif (C03)."
+  },
+  "langage": "python",
+  "sources": [
+    "src"
+  ],
+  "exclure": [],
+  "couches": [
+    {
+      "id": "0",
+      "profondeur": 0,
+      "nom": "parametres-et-seances",
+      "chemins": [
+        "src/xpbots/donnees_temps/c0_parametres_seances.py"
+      ],
+      "imports": [
+        "xpbots.donnees_temps.c0_parametres_seances"
+      ],
+      "contrats": [
+        "mcl/donnees-temps/contrats/couche-0.md",
+        "tests/robot/donnees_temps/test_c0_*.py"
+      ]
+    },
+    {
+      "id": "1a",
+      "profondeur": 1,
+      "nom": "sessions-londres",
+      "chemins": [
+        "src/xpbots/donnees_temps/c1a_sessions.py"
+      ],
+      "imports": [
+        "xpbots.donnees_temps.c1a_sessions"
+      ],
+      "contrats": [
+        "mcl/donnees-temps/contrats/couche-1a.md",
+        "tests/robot/donnees_temps/test_c1a_*.py"
+      ]
+    },
+    {
+      "id": "1b",
+      "profondeur": 1,
+      "nom": "constructeur-bougies",
+      "chemins": [
+        "src/xpbots/donnees_temps/c1b_bougies.py"
+      ],
+      "imports": [
+        "xpbots.donnees_temps.c1b_bougies"
+      ],
+      "contrats": [
+        "mcl/donnees-temps/contrats/couche-1b.md",
+        "tests/robot/donnees_temps/test_c1b_*.py"
+      ]
+    },
+    {
+      "id": "1c",
+      "profondeur": 1,
+      "nom": "indicateurs",
+      "chemins": [
+        "src/xpbots/donnees_temps/c1c_indicateurs.py"
+      ],
+      "imports": [
+        "xpbots.donnees_temps.c1c_indicateurs"
+      ],
+      "contrats": [
+        "mcl/donnees-temps/contrats/couche-1c.md",
+        "tests/robot/donnees_temps/test_c1c_*.py"
+      ]
+    },
+    {
+      "id": "2",
+      "profondeur": 2,
+      "nom": "etat-indicateurs",
+      "chemins": [
+        "src/xpbots/donnees_temps/c2_etat_indicateurs.py"
+      ],
+      "imports": [
+        "xpbots.donnees_temps.c2_etat_indicateurs"
+      ],
+      "contrats": [
+        "mcl/donnees-temps/contrats/couche-2.md",
+        "tests/robot/donnees_temps/test_c2_*.py"
+      ]
+    },
+    {
+      "id": "3",
+      "profondeur": 3,
+      "nom": "pipeline-marche",
+      "chemins": [
+        "src/xpbots/donnees_temps/c3_pipeline.py"
+      ],
+      "imports": [
+        "xpbots.donnees_temps.c3_pipeline"
+      ],
+      "contrats": [
+        "mcl/donnees-temps/contrats/couche-3.md",
+        "tests/robot/donnees_temps/test_c3_*.py"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "parametres_techniques",
+      "responsabilite": "Charger et valider le bloc common de la configuration figée en objet immuable, avec l'empreinte canonique du bundle.",
+      "depend_de": [
+        "amont-noyau"
+      ],
+      "couche": "0"
+    },
+    {
+      "id": "calendrier_seances",
+      "responsabilite": "Représenter les séances de cotation natives d'un symbole et dire si un instant est en séance.",
+      "depend_de": [
+        "amont-noyau"
+      ],
+      "couche": "0"
+    },
+    {
+      "id": "sessions_londres",
+      "responsabilite": "Calculer jours Londres et UTC, appartenance aux fenêtres de méthode, heures locales de sortie et blackout de rollover via Europe/London.",
+      "depend_de": [
+        "parametres_techniques"
+      ],
+      "couche": "1a"
+    },
+    {
+      "id": "constructeur_bougies",
+      "responsabilite": "Agréger les ticks en bougies M15/H1 Bid clôturées sur [T,T+d) aligné UTC et signaler les trous.",
+      "depend_de": [
+        "parametres_techniques",
+        "calendrier_seances",
+        "amont-noyau"
+      ],
+      "couche": "1b"
+    },
+    {
+      "id": "indicateurs",
+      "responsabilite": "Calculer de façon incrémentale EMA graine SMA, RSI et ATR Wilder, TR et A_t = ATR de t−1.",
+      "depend_de": [
+        "parametres_techniques"
+      ],
+      "couche": "1c"
+    },
+    {
+      "id": "etat_indicateurs",
+      "responsabilite": "Précharger, persister et restaurer les états récursifs par symbole et en tracer l'empreinte.",
+      "depend_de": [
+        "indicateurs",
+        "stockage-etat",
+        "amont-noyau"
+      ],
+      "couche": "2"
+    },
+    {
+      "id": "pipeline_marche",
+      "responsabilite": "Produire par symbole les bougies enrichies et les événements de trou à partir des ticks, de la couverture et de l'horloge.",
+      "depend_de": [
+        "sessions_londres",
+        "constructeur_bougies",
+        "etat_indicateurs"
+      ],
+      "couche": "3"
+    }
+  ],
+  "externes": [
+    {
+      "id": "amont-noyau",
+      "imports": [
+        "xpbots.noyau"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1a",
+        "1b",
+        "1c",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "id": "stockage-etat",
+      "imports": [
+        "sqlite3"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "horloge-os",
+      "imports": [
+        "time"
+      ],
+      "couches_autorisees": []
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "warn",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}

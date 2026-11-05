@@ -1,0 +1,339 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "service-ia",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": "Service IA distant partagé (A04–A11) : collecte, validation, veto, budget, routeur, snapshot."
+  },
+  "langage": "python",
+  "sources": [
+    "src"
+  ],
+  "exclure": [],
+  "couches": [
+    {
+      "id": "0",
+      "profondeur": 0,
+      "nom": "parametres-ia",
+      "chemins": [
+        "src/xpbots/service_ia/c0_parametres.py"
+      ],
+      "imports": [
+        "xpbots.service_ia.c0_parametres"
+      ],
+      "contrats": [
+        "mcl/service-ia/contrats/couche-0.md",
+        "tests/robot/service_ia/test_c0_*.py"
+      ]
+    },
+    {
+      "id": "1a",
+      "profondeur": 1,
+      "nom": "normalisation",
+      "chemins": [
+        "src/xpbots/service_ia/c1a_normalisation.py"
+      ],
+      "imports": [
+        "xpbots.service_ia.c1a_normalisation"
+      ],
+      "contrats": [
+        "mcl/service-ia/contrats/couche-1a.md",
+        "tests/robot/service_ia/test_c1a_*.py"
+      ]
+    },
+    {
+      "id": "1b",
+      "profondeur": 1,
+      "nom": "tokens",
+      "chemins": [
+        "src/xpbots/service_ia/c1b_tokens.py"
+      ],
+      "imports": [
+        "xpbots.service_ia.c1b_tokens"
+      ],
+      "contrats": [
+        "mcl/service-ia/contrats/couche-1b.md",
+        "tests/robot/service_ia/test_c1b_*.py"
+      ]
+    },
+    {
+      "id": "1c",
+      "profondeur": 1,
+      "nom": "validateurs",
+      "chemins": [
+        "src/xpbots/service_ia/c1c_validateurs.py"
+      ],
+      "imports": [
+        "xpbots.service_ia.c1c_validateurs"
+      ],
+      "contrats": [
+        "mcl/service-ia/contrats/couche-1c.md",
+        "tests/robot/service_ia/test_c1c_*.py"
+      ]
+    },
+    {
+      "id": "1d",
+      "profondeur": 1,
+      "nom": "budget",
+      "chemins": [
+        "src/xpbots/service_ia/c1d_budget.py"
+      ],
+      "imports": [
+        "xpbots.service_ia.c1d_budget"
+      ],
+      "contrats": [
+        "mcl/service-ia/contrats/couche-1d.md",
+        "tests/robot/service_ia/test_c1d_*.py"
+      ]
+    },
+    {
+      "id": "2a",
+      "profondeur": 2,
+      "nom": "veto",
+      "chemins": [
+        "src/xpbots/service_ia/c2a_veto.py"
+      ],
+      "imports": [
+        "xpbots.service_ia.c2a_veto"
+      ],
+      "contrats": [
+        "mcl/service-ia/contrats/couche-2a.md",
+        "tests/robot/service_ia/test_c2a_*.py"
+      ]
+    },
+    {
+      "id": "2b",
+      "profondeur": 2,
+      "nom": "routeur",
+      "chemins": [
+        "src/xpbots/service_ia/c2b_routeur.py"
+      ],
+      "imports": [
+        "xpbots.service_ia.c2b_routeur"
+      ],
+      "contrats": [
+        "mcl/service-ia/contrats/couche-2b.md",
+        "tests/robot/service_ia/test_c2b_*.py"
+      ]
+    },
+    {
+      "id": "3a",
+      "profondeur": 3,
+      "nom": "ecrivain-snapshot",
+      "chemins": [
+        "src/xpbots/service_ia/c3a_ecrivain_snapshot.py"
+      ],
+      "imports": [
+        "xpbots.service_ia.c3a_ecrivain_snapshot"
+      ],
+      "contrats": [
+        "mcl/service-ia/contrats/couche-3a.md",
+        "tests/robot/service_ia/test_c3a_*.py"
+      ]
+    },
+    {
+      "id": "3b",
+      "profondeur": 3,
+      "nom": "planificateur",
+      "chemins": [
+        "src/xpbots/service_ia/c3b_planificateur.py"
+      ],
+      "imports": [
+        "xpbots.service_ia.c3b_planificateur"
+      ],
+      "contrats": [
+        "mcl/service-ia/contrats/couche-3b.md",
+        "tests/robot/service_ia/test_c3b_*.py"
+      ]
+    },
+    {
+      "id": "4",
+      "profondeur": 4,
+      "nom": "service",
+      "chemins": [
+        "src/xpbots/service_ia/c4_service.py"
+      ],
+      "imports": [
+        "xpbots.service_ia.c4_service"
+      ],
+      "contrats": [
+        "mcl/service-ia/contrats/couche-4.md",
+        "tests/robot/service_ia/test_c4_*.py"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "parametres_ia",
+      "responsabilite": "Charger l'export IA, les schémas et les prompts exacts.",
+      "depend_de": [
+        "amont-noyau"
+      ],
+      "couche": "0"
+    },
+    {
+      "id": "normalisation_textes",
+      "responsabilite": "Normaliser et dédoublonner les textes officiels collectés.",
+      "depend_de": [
+        "parametres_ia"
+      ],
+      "couche": "1a"
+    },
+    {
+      "id": "borne_tokens",
+      "responsabilite": "Calculer la borne conservatrice de tokens d'une requête.",
+      "depend_de": [
+        "parametres_ia"
+      ],
+      "couche": "1b"
+    },
+    {
+      "id": "validateurs_sorties",
+      "responsabilite": "Valider strictement les sorties d'extraction et informatives.",
+      "depend_de": [
+        "parametres_ia"
+      ],
+      "couche": "1c"
+    },
+    {
+      "id": "registre_budget",
+      "responsabilite": "Réserver et rapprocher coûts, tentatives et tokens de façon transactionnelle.",
+      "depend_de": [
+        "parametres_ia",
+        "stockage-ia"
+      ],
+      "couche": "1d"
+    },
+    {
+      "id": "evenement_veto",
+      "responsabilite": "Construire un événement OFFICIAL_UNSCHEDULED_POLICY selon A06.",
+      "depend_de": [
+        "validateurs_sorties",
+        "normalisation_textes",
+        "amont-contexte-ia"
+      ],
+      "couche": "2a"
+    },
+    {
+      "id": "routeur_fournisseurs",
+      "responsabilite": "Choisir et appeler les fournisseurs dans l'ordre et les délais A08.",
+      "depend_de": [
+        "borne_tokens",
+        "registre_budget",
+        "validateurs_sorties",
+        "transport-llm"
+      ],
+      "couche": "2b"
+    },
+    {
+      "id": "ecrivain_snapshot",
+      "responsabilite": "Publier atomiquement le snapshot et son heartbeat.",
+      "depend_de": [
+        "evenement_veto",
+        "ipc-ecriture"
+      ],
+      "couche": "3a"
+    },
+    {
+      "id": "planificateur",
+      "responsabilite": "Planifier collectes, classifications, briefings, journaux et revues.",
+      "depend_de": [
+        "routeur_fournisseurs",
+        "normalisation_textes",
+        "collecte-rss"
+      ],
+      "couche": "3b"
+    },
+    {
+      "id": "service",
+      "responsabilite": "Exécuter le service : collecteur, worker unique, heartbeat.",
+      "depend_de": [
+        "planificateur",
+        "ecrivain_snapshot"
+      ],
+      "couche": "4"
+    }
+  ],
+  "externes": [
+    {
+      "id": "amont-noyau",
+      "imports": [
+        "xpbots.noyau"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1a",
+        "1b",
+        "1c",
+        "1d",
+        "2a",
+        "2b",
+        "3a",
+        "3b",
+        "4"
+      ]
+    },
+    {
+      "id": "amont-contexte-ia",
+      "imports": [
+        "xpbots.contexte_ia"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1a",
+        "1b",
+        "1c",
+        "1d",
+        "2a",
+        "2b",
+        "3a",
+        "3b",
+        "4"
+      ]
+    },
+    {
+      "id": "stockage-ia",
+      "imports": [
+        "sqlite3"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "transport-llm",
+      "imports": [
+        "urllib",
+        "http",
+        "ssl",
+        "socket"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "collecte-rss",
+      "imports": [],
+      "couches_autorisees": []
+    },
+    {
+      "id": "ipc-ecriture",
+      "imports": [],
+      "couches_autorisees": []
+    },
+    {
+      "id": "horloge-os",
+      "imports": [
+        "time"
+      ],
+      "couches_autorisees": []
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "warn",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}

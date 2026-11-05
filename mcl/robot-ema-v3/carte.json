@@ -1,0 +1,312 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "robot-ema-v3",
+    "echelle": "application",
+    "mode": "composite",
+    "description": "Composite du robot 1 EMA_V3 : squelette (noyau, app) et huit artefacts de chair."
+  },
+  "langage": "python",
+  "sources": [
+    "src"
+  ],
+  "exclure": [],
+  "couches": [
+    {
+      "id": "0",
+      "profondeur": 0,
+      "nom": "noyau",
+      "chemins": [
+        "src/xpbots/noyau"
+      ],
+      "imports": [
+        "xpbots.noyau"
+      ],
+      "contrats": [
+        "mcl/robot-ema-v3/COUTURES.md"
+      ]
+    },
+    {
+      "id": "1a",
+      "profondeur": 1,
+      "nom": "donnees-temps",
+      "chemins": [
+        "src/xpbots/donnees_temps"
+      ],
+      "imports": [
+        "xpbots.donnees_temps"
+      ],
+      "contrats": [
+        "mcl/robot-ema-v3/COUTURES.md"
+      ]
+    },
+    {
+      "id": "1b",
+      "profondeur": 1,
+      "nom": "contexte-ia",
+      "chemins": [
+        "src/xpbots/contexte_ia"
+      ],
+      "imports": [
+        "xpbots.contexte_ia"
+      ],
+      "contrats": [
+        "mcl/robot-ema-v3/COUTURES.md"
+      ]
+    },
+    {
+      "id": "2a",
+      "profondeur": 2,
+      "nom": "moteur-ema",
+      "chemins": [
+        "src/xpbots/moteur_ema"
+      ],
+      "imports": [
+        "xpbots.moteur_ema"
+      ],
+      "contrats": [
+        "mcl/robot-ema-v3/COUTURES.md"
+      ]
+    },
+    {
+      "id": "2b",
+      "profondeur": 2,
+      "nom": "execution",
+      "chemins": [
+        "src/xpbots/execution"
+      ],
+      "imports": [
+        "xpbots.execution"
+      ],
+      "contrats": [
+        "mcl/robot-ema-v3/COUTURES.md"
+      ]
+    },
+    {
+      "id": "2c",
+      "profondeur": 2,
+      "nom": "fondamental",
+      "chemins": [
+        "src/xpbots/fondamental"
+      ],
+      "imports": [
+        "xpbots.fondamental"
+      ],
+      "contrats": [
+        "mcl/robot-ema-v3/COUTURES.md"
+      ]
+    },
+    {
+      "id": "2d",
+      "profondeur": 2,
+      "nom": "service-ia",
+      "chemins": [
+        "src/xpbots/service_ia"
+      ],
+      "imports": [
+        "xpbots.service_ia"
+      ],
+      "contrats": [
+        "mcl/robot-ema-v3/COUTURES.md"
+      ]
+    },
+    {
+      "id": "3",
+      "profondeur": 3,
+      "nom": "journal-rejeu",
+      "chemins": [
+        "src/xpbots/journal_rejeu"
+      ],
+      "imports": [
+        "xpbots.journal_rejeu"
+      ],
+      "contrats": [
+        "mcl/robot-ema-v3/COUTURES.md"
+      ]
+    },
+    {
+      "id": "4",
+      "profondeur": 4,
+      "nom": "infrastructure",
+      "chemins": [
+        "src/xpbots/infrastructure"
+      ],
+      "imports": [
+        "xpbots.infrastructure"
+      ],
+      "contrats": [
+        "mcl/robot-ema-v3/COUTURES.md"
+      ]
+    },
+    {
+      "id": "5",
+      "profondeur": 5,
+      "nom": "app",
+      "chemins": [
+        "src/xpbots/app"
+      ],
+      "imports": [
+        "xpbots.app"
+      ],
+      "contrats": [
+        "mcl/robot-ema-v3/COUTURES.md"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "noyau",
+      "responsabilite": "Fournir les types de couture, les ports, les motifs, le schéma C09 et le chargeur de configuration (squelette).",
+      "depend_de": [],
+      "couche": "0"
+    },
+    {
+      "id": "donnees_temps",
+      "responsabilite": "Produire les bougies enrichies et le contexte temporel (C03).",
+      "depend_de": [
+        "noyau"
+      ],
+      "couche": "1a"
+    },
+    {
+      "id": "contexte_ia",
+      "responsabilite": "Lire le snapshot IA et rendre BLOCK ou NEUTRAL (A07, A10, A12).",
+      "depend_de": [
+        "noyau"
+      ],
+      "couche": "1b"
+    },
+    {
+      "id": "moteur_ema",
+      "responsabilite": "Appliquer la méthode S01.",
+      "depend_de": [
+        "noyau",
+        "donnees_temps"
+      ],
+      "couche": "2a"
+    },
+    {
+      "id": "execution",
+      "responsabilite": "Appliquer C06–C09 et coordonner le compte.",
+      "depend_de": [
+        "noyau",
+        "donnees_temps"
+      ],
+      "couche": "2b"
+    },
+    {
+      "id": "fondamental",
+      "responsabilite": "Appliquer C05.",
+      "depend_de": [
+        "noyau",
+        "donnees_temps"
+      ],
+      "couche": "2c"
+    },
+    {
+      "id": "service_ia",
+      "responsabilite": "Produire le snapshot IA (A04–A11).",
+      "depend_de": [
+        "noyau",
+        "contexte_ia"
+      ],
+      "couche": "2d"
+    },
+    {
+      "id": "journal_rejeu",
+      "responsabilite": "Journaliser, rejouer et mesurer (C09, C10, A13).",
+      "depend_de": [
+        "noyau",
+        "donnees_temps",
+        "execution"
+      ],
+      "couche": "3"
+    },
+    {
+      "id": "infrastructure",
+      "responsabilite": "Implémenter les frontières externes réelles.",
+      "depend_de": [
+        "noyau",
+        "donnees_temps",
+        "execution",
+        "fondamental",
+        "contexte_ia",
+        "journal_rejeu",
+        "service_ia",
+        "metatrader5",
+        "sqlite",
+        "reseau",
+        "horloge-os"
+      ],
+      "couche": "4"
+    },
+    {
+      "id": "app",
+      "responsabilite": "Câbler les composants et exposer les points d'entrée.",
+      "depend_de": [
+        "noyau",
+        "donnees_temps",
+        "contexte_ia",
+        "moteur_ema",
+        "execution",
+        "fondamental",
+        "service_ia",
+        "journal_rejeu",
+        "infrastructure",
+        "horloge-os"
+      ],
+      "couche": "5"
+    }
+  ],
+  "externes": [
+    {
+      "id": "metatrader5",
+      "imports": [
+        "MetaTrader5"
+      ],
+      "couches_autorisees": [
+        "4"
+      ]
+    },
+    {
+      "id": "sqlite",
+      "imports": [
+        "sqlite3"
+      ],
+      "couches_autorisees": [
+        "4"
+      ]
+    },
+    {
+      "id": "reseau",
+      "imports": [
+        "urllib",
+        "http",
+        "ssl",
+        "socket"
+      ],
+      "couches_autorisees": [
+        "4"
+      ]
+    },
+    {
+      "id": "horloge-os",
+      "imports": [
+        "time"
+      ],
+      "couches_autorisees": [
+        "4",
+        "5"
+      ]
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "warn",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}

@@ -1,0 +1,443 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "infrastructure",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": "Adaptateurs réels des frontières externes : fichiers, horloge, SQLite, MT5, HTTP."
+  },
+  "langage": "python",
+  "sources": [
+    "src"
+  ],
+  "exclure": [],
+  "couches": [
+    {
+      "id": "0a",
+      "profondeur": 0,
+      "nom": "fichiers-et-horloge",
+      "chemins": [
+        "src/xpbots/infrastructure/fichiers"
+      ],
+      "imports": [
+        "xpbots.infrastructure.fichiers"
+      ],
+      "contrats": [
+        "mcl/infrastructure/contrats/couche-0a.md",
+        "tests/robot/infrastructure/test_c0a_*.py"
+      ]
+    },
+    {
+      "id": "0b",
+      "profondeur": 0,
+      "nom": "sqlite-robot",
+      "chemins": [
+        "src/xpbots/infrastructure/sqlite_robot"
+      ],
+      "imports": [
+        "xpbots.infrastructure.sqlite_robot"
+      ],
+      "contrats": [
+        "mcl/infrastructure/contrats/couche-0b.md",
+        "tests/robot/infrastructure/test_c0b_*.py"
+      ]
+    },
+    {
+      "id": "0c",
+      "profondeur": 0,
+      "nom": "mt5-connexion",
+      "chemins": [
+        "src/xpbots/infrastructure/mt5/connexion.py"
+      ],
+      "imports": [
+        "xpbots.infrastructure.mt5.connexion"
+      ],
+      "contrats": [
+        "mcl/infrastructure/contrats/couche-0c.md",
+        "tests/robot/infrastructure/test_c0c_*.py"
+      ]
+    },
+    {
+      "id": "0d",
+      "profondeur": 0,
+      "nom": "http",
+      "chemins": [
+        "src/xpbots/infrastructure/http"
+      ],
+      "imports": [
+        "xpbots.infrastructure.http"
+      ],
+      "contrats": [
+        "mcl/infrastructure/contrats/couche-0d.md",
+        "tests/robot/infrastructure/test_c0d_*.py"
+      ]
+    },
+    {
+      "id": "0e",
+      "profondeur": 0,
+      "nom": "sqlite-ia",
+      "chemins": [
+        "src/xpbots/infrastructure/sqlite_ia"
+      ],
+      "imports": [
+        "xpbots.infrastructure.sqlite_ia"
+      ],
+      "contrats": [
+        "mcl/infrastructure/contrats/couche-0e.md",
+        "tests/robot/infrastructure/test_c0e_*.py"
+      ]
+    },
+    {
+      "id": "1a",
+      "profondeur": 1,
+      "nom": "mt5-adaptateurs",
+      "chemins": [
+        "src/xpbots/infrastructure/mt5/adaptateurs.py"
+      ],
+      "imports": [
+        "xpbots.infrastructure.mt5.adaptateurs"
+      ],
+      "contrats": [
+        "mcl/infrastructure/contrats/couche-1a.md",
+        "tests/robot/infrastructure/test_c1a_*.py"
+      ]
+    },
+    {
+      "id": "1b",
+      "profondeur": 1,
+      "nom": "ia-adaptateurs",
+      "chemins": [
+        "src/xpbots/infrastructure/ia_adaptateurs.py"
+      ],
+      "imports": [
+        "xpbots.infrastructure.ia_adaptateurs"
+      ],
+      "contrats": [
+        "mcl/infrastructure/contrats/couche-1b.md",
+        "tests/robot/infrastructure/test_c1b_*.py"
+      ]
+    },
+    {
+      "id": "2",
+      "profondeur": 2,
+      "nom": "qualification-c04",
+      "chemins": [
+        "src/xpbots/infrastructure/mt5/qualification_c04.py"
+      ],
+      "imports": [
+        "xpbots.infrastructure.mt5.qualification_c04"
+      ],
+      "contrats": [
+        "mcl/infrastructure/contrats/couche-2.md",
+        "tests/robot/infrastructure/test_c2_*.py"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "horloge_systeme",
+      "responsabilite": "Fournir l'instant UTC en millisecondes du système.",
+      "depend_de": [
+        "amont-noyau",
+        "horloge-os"
+      ],
+      "couche": "0a"
+    },
+    {
+      "id": "journal_fichier",
+      "responsabilite": "Écrire le journal C09 en JSONL par ajout avec fsync.",
+      "depend_de": [
+        "amont-journal-rejeu",
+        "systeme-fichiers"
+      ],
+      "couche": "0a"
+    },
+    {
+      "id": "ipc_snapshot_fichier",
+      "responsabilite": "Lire le fichier de snapshot IA et le fermer immédiatement.",
+      "depend_de": [
+        "amont-contexte-ia",
+        "systeme-fichiers"
+      ],
+      "couche": "0a"
+    },
+    {
+      "id": "ticks_historiques_fichiers",
+      "responsabilite": "Lire les fichiers de ticks historiques et leur manifeste.",
+      "depend_de": [
+        "amont-journal-rejeu",
+        "systeme-fichiers"
+      ],
+      "couche": "0a"
+    },
+    {
+      "id": "sources_fondamentales_fichiers",
+      "responsabilite": "Lire les permissions et calendriers déposés par le module fondamental (R12, R13).",
+      "depend_de": [
+        "amont-fondamental",
+        "systeme-fichiers"
+      ],
+      "couche": "0a"
+    },
+    {
+      "id": "stockage_sqlite",
+      "responsabilite": "Stocker l'état du robot de façon transactionnelle.",
+      "depend_de": [
+        "amont-noyau",
+        "sqlite"
+      ],
+      "couche": "0b"
+    },
+    {
+      "id": "connexion_mt5",
+      "responsabilite": "Ouvrir et contrôler la connexion au terminal MT5.",
+      "depend_de": [
+        "metatrader5",
+        "amont-noyau"
+      ],
+      "couche": "0c"
+    },
+    {
+      "id": "transport_http",
+      "responsabilite": "Envoyer des requêtes HTTPS bornées.",
+      "depend_de": [
+        "reseau",
+        "amont-service-ia"
+      ],
+      "couche": "0d"
+    },
+    {
+      "id": "stockage_service_ia",
+      "responsabilite": "Stocker textes, travaux, résultats, budget et snapshots du service IA.",
+      "depend_de": [
+        "sqlite",
+        "amont-service-ia"
+      ],
+      "couche": "0e"
+    },
+    {
+      "id": "flux_ticks_mt5",
+      "responsabilite": "Lire les ticks MT5 et la couverture du flux.",
+      "depend_de": [
+        "connexion_mt5",
+        "metatrader5"
+      ],
+      "couche": "1a"
+    },
+    {
+      "id": "calcul_courtier_mt5",
+      "responsabilite": "Exposer les calculs et caractéristiques natifs du courtier.",
+      "depend_de": [
+        "connexion_mt5",
+        "amont-execution",
+        "metatrader5"
+      ],
+      "couche": "1a"
+    },
+    {
+      "id": "courtier_mt5",
+      "responsabilite": "Envoyer les ordres protégés et rapprocher positions et transactions.",
+      "depend_de": [
+        "connexion_mt5",
+        "amont-execution",
+        "metatrader5"
+      ],
+      "couche": "1a"
+    },
+    {
+      "id": "collecteur_rss",
+      "responsabilite": "Collecter les flux RSS officiels de façon conditionnelle.",
+      "depend_de": [
+        "transport_http"
+      ],
+      "couche": "1b"
+    },
+    {
+      "id": "clients_llm",
+      "responsabilite": "Appeler les API Groq, Gemini et OpenAI facultative selon A08.",
+      "depend_de": [
+        "transport_http"
+      ],
+      "couche": "1b"
+    },
+    {
+      "id": "qualification_c04",
+      "responsabilite": "Établir la fiche d'environnement C04 et la faisabilité du volume minimal.",
+      "depend_de": [
+        "calcul_courtier_mt5",
+        "flux_ticks_mt5",
+        "amont-execution"
+      ],
+      "couche": "2"
+    }
+  ],
+  "externes": [
+    {
+      "id": "amont-noyau",
+      "imports": [
+        "xpbots.noyau"
+      ],
+      "couches_autorisees": [
+        "0a",
+        "0b",
+        "0c",
+        "0d",
+        "0e",
+        "1a",
+        "1b",
+        "2"
+      ]
+    },
+    {
+      "id": "amont-donnees-temps",
+      "imports": [
+        "xpbots.donnees_temps"
+      ],
+      "couches_autorisees": [
+        "0a",
+        "0b",
+        "0c",
+        "0d",
+        "0e",
+        "1a",
+        "1b",
+        "2"
+      ]
+    },
+    {
+      "id": "amont-execution",
+      "imports": [
+        "xpbots.execution"
+      ],
+      "couches_autorisees": [
+        "0a",
+        "0b",
+        "0c",
+        "0d",
+        "0e",
+        "1a",
+        "1b",
+        "2"
+      ]
+    },
+    {
+      "id": "amont-fondamental",
+      "imports": [
+        "xpbots.fondamental"
+      ],
+      "couches_autorisees": [
+        "0a",
+        "0b",
+        "0c",
+        "0d",
+        "0e",
+        "1a",
+        "1b",
+        "2"
+      ]
+    },
+    {
+      "id": "amont-contexte-ia",
+      "imports": [
+        "xpbots.contexte_ia"
+      ],
+      "couches_autorisees": [
+        "0a",
+        "0b",
+        "0c",
+        "0d",
+        "0e",
+        "1a",
+        "1b",
+        "2"
+      ]
+    },
+    {
+      "id": "amont-journal-rejeu",
+      "imports": [
+        "xpbots.journal_rejeu"
+      ],
+      "couches_autorisees": [
+        "0a",
+        "0b",
+        "0c",
+        "0d",
+        "0e",
+        "1a",
+        "1b",
+        "2"
+      ]
+    },
+    {
+      "id": "amont-service-ia",
+      "imports": [
+        "xpbots.service_ia"
+      ],
+      "couches_autorisees": [
+        "0a",
+        "0b",
+        "0c",
+        "0d",
+        "0e",
+        "1a",
+        "1b",
+        "2"
+      ]
+    },
+    {
+      "id": "metatrader5",
+      "imports": [
+        "MetaTrader5"
+      ],
+      "couches_autorisees": [
+        "0c",
+        "1a"
+      ]
+    },
+    {
+      "id": "sqlite",
+      "imports": [
+        "sqlite3"
+      ],
+      "couches_autorisees": [
+        "0b",
+        "0e"
+      ]
+    },
+    {
+      "id": "reseau",
+      "imports": [
+        "urllib",
+        "http",
+        "ssl",
+        "socket"
+      ],
+      "couches_autorisees": [
+        "0d"
+      ]
+    },
+    {
+      "id": "horloge-os",
+      "imports": [
+        "time"
+      ],
+      "couches_autorisees": [
+        "0a"
+      ]
+    },
+    {
+      "id": "systeme-fichiers",
+      "imports": [],
+      "couches_autorisees": []
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "warn",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}
