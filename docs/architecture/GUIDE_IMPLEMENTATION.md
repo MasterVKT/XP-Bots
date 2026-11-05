@@ -37,6 +37,8 @@ L'analyse fondamentale externe et le complément LLM ont des rôles distincts. U
 
 Les dates et champs de collecte sont décrits dans les [données historiques requises](../data/03_Donnees_Historiques_Requises_et_Validation.md). Un calendrier de collecte ne prouve pas à lui seul que l'effectif de validation sera atteint.
 
+Le [plan d'implémentation intégrale du robot London](robot_london_v3/README.md) (`LONDON_V3`, version 1.0.0 du 5 novembre 2026, statut proposé) décline cet ordre en phases MCL avec points d'arrêt, décisions et arbitrages à trancher.
+
 ## Emploi des fonctions de référence
 
 `reference/technical.py` fournit les indicateurs et détecteurs de configurations, sans portefeuille, dimensionnement complet ou modèle de fills. `reference/llm_contracts.py` illustre validation textuelle, causalité, veto et bornes de coût, sans client HTTP, verrouillage concurrent du budget ou persistance de production. Leur [notice](../../reference/README.md) précise les limites.

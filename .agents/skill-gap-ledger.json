@@ -13,6 +13,18 @@
       ],
       "decision": "consignee",
       "skill": null
+    },
+    {
+      "id": "integration-python-du-paquet-metatrader5-base-horaire-des-ticks-order-send-bloqu",
+      "label": "Intégration Python du paquet MetaTrader5 (base horaire des ticks, order_send bloquant, calendrier et séances absents)",
+      "occurrences": 1,
+      "first_seen": "2026-11-05",
+      "last_seen": "2026-11-05",
+      "evidence": [
+        "2026-11-05 : plan du robot London en Python + MT5 ; xp-bots-broker-account-qualification couvre C04 et MQL5, pas l'API Python ; extension envisagée en phase 11"
+      ],
+      "decision": "consignee",
+      "skill": null
     }
   ]
 }
