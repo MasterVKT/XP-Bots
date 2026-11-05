@@ -69,3 +69,4 @@ l'utilisateur. Bilan par `mcl.py rapport` à la clôture de chaque artefact.
 | Phase | Date | Résultat |
 |---|---|---|
 | 0 — Cadrage | 2026-11-05 | Neuf cartes sans divergence, 60 esquisses de contrat de couche, coutures, registre R1–R17 soumis |
+| 1 — Squelette | 2026-11-05 | Noyau (types, ports, motifs, journal C09, configuration), segments minimaux, rejeu `xpbots.app.rejeu`, lanceur `tools/run_robot_tests.py`, CI ; coutures finalisées ; gate global tracé |

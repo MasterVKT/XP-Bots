@@ -25,6 +25,8 @@ Les spécifications et les fichiers JSON doivent rester cohérents. Toute diverg
 | `tests/`, `tools/` | Contrôles des contrats, calculs, documents et préparation du merge |
 | `docs/validation/` | [Portée des contrôles et preuves conservées](docs/validation/README.md) |
 | `.agents/` | Gouvernance des agents AI de développement : skills, hooks, règles et [compatibilité](.agents/COMPATIBILITY.md) |
+| `src/xpbots/`, `tests/robot/` | Code du robot 1 en construction et sa suite de tests (bibliothèque standard) |
+| `mcl/` | Cartes des couches, contrats et journaux de construction MCL du robot 1 |
 
 L'IA utilise exclusivement des **API distantes**, avec un service partagé par les deux méthodes. Le mode initial est `PAPER_AB`, les routes gratuites sont prioritaires et le secours payant est désactivé. Plafonds partagés : **15 USD/mois au total**, dont **3 USD/mois maximum pour les API payantes**. Aucun modèle local n'est admis. Le complément IA n'est jamais une permission fondamentale ni un générateur d'ordres.
 
@@ -46,6 +48,18 @@ python tools/verify_project.py --git
 ```
 
 Cette simulation utilise un index temporaire et conserve l'index réel, la branche et les fichiers de travail. Elle ne remplace pas une nouvelle vérification si le distant change.
+
+## Robot 1 Triple EMA + RSI + repli (en construction)
+
+Le [plan d'implémentation](docs/architecture/PLAN_IMPLEMENTATION_ROBOT_EMA_V3.md) découpe la construction en phases ; l'avancement est suivi dans [le plan composite](mcl/robot-ema-v3/PLAN-MCL.md). Le squelette actuel rejoue une fixture de ticks synthétiques jusqu'au journal C09 : aucun ordre, aucun appel réseau, aucune donnée de prix réelle. Le journal est écrit sous `runtime/`, exclu de Git, et n'est jamais écrasé.
+
+```powershell
+python tools/run_robot_tests.py
+$env:PYTHONPATH = "src"
+python -m xpbots.app.rejeu --ticks tests/robot/fixtures/squelette_ticks.csv --manifeste tests/robot/fixtures/squelette_manifeste.json --journal runtime/journal_squelette.jsonl
+```
+
+La même vérification tourne en intégration continue (`.github/workflows/robot-ci.yml`) avec `python tools/verify_project.py` et le contrôle d'architecture des cartes MCL.
 
 ## Agents AI de développement
 

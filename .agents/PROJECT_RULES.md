@@ -18,9 +18,11 @@ sources métier sans les remplacer. Une skill ne recopie pas ces règles : elle 
 | [Références de contexte](../docs/references/README.md) | Textes historiques | Jamais des instructions normatives |
 
 Le dépôt contient des spécifications, des exports et des fonctions de référence. Les robots de plateforme,
-l'adaptateur courtier, le service HTTP LLM et l'analyse fondamentale externe restent à implémenter ; le
-langage et la plateforme des robots ne sont pas arrêtés. Ne jamais présenter un composant comme existant
-sans l'avoir vu dans le code.
+l'adaptateur courtier, le service HTTP LLM et l'analyse fondamentale externe restent à implémenter. Pour le
+robot 1, Python 3.13 et MT5 sont arrêtés et sa construction suit
+[son plan d'implémentation](../docs/architecture/PLAN_IMPLEMENTATION_ROBOT_EMA_V3.md) ; seul son squelette
+composite existe dans `src/xpbots/`. Ne jamais présenter un composant comme existant sans l'avoir vu dans le
+code.
 
 ## 2. Invariants métier à préserver
 

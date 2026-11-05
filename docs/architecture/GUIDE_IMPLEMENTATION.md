@@ -2,6 +2,8 @@
 
 État du dépôt au 4 novembre 2026 : spécifications 3.1.0, paramètres figés, contrats et fonctions de référence disponibles. Aucun robot de plateforme, service HTTP LLM, registre de budget transactionnel ou adaptateur courtier n'est encore fourni. Ce guide oriente la construction ; les deux spécifications autonomes fixent le comportement détaillé.
 
+Mise à jour du 5 novembre 2026 : la construction du robot 1 (Python 3.13, MT5) suit le [plan d'implémentation du robot 1](PLAN_IMPLEMENTATION_ROBOT_EMA_V3.md) ; son squelette composite existe dans `src/xpbots/`, sans adaptateur courtier réel. Le robot 2 reste à planifier.
+
 ## Autorité des ressources
 
 Les [deux spécifications](../../README.md) contiennent les règles complètes C01–C11, la méthode S01 ou S02 et le workflow IA A01–A15. Les exports de `config/`, `schemas/` et `prompts/` évitent une transcription manuelle. Les contrôles vérifient leur concordance. Le nom `parametres_figes_v3.json` et sa version technique 3.0.0 restent inchangés : la version documentaire 3.1.0 ajoute l'intégration IA sans modifier ce noyau.
@@ -41,6 +43,6 @@ Les dates et champs de collecte sont décrits dans les [données historiques req
 
 `reference/technical.py` fournit les indicateurs et détecteurs de configurations, sans portefeuille, dimensionnement complet ou modèle de fills. `reference/llm_contracts.py` illustre validation textuelle, causalité, veto et bornes de coût, sans client HTTP, verrouillage concurrent du budget ou persistance de production. Leur [notice](../../reference/README.md) précise les limites.
 
-Les dépendances de `requirements-dev.txt` concernent ces contrôles Python. Le langage, la plateforme et les dépendances du futur robot ne sont pas arrêtés par le rangement du dépôt. Aucun dossier d'application vide ni adaptateur factice n'a été ajouté.
+Les dépendances de `requirements-dev.txt` concernent ces contrôles Python. Le robot 1 n'utilise que la bibliothèque standard ; le paquet `MetaTrader5` sera réservé à son infrastructure (plan, section 1). Aucun adaptateur factice n'a été ajouté.
 
 Pour les futurs historiques, traces et états privés, utiliser les emplacements exclus `data/raw/`, `data/cache/`, `data/private/`, `runtime/`, `logs/` et `.local/`. Les résultats synthétiques servant de fixtures peuvent être ajoutés explicitement dans `tests/` après revue.

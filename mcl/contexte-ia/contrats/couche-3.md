@@ -10,7 +10,7 @@
 
 Unité : contexte
 Responsabilité : Rendre BLOCK ou NEUTRAL pour un symbole et un instant, jamais ALLOW.
-Signature : ContexteIA.decision(symbole, i, bras) -> BLOCK | NEUTRAL ; recharger()
+Signature : ContexteIA.decision(symbole, instant_ms) -> DecisionContexteIA (BLOCK | NEUTRAL ; le bras A/B est porté par l'instance) ; recharger()
 Entrée : symbole, instant, bras PAPER_AB, mode
 Sortie : décision et identifiants de preuve
 Effets de bord : aucun

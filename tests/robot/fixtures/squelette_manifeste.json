@@ -1,0 +1,31 @@
+{
+  "schema": "xp-fixture-manifeste-v1",
+  "origine": "synthetique",
+  "fuseau": "UTC",
+  "description": "Ticks synthétiques déterministes du squelette (graine 20261104) ; aucun prix réel.",
+  "fin_donnees_ms": 1793786400000,
+  "symboles": {
+    "EURUSD": {
+      "symbole_courtier": "EURUSDsynth",
+      "couverture": [
+        [
+          1793779200000,
+          1793786400000
+        ]
+      ]
+    },
+    "GBPUSD": {
+      "symbole_courtier": "GBPUSDsynth",
+      "couverture": [
+        [
+          1793779200000,
+          1793781600000
+        ],
+        [
+          1793782200000,
+          1793786400000
+        ]
+      ]
+    }
+  }
+}

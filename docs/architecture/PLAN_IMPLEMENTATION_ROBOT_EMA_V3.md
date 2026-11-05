@@ -15,7 +15,7 @@ Résultat visé : un robot Python qui, sur les mêmes ticks, prend les mêmes d�
 MT5 démo (C04), et un service IA partagé (A04–A11) en dernière phase. **La rentabilité reste non validée** :
 elle relève du protocole C10/A13 sur les données réelles de l'utilisateur.
 
-Avancement : **phase 0 terminée le 2026-11-05** (cartographie confirmée par `mcl.py`, tableau de suivi dans `mcl/robot-ema-v3/PLAN-MCL.md`). Chaque phase suivante ne démarre que sur
+Avancement : **phases 0 et 1 terminées le 2026-11-05** (cartographie confirmée par `mcl.py`, puis squelette composite livré ; tableau de suivi dans `mcl/robot-ema-v3/PLAN-MCL.md`). Chaque phase suivante ne démarre que sur
 demande explicite de l'utilisateur.
 
 ## 1. Décisions arrêtées
@@ -167,18 +167,22 @@ coordinateur (refus explicite) → exécution papier → journal C09**.
 - `noyau` : `Instant` (ms UTC + séquence, ordre total) ; `Tick` (symbole canonique et courtier, Bid/Ask finis
   positifs) ; `Bougie` (période, ouverture, OHLC Bid, validité, nombre de ticks) ; `Cotation` ; `Signal`
   (stratégie, symbole, clôture UTC, sens, clôture Bid, `A_t`, `B_SL`, multiple k, état du détecteur) ;
-  `IssueSignal` (rempli avec volume/prix/instant, ou refus définitif avec motif) ; `CleIntention`
+  `ResultatTechnique` (exactement un signal ou un motif) ; `IssueSignal` (rempli avec volume/prix/instant, ou
+  refus définitif avec motif) ; `DecisionFondamentale` ; `DecisionContexteIA` (BLOCK ou NEUTRAL) ; `CleIntention`
   `(deployment_id, strategy_id, symbole, cloture_M15_UTC, sens)` ; `MotifRefus` ; schéma des enregistrements C09 ;
   JSON canonique strict (refus des doublons et des non-finis, empreinte = `reference.technical.canonical_hash`) ;
-  chargeur de `config/` ; ports (protocoles `typing`) listés §5 plus `Strategie`, `ControleFondamental`,
-  `ContexteIA`.
+  chargeur de `config/` ; ports (protocoles `typing`) nécessaires au squelette : `SourceTicksHistoriques`,
+  `Journal`, `Strategie`, `ControleFondamental`, `ContexteIA` ; les autres ports de §5 arrivent avec leur premier
+  consommateur (contrat un niveau d'avance seulement).
 - Segments minimaux dans `app/segments_minimaux.py`, chacun remplacé plus tard (`COUTURES.md` décrit entrée,
   sortie, invariants et artefact remplaçant) : agrégateur M15 sans gestion de trou (couverture lue dans le
   manifeste de fixture) → A ; stratégie neutre → B ; coordinateur de refus → D ; fondamental absent → E ;
   contexte IA neutre → F ; exécution papier sans ordre → H/I.
-- `infrastructure` minimale : lecteur CSV de fixture, écrivain JSONL.
-- Point d'entrée : `python -m xpbots.app.rejeu --ticks <csv> --manifeste <json> --journal <jsonl>`.
-- Gate du squelette = sa CI : suite robot + `python tools/verify_project.py` + `mcl.py verifier` composite.
+- Infrastructure minimale, elle aussi dans `app/segments_minimaux.py` (le paquet `infrastructure` est construit
+  au protocole MCL en phase 9) : lecteur CSV de fixture, écrivain JSONL.
+- Point d'entrée : `python -m xpbots.app.rejeu --ticks <csv> --manifeste <json> --journal <jsonl>`, avec `src`
+  dans `PYTHONPATH` ; fixture synthétique versionnée `tests/robot/fixtures/squelette_ticks.csv`.
+- Gate du squelette = sa CI (`.github/workflows/robot-ci.yml`) : suite robot + `python tools/verify_project.py` + `mcl.py verifier` composite et par artefact ; le gate global est aussi tracé dans `mcl/robot-ema-v3/journal.jsonl`.
 
 ## 7. Cartes des couches par artefact
 

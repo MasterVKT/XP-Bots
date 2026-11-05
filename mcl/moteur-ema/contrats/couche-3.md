@@ -10,7 +10,7 @@
 
 Unité : moteur_ema
 Responsabilité : Produire à chaque clôture admissible un signal ou un motif technique et appliquer l'issue reçue.
-Signature : MoteurEMA (port Strategie).sur_cloture(bougie_enrichie, tick_size) -> ResultatTechnique ; appliquer_issue(cle, issue) ; notifier_sortie(symbole, instant)
+Signature : MoteurEMA (port Strategie, profils et tick_size fournis à la construction).sur_cloture(bougie_enrichie) -> ResultatTechnique ; appliquer_issue(cle, issue) ; notifier_sortie(symbole, instant)
 Entrée : BougieEnrichie, tick_size, issues
 Sortie : Signal ou motif, état du détecteur et niveaux structurels
 Effets de bord : état persisté via le port Stockage

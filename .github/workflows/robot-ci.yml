@@ -1,0 +1,31 @@
+# Gate du squelette composite du robot 1 EMA_V3 (plan maître, section 6) : suite du robot, contrôles du
+# projet et architecture MCL. Aucun ordre, aucun appel d'API, aucune donnée de prix réelle.
+name: robot-ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Dépendances des contrôles de référence
+        run: python -m pip install -r requirements-dev.txt
+      - name: Suite du robot
+        run: python tools/run_robot_tests.py
+      - name: Contrôles du projet
+        run: python tools/verify_project.py
+      - name: Architecture MCL (composite et artefacts)
+        run: |
+          for dossier in mcl/*/; do
+            python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossier "${dossier%/}" verifier --mode strict
+          done
