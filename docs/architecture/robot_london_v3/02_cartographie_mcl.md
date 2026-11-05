@@ -96,27 +96,32 @@ nature (extension ou modification), artefact, justification, gate vert de la CI 
 | `controles-fondamentaux` | `noyau`, `execution-coordinateur` (port fondamental) | 3 |
 | `contexte-ia` | `noyau`, `execution-coordinateur` (port du contexte IA) | 3 |
 | `infrastructure` | `noyau`, `execution-coordinateur` (protocole du courtier et port de calcul) | 3 |
-| `orchestration` | `noyau`, `donnees-temps`, `moteur-london`, `execution-coordinateur`, `controles-fondamentaux`, `contexte-ia` | 4 |
+| `moteur-london-v1` | `noyau`, `donnees-temps` (artefact de comparaison, sous-étape 13.4) | 2 |
+| `orchestration` | `noyau`, `donnees-temps`, `execution-coordinateur`, `controles-fondamentaux`, `contexte-ia` ; les stratégies sont **injectées** (D-18) | 4 |
 | `service-ia` | `noyau`, `contexte-ia` (format du snapshot) | 4 |
-| `journal-rejeu` | `noyau`, `execution-coordinateur`, `orchestration` | 5 |
-| `points-entree` | `noyau`, `orchestration`, `journal-rejeu`, `infrastructure` | 6 |
+| `journal-rejeu` | `noyau`, `execution-coordinateur`, `orchestration`, `moteur-london` (fabrique de stratégie) ; `moteur-london-v1` à partir de 13.4 | 5 |
+| `points-entree` | `noyau`, `orchestration`, `journal-rejeu`, `infrastructure`, `moteur-london` (fabrique de stratégie) | 6 |
 
 Une simulation de cette carte composite avec `mcl.py analyser` (5 novembre 2026, hors du dépôt) rend exactement
-ces profondeurs, sans divergence ni cycle ; son unique alerte, « plusieurs racines (`service_ia`, `app`) », est
-attendue : le robot et le service IA sont deux processus distincts. Les cartes prévues de `noyau`,
-`donnees-temps`, `moteur-london`, `execution-coordinateur`, `controles-fondamentaux`, `journal-rejeu` et
-`infrastructure` ont été simulées de même : les couches calculées sont celles des tableaux du §6.
+ces profondeurs, sans divergence ni cycle, avec ou sans `moteur-london-v1` (qui prend la couche parallèle 2c) ;
+son unique alerte, « plusieurs racines (`service_ia`, `app`) », est attendue : le robot et le service IA sont
+deux processus distincts. Les cartes prévues de `noyau`, `donnees-temps`, `moteur-london`,
+`execution-coordinateur`, `controles-fondamentaux`, `journal-rejeu` et `infrastructure` ont été simulées de
+même : les couches calculées sont celles des tableaux du §6.
 
 Les artefacts de même profondeur sont **parallèles** : aucune dépendance mutuelle n'est permise. En
-particulier, `moteur-london` et `execution-coordinateur` ne s'importent jamais l'un l'autre (indépendance des
-méthodes, C08), et `infrastructure` ne lit que des octets pour les permissions, le calendrier et le snapshot,
-sans importer `controles-fondamentaux` ni `contexte-ia`.
+particulier, `moteur-london`, `moteur-london-v1` et `execution-coordinateur` ne s'importent jamais l'un l'autre
+(indépendance des méthodes, C08) ; `infrastructure` ne lit que des octets pour les permissions, le calendrier et
+le snapshot, sans importer `controles-fondamentaux` ni `contexte-ia`. L'orchestration n'importe **aucune**
+stratégie : les points de composition (`journal-rejeu` pour le rejeu, `points-entree` pour le direct) lui
+fournissent les fabriques de stratégie par la configuration de déploiement (D-18). Le moteur V1 et le futur
+robot EMA s'y branchent donc sans défiger l'orchestration.
 
 **Ordre de construction** (ordre produit du guide, compatible avec les dépendances) : `noyau` (phase 2),
 `donnees-temps` (3), `moteur-london` (4), `execution-coordinateur` (5 et 6), `controles-fondamentaux` (7),
 `contexte-ia` (8), `orchestration` (9), `journal-rejeu` (10), `infrastructure` et `points-entree` (11),
-`service-ia` (12). `infrastructure` pourrait techniquement venir plus tôt ; elle attend la phase 11 parce qu'elle
-exige le poste Windows et les décisions D-05, D-11 à D-13.
+`service-ia` (12), `moteur-london-v1` (13.4). `infrastructure` pourrait techniquement venir plus tôt ; elle
+attend la phase 11 parce qu'elle exige le poste Windows et le compte de démonstration.
 
 `controles-fondamentaux` et `contexte-ia` implémentent les ports déclarés par `execution-coordinateur` : ils
 viennent donc après lui, ce qui respecte aussi l'ordre produit du guide (« brancher » le calendrier et les
@@ -421,16 +426,18 @@ Rôle : le moteur de décision événementiel, identique en rejeu et en direct, 
 
 | Unité | Couche | Responsabilité | Entrée → sortie | Dépend de | Amont | Sources |
 |---|---|---|---|---|---|---|
-| `contrats_orchestration` | 0 | Déclarer le contrat structurel d'une stratégie, la configuration de déploiement et les enveloppes d'entrée et de sortie | — | — | noyau | C08, A13 |
-| `bras` | 1 | Composer un bras : moteurs London par symbole, coordinateur, politique IA | configuration de bras → bras ; export et import d'état | `contrats_orchestration` | moteur-london, execution-coordinateur, contexte-ia | A01, A13 |
+| `contrats_orchestration` | 0 | Déclarer le contrat structurel d'une stratégie, la configuration de déploiement (avec ses fabriques de stratégie) et les enveloppes d'entrée et de sortie | — | — | noyau | C08, A13 |
+| `bras` | 1 | Composer un bras : instances de stratégie par symbole créées par les fabriques injectées, coordinateur, politique IA | configuration de bras → bras ; export et import d'état | `contrats_orchestration` | execution-coordinateur, contexte-ia | A01, A13 |
 | `moteur_decision` | 2 | Enveloppe : appliquer l'ordre C08 à chaque événement pour tous les bras, à partir d'entrées identiques | événement → commandes par bras, enregistrements, minuteries | `bras` | donnees-temps, controles-fondamentaux, noyau | C08, A07, C11.14 |
 
 Esquisses de contrat : les bougies sont construites une seule fois et partagées ; l'état des permissions est
 commun (entrées identiques) mais ses clôtures s'appliquent à chaque bras ; chaque bras possède ses propres
-moteurs London (les quotas dépendent de ses propres remplissages), son coordinateur et son compte ; le bras IA
-utilise `contexte-ia`, le bras de référence le complément absent ; sorties étiquetées par bras ; même séquence
-d'entrées → mêmes sorties. Le contrat structurel de stratégie (protocole Python) est satisfait par le moteur
-London sans que celui-ci l'importe ; le futur moteur EMA le satisfera de même.
+instances de stratégie (les quotas London dépendent de ses propres remplissages), son coordinateur et son
+compte ; le bras IA utilise `contexte-ia`, le bras de référence le complément absent ; sorties étiquetées par
+bras ; même séquence d'entrées → mêmes sorties. Le contrat structurel de stratégie (protocole Python) est
+satisfait par le moteur London sans que celui-ci l'importe ; le moteur V1 de comparaison et le futur moteur EMA
+le satisferont de même. Les tests de catégorie 2 de l'orchestration utilisent le vrai moteur London, artefact
+amont figé, injecté comme en production.
 
 ### 6.8 Artefact `journal-rejeu` (paquet `xpbots.rejeu`, phase 10)
 
@@ -445,7 +452,7 @@ périodes, métriques, bootstrap et rapports ; cœur pur qui reçoit des lignes 
 | `simulateur_execution` | 1b | Exécuter les commandes sur ticks selon le modèle de référence ou de stress et fournir le port de calcul | commandes, ticks → réponses, état du compte | `types_rejeu` | execution-coordinateur, noyau | C10, C11.12, P-11 |
 | `metriques` | 1c | Calculer effectifs, espérance, profit factor, drawdown de fonds propres, rétention et fréquence | trades, courbe, jours → métriques | `types_rejeu` | noyau | C09, C10, A13 |
 | `bootstrap` | 1d | Bootstrap de blocs de cinq journées, graine et réplications de l'export, percentiles | sommes journalières → intervalles | `types_rejeu`, `protocole_c10` | noyau | C10, A13.7 |
-| `executeur_rejeu` | 2 | Rejouer une période : analyse, orchestration, simulateur ; blocs, rejeu continu, bras, perturbations, verrou du test réservé | périodes, ticks, configuration → résultats | `analyse_ticks`, `simulateur_execution`, `protocole_c10` | orchestration, noyau | C10, A13 |
+| `executeur_rejeu` | 2 | Rejouer une période : analyse, orchestration, simulateur ; blocs, rejeu continu, bras, perturbations, verrou du test réservé | périodes, ticks, configuration → résultats | `analyse_ticks`, `simulateur_execution`, `protocole_c10` | orchestration, moteur-london (fabrique), noyau ; moteur-london-v1 à partir de 13.4 | C10, A13 |
 | `rapports` | 3 | Produire les rapports C10, A11 London et A13 | résultats → rapports structurés | `metriques`, `bootstrap`, `executeur_rejeu` | noyau | C10, A11, A13, A14 |
 
 Esquisses de contrat :
@@ -493,7 +500,7 @@ Rôle : seules implémentations réelles des frontières externes. Précédé de
 | `journal_fichiers` | 0d | Écrire journal de décisions et journal d'entrées en JSON Lines | enregistrements → fichiers | — | système de fichiers | C09, C11.14 |
 | `lecteur_snapshot` | 0e | Lire les octets du snapshot IA au chemin réel, avec plafond de taille | chemin → octets, heure de lecture | — | système de fichiers | A10 |
 | `lecteur_ticks` | 0f | Lire en flux les fichiers de ticks mensuels et calculer leur empreinte | fichiers → lignes, SHA-256 | — | système de fichiers | C10 |
-| `sources_controles` | 0g | Lire permissions, calendrier et horaires selon D-11 et D-12 | transport → octets horodatés | — | système de fichiers ou HTTP local | C04, C05 |
+| `sources_controles` | 0g | Lire le dossier d'échange des permissions (D-11), les exports MQL5 du calendrier et des séances et le fichier des fermetures exceptionnelles (D-12) | fichiers → octets horodatés à la lecture | — | système de fichiers | C04, C05 |
 | `mt5_session` | 1 | S'attacher au terminal, lire version, état, compte et dossier commun | — → session et informations | `types_infra` | `MetaTrader5` | C04 |
 | `mt5_specifications` | 2a | Lire et contrôler les caractéristiques C04 et produire les profils | symbole → profils, liste `ENVIRONMENT_NOT_READY` | `mt5_session` | `MetaTrader5` | C04 |
 | `mt5_flux` | 2b | Récupérer les ticks incrémentalement, convertir l'heure, signaler la connexion | symbole, curseur → ticks, états de connexion | `mt5_session`, `types_infra` | `MetaTrader5` | C03, S-01, S-08 |
@@ -517,7 +524,7 @@ avant chaque ordre (C04) ; aucun secret journalisé.
 | Unité | Couche | Responsabilité | Entrée → sortie | Dépend de | Amont | Sources |
 |---|---|---|---|---|---|---|
 | `configuration_application` | 0 | Lire arguments, chemins, mode, identifiant et registre de déploiement | arguments, fichiers → configuration d'exécution | — | noyau | C01, A01 |
-| `boucle_direct` | 1a | Démarrer, rapprocher, scruter, planifier, exécuter les commandes après écriture de l'état, s'arrêter proprement | configuration → exécution continue | `configuration_application` | infrastructure, orchestration | C08, A03, A10 |
+| `boucle_direct` | 1a | Démarrer, rapprocher, scruter, planifier, exécuter les commandes après écriture de l'état, s'arrêter proprement | configuration → exécution continue | `configuration_application` | infrastructure, orchestration, moteur-london (fabrique) | C08, A03, A10 |
 | `cli_rejeu` | 1b | Lancer un rejeu C10 | arguments → résultats et rapports | `configuration_application` | journal-rejeu, infrastructure | C10 |
 | `cli_qualification` | 1c | Qualifier l'environnement C04 et exécuter les contrôles de qualification | arguments → rapport | `configuration_application` | infrastructure | C04 |
 | `cli_rapports` | 1d | Produire les rapports à partir des journaux | journaux → rapports | `configuration_application` | journal-rejeu, infrastructure | C09, A11 |
@@ -525,8 +532,8 @@ avant chaque ordre (C04) ; aucun secret journalisé.
 
 ### 6.11 Artefact `service-ia` (paquet `xpbots.service_ia`, phase 12, processus séparé)
 
-Comparaison : fonctions de [llm_contracts.py](../../../reference/llm_contracts.py). Carte indicative, à trancher
-par `mcl.py analyser`.
+Comparaison : fonctions de [llm_contracts.py](../../../reference/llm_contracts.py). Carte indicative : comme pour
+tout artefact, `mcl.py analyser` fixe les profondeurs définitives avant la première couche.
 
 | Unité | Couche | Responsabilité | Dépend de | Frontière réelle | Sources |
 |---|---|---|---|---|---|
@@ -543,6 +550,37 @@ par `mcl.py analyser`.
 | `planificateur` | 3 | Planifier briefing, classification, journal, revue et cas de dérive sous les plafonds | `routeur`, `collecteur_rss`, `constructeur_veto` | — | A09, A11, A13 |
 | `service` | 4 | Enveloppe : heartbeat indépendant, travailleur d'inférence unique, collecteur séparé | `planificateur`, `ecrivain_snapshot` | — | A03, A10 |
 
+### 6.12 Composant MQL5 `XPBotsExport` (phase 11, hors carte `mcl.py`)
+
+Rôle : exporter le calendrier HIGH et les horaires de séance que le paquet Python `MetaTrader5` n'expose pas
+(D-12). Contrat de sortie : [document 01](01_architecture.md), §2.2. `mcl.py` n'analyse pas MQL5 : le composant
+reste volontairement minuscule et sans logique de décision.
+
+| Module | Responsabilité | Fonctions natives | Contrôle |
+|---|---|---|---|
+| Export du calendrier | Lire les événements d'importance haute des devises suivies sur la fenêtre requise et écrire `calendrier.json` | Fonctions `Calendar*` (pays, événements, valeurs, détection des changements) | Fixtures Python du format ; comparaison sur le poste avec la vue calendrier du terminal |
+| Export des séances | Lire les séances de cotation et de négociation de chaque symbole lié et écrire `seances_<symbole>.json` | `SymbolInfoSessionQuote`, `SymbolInfoSessionTrade` | Fixtures Python ; comparaison avec la fiche du symbole |
+| Écriture atomique | Écrire un fichier temporaire du dossier commun, le vider, puis le substituer au fichier publié | `FileOpen` avec `FILE_COMMON`, `FileFlush`, `FileMove` avec remplacement | Lecture concurrente par le robot sans fichier tronqué |
+| Boucle du service | Exporter le calendrier chaque minute et les séances chaque heure, journaliser les erreurs du terminal | Service MQL5, minuterie | Compilation sans avertissement dans MetaEditor ; journal du terminal |
+
+Règles : une convention de module (un fichier par module, aucune variable globale partagée hors de la boucle),
+une revue de code obligatoire, aucune décision de trading, aucune écriture hors de `XPBots/export/v1/`.
+
+### 6.13 Artefact `moteur-london-v1` (paquet `xpbots.london_v1`, sous-étape 13.4)
+
+Rôle : porter les règles V1 London fournies par l'utilisateur (D-15) sur le même moteur d'exécution, le même
+compte, les mêmes coûts et les mêmes permissions que V3, pour la seule rétention `N_V3 / N_V1` de C10.
+
+- Construction MCL complète, avec sa propre carte ; unités cartographiées à partir de la spécification V1 une
+  fois fournie (elle est d'abord versée dans `docs/references/` comme contexte, avec son empreinte SHA-256, et
+  ne devient jamais normative pour V3).
+- Le moteur satisfait le contrat structurel de stratégie de l'orchestration ; il est injecté seulement par
+  l'exécuteur de rejeu ; tout mode autre que `REJEU` le refuse au démarrage.
+- Il réutilise les unités de `donnees-temps` ; il n'importe ni `moteur-london` ni `execution-coordinateur`
+  (couche parallèle 2c de la carte composite).
+- Aucune règle de V3 n'est modifiée ; un écart de comportement V1 qui exigerait de changer le noyau ou le
+  coordinateur est signalé comme défaut avant toute adaptation.
+
 ## 7. Frontières externes et doublures
 
 | Frontière | Contrat attendu | Doublure minimale (tests) | Couches qui l'utilisent doublée | Implémentation réelle | Test de contrat |
@@ -555,8 +593,8 @@ par `mcl.py analyser`.
 | Journal | Enregistrements C09 et d'entrées | Liste en mémoire | `points-entree` | `infrastructure` 0d | Relecture canonique identique |
 | Snapshot IA | Octets et heure de lecture | Octets fabriqués | `contexte-ia` | `infrastructure` 0e | Écriture et lecture concurrentes sous Windows |
 | Fichiers de ticks | Lignes de texte et manifeste | Lignes fabriquées | `journal-rejeu` | `infrastructure` 0f | Empreintes et ordre natif |
-| Fournisseur fondamental | Octets de messages horodatés | Messages scénarisés avec `known_at` | `controles-fondamentaux` | `infrastructure` 0g (D-11) | Transport réel retenu |
-| Calendrier et horaires | Versions horodatées | Versions scénarisées | `controles-fondamentaux`, `execution-coordinateur` | `infrastructure` 0g (D-12) | Source réelle retenue |
+| Dossier d'échange des permissions (D-11) | Octets de messages et heure de lecture | Messages scénarisés avec `known_at` ; fichiers écrits par un module factice | `controles-fondamentaux` | `infrastructure` 0g | Remplacement concurrent par le vrai module, sous Windows |
+| Export MQL5 du calendrier et des séances (D-12) | Versions horodatées | Versions scénarisées ; fixtures JSON du format | `controles-fondamentaux`, `execution-coordinateur`, `service-ia` | `infrastructure` 0g et service MQL5 | Export réel comparé à la vue du terminal |
 | API LLM | Requêtes et réponses HTTPS | Ouvreur HTTP factice | `service-ia` | `service-ia` 1d | Conformité A08, avec accord explicite de l'humain |
 | Flux RSS | XML sur HTTPS | XML fabriqué | `service-ia` | `service-ia` 2a | Lecture réelle Fed et BCE ; BoE refusé en 403 lors de l'examen |
 | SQLite du service | Registre et cache | Base en mémoire | `service-ia` | `service-ia` 1c | Concurrence des réservations |
@@ -565,7 +603,7 @@ par `mcl.py analyser`.
 
 | Cartes | Interdits (déclarés en `externes` avec `couches_autorisees` vide) |
 |---|---|
-| `noyau`, `donnees-temps`, `moteur-london`, `execution-coordinateur`, `controles-fondamentaux`, `contexte-ia`, `orchestration` | `time`, `os`, `pathlib`, `io`, `socket`, `http`, `urllib`, `sqlite3`, `threading`, `subprocess`, `random`, `MetaTrader5`, `reference`, et tous les paquets `xpbots` en aval |
+| `noyau`, `donnees-temps`, `moteur-london`, `moteur-london-v1`, `execution-coordinateur`, `controles-fondamentaux`, `contexte-ia`, `orchestration` | `time`, `os`, `pathlib`, `io`, `socket`, `http`, `urllib`, `sqlite3`, `threading`, `subprocess`, `random`, `MetaTrader5`, `reference`, et tous les paquets `xpbots` en aval ou parallèles (pour `orchestration` : aussi `xpbots.london` et `xpbots.london_v1`) |
 | `journal-rejeu` | Les mêmes, sauf `random`, autorisé dans la seule couche `bootstrap` |
 | `infrastructure` | `reference`, `xpbots.app`, `xpbots.service_ia` ; chaque frontière réelle autorisée dans ses seules couches |
 | `points-entree` | `reference` et les frontières réelles directes (toujours par `xpbots.infra`) |

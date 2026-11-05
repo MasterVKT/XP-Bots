@@ -15,7 +15,7 @@ sont lues dans les [paramètres techniques](../../../config/parametres_figes_v3.
 | 4 | Configuration figée chargée, jamais recopiée | Lecture stricte des deux exports, contrôle de leur empreinte contre [conservation_ressources.json](../../validation/conservation_ressources.json), refus de démarrer si une option désactivée est activée | C01, C02, règles du projet §2 |
 | 5 | Échec sûr | Toute inconnue bloque les nouvelles entrées sans inventer de permission ; sorties et protections passent avant toute entrée | C04, C05, C08, A12 |
 | 6 | Persistance avant action | Intention et réservation validées en base avant l'envoi de l'ordre ; quotas écrits au premier remplissage ; restauration avant toute décision | C08, S02.4 |
-| 7 | Indépendance des méthodes | Le moteur London ignore coordinateur et courtier ; le coordinateur ne connaît que les signaux et issues définis dans le noyau | C08, règles du projet §2 |
+| 7 | Indépendance des méthodes | Le moteur London ignore coordinateur et courtier ; le coordinateur ne connaît que les signaux et issues définis dans le noyau ; l'orchestration reçoit les stratégies par injection, sans les importer (D-18) | C08, règles du projet §2 |
 | 8 | Numérique explicite | Flottants 64 bits pour indicateurs et formules de signal ; décimal sur la grille native pour niveaux exécutables, volumes et montants | C03.12 |
 | 9 | Observabilité complète | Journal C09 à chaque clôture et pour chaque intention ; journal d'entrées permettant un rejeu exact | C09, C11.14 |
 | 10 | Dépendances confinées | Bibliothèque standard dans le cœur ; `MetaTrader5`, SQLite, système de fichiers, réseau et horloge seulement dans l'infrastructure, vérifié par les cartes MCL | MCL règle 3 ; règles du projet §4 |
@@ -34,9 +34,9 @@ Poste Windows de l'utilisateur
   Robot XP-Bots : python -m xpbots.app.robot --mode PAPER | PAPER_AB | DEMO
       coquille : adaptateur MT5, horloge système, SQLite (runtime/), journaux (logs/), alertes locales
       cœur     : donnees-temps -> moteur-london -> coordinateur (+ contrôles C05, contexte IA A07)
-      ▲ lecture chaque seconde            ▲ lecture périodique              ▲ lecture périodique
-  Snapshot IA (Common/Files/XPBots/ai/v1/context_latest.json)   permissions (D-11)   calendrier, séances (D-12)
-      ▲ écriture atomique, heartbeat 30 s
+      ▲ lecture chaque seconde (les trois échanges, sous le dossier commun du terminal)
+  XPBots/ai/v1/context_latest.json    XPBots/fondamental/v1/permission_*.json    XPBots/export/v1/*.json
+      ▲ écriture atomique, 30 s       ▲ module fondamental externe (D-11)        ▲ service MQL5 XPBotsExport (D-12)
   Service IA : python -m xpbots.service_ia  --HTTPS-->  Groq, Gemini (OpenAI facultatif, désactivé)
                                             --HTTPS-->  RSS officiels Fed, BCE, BoE
   Module fondamental externe (fourni par l'utilisateur, hors de ce plan)
@@ -45,14 +45,74 @@ Poste Windows de l'utilisateur
 | Échange | Producteur | Consommateur | Emplacement | Règles |
 |---|---|---|---|---|
 | Snapshot IA | Service IA | Robot | `XPBots/ai/v1/context_latest.json` sous le chemin réel `terminal_info().commondata_path` (jamais déduit du nom d'utilisateur) | Écriture atomique, au plus `snapshot_max_bytes`, lecture toutes les `ea_snapshot_poll_seconds` (A10) |
-| Permissions fondamentales | Module externe | Robot | Selon D-11 | Schéma `fundamental-permission-v1`, heartbeat attendu `fundamental_expected_heartbeat_seconds` (C05) |
-| Calendrier HIGH, horaires de séance | Selon D-12 | Robot | Selon D-12 | Versions et heures de connaissance conservées (C05, C04) |
+| Permissions fondamentales | Module externe | Robot | `XPBots/fondamental/v1/permission_<SYMBOLE>.json` sous le dossier commun | Schéma `fundamental-permission-v1`, heartbeat attendu `fundamental_expected_heartbeat_seconds` (C05) ; contrat au §2.1 |
+| Calendrier HIGH, horaires de séance | Service MQL5 `XPBotsExport` | Robot, service IA (A06) | `XPBots/export/v1/calendrier.json`, `XPBots/export/v1/seances_<symbole>.json` | Versions et heures de connaissance conservées (C05, C04) ; contrat au §2.2 |
+| Fermetures exceptionnelles | Humain, d'après les avis du courtier | Robot | `XPBots/export/v1/fermetures_exceptionnelles.json` | Fichier versionné obligatoire, liste éventuellement vide avec date de relevé (C04) |
 | État persistant | Robot | Robot | `runtime/<deployment_id>/etat.sqlite` | Transactions exclusives (§7) |
 | Journaux | Robot | Rejeu, rapports | `logs/<deployment_id>/` | JSON Lines canonique (§9) |
 | Ticks historiques | Humain | Rejeu | `data/raw/ticks/<symbole>/<AAAA-MM>.csv.gz` | Format des [données requises](../../data/03_Donnees_Historiques_Requises_et_Validation.md), §2 ; manifeste SHA-256 |
 | Rapports de qualification | Robot (CLI) | Humain | `.local/reports/qualification/` | Hors des preuves historiques ; sans secret ni numéro de compte |
 
-Tous ces emplacements sont déjà exclus par `.gitignore` (`runtime/`, `logs/`, `data/raw/`, `.local/`).
+Les emplacements du dépôt sont déjà exclus par `.gitignore` (`runtime/`, `logs/`, `data/raw/`, `.local/`) ; les
+échanges vivent hors du dépôt, dans le dossier commun du terminal.
+
+### 2.1 Dossier d'échange des permissions fondamentales (D-11)
+
+- **Emplacement** : `XPBots/fondamental/v1/` sous le dossier commun réel du terminal
+  (`terminal_info().commondata_path`), même racine que le snapshot IA ; chemin effectif consigné au registre de
+  déploiement, jamais déduit du nom d'utilisateur.
+- **Fichiers** : un par symbole canonique (`permission_EURUSD.json`, `permission_GBPUSD.json`,
+  `permission_XAUUSD.json`) ; chacun contient exactement **un** message `fundamental-permission-v1` (C05), en
+  UTF-8 et en JSON strict.
+- **Écriture par le module externe** : fichier temporaire dans le même dossier, vidage et synchronisation sur
+  disque, puis remplacement atomique ; nouvelle tentative en cas de refus de partage sous Windows ; une séquence
+  publiée n'est jamais réécrite. Ces règles sont transmises au fournisseur du module : le robot ne peut pas les
+  imposer, il les vérifie.
+- **Lecture par le robot** : chaque seconde ; fichier fermé aussitôt lu ; plafond de taille d'ingénierie de
+  4 096 octets, consigné au registre de déploiement ; heure de réception = instant UTC de la lecture du nouveau
+  contenu, conservée à côté de `known_at` (C05).
+- **Acceptation** : validation complète par `message_permission` ; séquence strictement croissante par symbole ;
+  un contenu relu avec la même séquence est ignoré et ne renouvelle rien ; une séquence inférieure, un fichier
+  tronqué, illisible ou invalide est rejeté et journalisé, sans changement d'état ; l'absence de fichier vaut
+  absence de message, donc blocage dès l'expiration du dernier message valide.
+- **Interdits** : le robot n'écrit, ne déplace ni ne supprime rien dans ce dossier ; l'écriture est réservée au
+  module et au compte de l'utilisateur, comme pour A10.
+- **Rejeu** : l'historique des permissions est fourni en JSON Lines avec `known_at` ; chaque message est livré
+  au cœur à son heure de réception enregistrée, ou à `known_at` à défaut, jamais plus tôt.
+- **Journal d'entrées** : chaque nouveau contenu lu y est écrit avec son heure de lecture (C11.14).
+
+### 2.2 Service MQL5 d'export du calendrier et des séances (D-12)
+
+- **Composant** : programme de type service du terminal, `XPBotsExport`, source `mql5/Services/XPBotsExport.mq5`
+  dans le dépôt ; seul code MQL5 du projet ; compilé dans MetaEditor et installé dans le terminal par l'humain.
+  `mcl.py` n'analysant pas MQL5, sa structure est contrôlée par convention de module et revue de code ; son
+  format de sortie est contrôlé par des tests Python sur fixtures, puis par un test de contrat sur le poste.
+- **Sorties**, dans `XPBots/export/v1/` du dossier commun, écrites par fichier temporaire puis remplacement :
+  - `calendrier.json` : numéro de version strictement croissant ; heure du serveur et heure GMT du terminal à
+    l'export ; fenêtre couverte, du début du jour UTC précédent jusqu'à au moins l'instant d'export plus
+    `news_forward_coverage_seconds` ; événements d'importance haute des devises USD, EUR et GBP, avec
+    identifiants d'événement et de valeur, code d'événement, devise, type, secteur, heure de l'événement et heure
+    de dernière mise à jour, en heure du serveur ;
+  - `seances_<symbole_courtier>.json` : numéro de version, heures d'export, et pour chaque jour de semaine les
+    intervalles de cotation et de négociation en heure du serveur.
+- **Cadence** : calendrier chaque minute, séances au démarrage puis chaque heure (constantes d'ingénierie
+  consignées au registre de déploiement). Une annonce modifiée tardivement est ainsi connue du robot au plus tard
+  environ une minute après sa mise à jour dans le terminal ; elle déclenche alors blocage et clôture immédiats
+  si elle tombe dans sa fenêtre (C05).
+- **Fermetures exceptionnelles** : MQL5 ne les fournit pas. L'humain tient
+  `XPBots/export/v1/fermetures_exceptionnelles.json`, versionné et daté d'après les avis du courtier (liste
+  éventuellement vide avec date de relevé). Fichier absent → `ENVIRONMENT_NOT_READY` (C04 : aucun champ manquant
+  ne vaut zéro).
+- **Lecture et conversion par le robot** : contrôle d'une nouvelle version chaque seconde ; conversion heure
+  serveur → UTC par la table qualifiée de la sonde S-01 ; heure de connaissance d'un événement = instant de la
+  première lecture où il apparaît ou change (heure, importance) ; toutes les versions conservées (C05) ; table
+  d'importance et de types (décisions de politique monétaire par issuer, utiles à A06) versionnée et relue par
+  l'humain ; calendrier périmé si la dernière version lue date de plus de `news_calendar_max_age_seconds` ou si sa
+  couverture est insuffisante. Le service IA lit le même export pour l'appariement de A06.
+- **Historique de C10** : exporter aujourd'hui l'historique du calendrier produit un calendrier enrichi après
+  coup ; son usage en rejeu est déclaré comme approximation exposée à une fuite d'information
+  ([données requises](../../data/03_Donnees_Historiques_Requises_et_Validation.md), §4). La collecte prospective
+  des versions commence dès la phase 11.
 
 ## 3. Modes d'exécution
 
@@ -60,7 +120,7 @@ Tous ces emplacements sont déjà exclus par `.gitignore` (`runtime/`, `logs/`, 
 |---|---|---|---|---|---|---|---|
 | `REJEU` | Fichiers historiques | Simulateur C10 (référence ou stress) | Un compte fictif de 100 USD par expérience | Historique causal, ou scénario explicitement nommé `TECHNICAL_CONTROL_NEUTRAL` | Réponses archivées seulement, jamais réinférées | C10, C11, A13 | — |
 | `PAPER` (défaut technique `common.default_mode`) | Flux MT5 direct | Simulateur | Un compte fictif | Fournisseur externe réel | Aucun (`NEUTRAL`) | Contrôle en direct | Robot construit, C11 et A14 verts |
-| `PAPER_AB` (défaut IA `default_evaluation_mode`) | Flux MT5 direct | Deux simulateurs | Bras `REFERENCE` et bras `IA`, 100 USD chacun | Mêmes permissions dans les deux bras | Bras `IA` seulement | A13 | Service IA en marche |
+| `PAPER_AB` (défaut IA `default_evaluation_mode`) | Flux MT5 direct | Deux simulateurs | Bras `REFERENCE` et bras `IA`, 100 USD chacun | Mêmes permissions dans les deux bras | Bras `IA` seulement | A13 | Service IA en marche, appels d'API autorisés (D-17) |
 | `DEMO` | Flux MT5 direct | Ordres réels sur compte de démonstration | Compte démo | Fournisseur externe réel | Désactivé tant que A13 n'est pas établi | Démonstration prospective C10 | Qualification C04, décision humaine |
 | `REEL` | Flux MT5 direct | Ordres réels | Compte réel | Fournisseur externe réel | Seulement après validation financière A13 | Exploitation | Verrouillé : décision de déploiement tracée, critères C10 (skill `xp-bots-deployment-readiness`) |
 
@@ -182,6 +242,7 @@ src/xpbots/
     c2a_validation/ c2b_etat_indicateurs/ c3_flux/
   london/                           artefact moteur-london
     c0a_parametres/ c0b_types/ c1a_range/ c1b_gel_atr_h1/ c1c_cassure/ c1d_stop/ c1e_quotas/ c2_moteur/
+  london_v1/                        artefact moteur-london-v1 (sous-étape 13.4, rejeu de comparaison seulement)
   execution/                        artefact execution-coordinateur
     c0a_types/ c0b_ports_controles/ c0c_garde_cotation/ c0d_prix/ c0e_echeances/
     c1a_port_calcul/ c1b_gardes_compte/ c1c_reservations/ c2a_risque/ c2b_arbitrage/
@@ -198,6 +259,7 @@ tests/robot/
   squelette/                        test de bout en bout du squelette
   noyau/ donnees_temps/ moteur_london/ execution_coordinateur/ controles_fondamentaux/
   contexte_ia/ orchestration/ journal_rejeu/ infrastructure/ points_entree/ service_ia/
+mql5/Services/XPBotsExport.mq5      service MQL5 d'export du calendrier et des séances (D-12), seul code MQL5
 tools/run_robot_tests.py            lanceur unique des tests du robot (bibliothèque standard)
 mcl/<artefact>/                     carte.json, journal.jsonl, contrats/, PLAN-MCL.md
 mcl/squelette/COUTURES.md           registre des coutures du squelette
@@ -302,7 +364,7 @@ courtier, appels au port de calcul et leurs résultats, messages de permission, 
 des snapshots. Rejouer ce journal dans le même cœur doit reproduire à l'identique commandes et enregistrements
 (C11.14) ; c'est aussi la base du rejeu d'incident.
 
-### 9.3 Correspondance proposée des motifs (en attente de P-07 et P-08)
+### 9.3 Correspondance des motifs (arrêtée par P-07 et P-08 le 05/11/2026)
 
 | Situation | `motif` | `detail` proposé | Source |
 |---|---|---|---|
@@ -320,16 +382,16 @@ des snapshots. Rejouer ce journal dans le même cœur doit reproduire à l'ident
 | Position London ouverte, symbole occupé ou verrouillé | `SYMBOL_BUSY` | `POSITION_METHODE`, `POSITION_AUTRE_METHODE`, `ETAT_ORDRE_INCONNU`, `CLOTURE_EN_ATTENTE`, `VERROU_PROPRIETE` | S02.4, C07, C08 |
 | Permission absente, périmée, invalide, interruption | `FUNDAMENTAL_INVALID` | `ABSENTE`, `PERIMEE`, `INVALIDE`, `INTERRUPTION` | C05 |
 | Direction incompatible | `FUNDAMENTAL_DIRECTION` | `LONG_ONLY`, `SHORT_ONLY` | C05 |
-| État `NO_NEW` ou `FLATTEN` | `FUNDAMENTAL_DIRECTION` (proposition à arbitrer) | `RISK_STATE_NO_NEW`, `RISK_STATE_FLATTEN` | C05 |
+| État `NO_NEW` ou `FLATTEN` | `FUNDAMENTAL_DIRECTION` (retenu) | `RISK_STATE_NO_NEW`, `RISK_STATE_FLATTEN` | C05 |
 | Fenêtre d'annonce, calendrier périmé ou couverture insuffisante | `NEWS_WINDOW` | `ANNONCE_HIGH`, `CALENDRIER_PERIME`, `COUVERTURE_INSUFFISANTE` | C05 |
 | Veto IA validé | `AI_CONTEXT_VETO` | identifiant de l'événement | A07 |
 | Spread au-dessus du plafond (tentative) | `SPREAD_CAP` | — | C06 |
 | Écart d'entrée au-dessus du maximum (tentative) | `ENTRY_GAP` | — | C06 |
 | TTL atteint sans cotation conforme | `SIGNAL_EXPIRED` | dernière cause (P-08) | C06 |
-| Contrainte native de SL/TP rendant le plan invalide | `PROTECTION_ERROR` (proposition à arbitrer) | `CONTRAINTE_NATIVE_AVANT_ORDRE` | C06 |
+| Contrainte native de SL/TP rendant le plan invalide | `PROTECTION_ERROR` (retenu) | `CONTRAINTE_NATIVE_AVANT_ORDRE` | C06 |
 | Volume minimal au-delà du budget | `MIN_VOLUME_OR_RISK_REJECT` | — | C07 |
 | Réserve totale ou nombre de positions | `ACCOUNT_RISK_CAP` | `RESERVE_TOTALE`, `NOMBRE_POSITIONS` | C07 |
-| Positions externes non coordonnées | `ACCOUNT_RISK_CAP` (proposition à arbitrer) | `POSITIONS_EXTERNES` | C07 |
+| Positions externes non coordonnées | `ACCOUNT_RISK_CAP` (retenu) | `POSITIONS_EXTERNES` | C07 |
 | Marge | `MARGIN_REJECT` | `MARGE_TIERS`, `CONTROLE_NATIF` | C07 |
 | Caractéristique inconnue, fonction de calcul en erreur, profil non prêt | `ENVIRONMENT_NOT_READY` | champ ou fonction concerné | C04 |
 | Réponse d'ordre inconnue | `UNKNOWN_ORDER_STATE` | — | C08 |
@@ -353,8 +415,8 @@ sondes se jette ; seules leurs preuves sont conservées dans le rapport de quali
 | S-07 | `order_calc_margin`, `order_calc_profit`, `order_check` | `OrderCalcMargin` évalue un ordre isolé (C04) | Marge totale = marge du compte + marge du nouvel ordre + contrôle natif |
 | S-08 | `copy_ticks_from` | Date de départ à la seconde ; ticks de même milliseconde possibles ; profondeur d'historique propre au courtier | Dédoublonnage par `time_msc` et ordre natif ; préchargement en bougies natives Bid seulement après comparaison (P-01) |
 
-Le paquet Python ne fournit ni le calendrier économique ni les horaires de séance : voir D-12. Le chemin du
-dossier commun vient de `terminal_info().commondata_path`.
+Le paquet Python ne fournit ni le calendrier économique ni les horaires de séance : D-12 retient le service MQL5
+d'export du §2.2. Le chemin du dossier commun vient de `terminal_info().commondata_path`.
 
 ## 11. Sécurité, secrets et confidentialité
 

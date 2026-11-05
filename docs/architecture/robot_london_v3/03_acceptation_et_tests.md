@@ -35,8 +35,8 @@ pas l'exécution de ces cas sur un robot : ils restent verts et inchangés.
   `tests/robot/<artefact>/test_cat2_c<couche>_<theme>.py` ; squelette : `tests/robot/squelette/` ; outils de
   test (doublures des seules frontières externes) : `tests/robot/outils/`.
 - Tests de contrat des frontières réelles : `test_contrat_<frontiere>_<theme>.py`, ignorés sauf si
-  `XPBOTS_CONTRATS_MT5=1` (Windows, terminal connecté à un compte démo) ou `XPBOTS_CONTRATS_API=1` (appels
-  approuvés par l'humain).
+  `XPBOTS_CONTRATS_MT5=1` (Windows, terminal connecté au compte démo Deriv) ou `XPBOTS_CONTRATS_API=1` (appels
+  d'API réels : non autorisés au 05/11/2026, D-17, redemandés en phase 12).
 - Lanceur `tools/run_robot_tests.py` (bibliothèque standard) : ajoute `src` au chemin d'import ; découvre les
   tests ; options `--artefact`, `--couche`, `--categorie 1|2` ; code de sortie non nul au moindre échec ; résumé
   écrit dans `.local/reports/robot_tests.json` (ignoré par Git).
@@ -166,9 +166,13 @@ python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossie
   rapprochement après déconnexion provoquée ; détection d'une position externe ouverte à la main sur le compte
   démo ; chemin du dossier commun. Jamais sur un compte réel.
 - **Fichiers et SQLite** : arrêt brutal pendant une transaction, puis reprise ; écriture et lecture concurrentes
-  du snapshot sous Windows (refus de partage, nouvelles tentatives).
-- **API LLM (`XPBOTS_CONTRATS_API=1`, approbation explicite)** : une requête de conformité par route gratuite
-  configurée, selon les gabarits A08 ; aucune route payante sans décision.
+  du snapshot et du dossier d'échange des permissions sous Windows (refus de partage, nouvelles tentatives,
+  jamais de contenu tronqué accepté).
+- **Service MQL5 d'export** : compilation sans avertissement ; un export réel comparé à la vue calendrier du
+  terminal et à la fiche de séances du symbole ; format validé par les mêmes tests Python que les fixtures.
+- **API LLM (`XPBOTS_CONTRATS_API=1`)** : une requête de conformité par route gratuite configurée, selon les
+  gabarits A08, seulement après l'autorisation explicite que D-17 exige (non accordée au 05/11/2026) ; aucune
+  route payante sans décision.
 - **RSS** : lecture réelle des flux Fed et BCE si la politique réseau le permet ; refus BoE consigné.
 
 ## 8. Gardes transverses
