@@ -10,12 +10,19 @@ import os
 from typing import Iterable, Iterator
 
 NOM_JOURNAL_SQUELETTE = 'decisions.jsonl'
+CHEMINS_CONFIGURATION = ('config/parametres_figes_v3.json', 'config/parametres_IA_integration_v1.json',
+                         'docs/validation/conservation_ressources.json')
 
 
 def lire_octets(chemin: str) -> bytes:
-    """Lire un fichier entier (configuration figée)."""
+    """Lire un fichier entier."""
     with open(chemin, 'rb') as fichier:
         return fichier.read()
+
+
+def lire_configuration(racine_depot: str) -> tuple[bytes, bytes, bytes]:
+    """Octets de l'export technique, de l'export IA et de la preuve de conservation du dépôt."""
+    return tuple(lire_octets(os.path.join(racine_depot, *relatif.split('/'))) for relatif in CHEMINS_CONFIGURATION)
 
 
 def lire_lignes(chemin: str) -> Iterator[str]:

@@ -3,7 +3,7 @@ from decimal import Decimal
 import unittest
 
 from xpbots.execution.squelette import CommandeCloture, CommandeEntree
-from xpbots.noyau.squelette import Tick
+from xpbots.noyau.c1a_marche import Tick
 from xpbots.orchestration.squelette import SortieMoteur
 from xpbots.rejeu.squelette import (ClotureExecutee, ExecutionPapierMinimale, RefusCommande, Remplissage,
                                     SortieProtection, rejouer)
@@ -12,7 +12,7 @@ VOLUME = Decimal('0.01')
 
 
 def tick(instant, bid, ask, symbole='EURUSD'):
-    return Tick(symbole, symbole, instant, instant, bid, ask)
+    return Tick(symbole, symbole, instant, instant, instant, bid, ask)
 
 
 class TestExecutionPapier(unittest.TestCase):
@@ -69,8 +69,8 @@ class MoteurQuiOrdonne:
         self.appels = []
 
     def traiter_tick(self, t):
-        self.appels.append(t.instant_ms)
-        commandes = (CommandeEntree('k', 'EURUSD', 'ACHAT', VOLUME, 1.0, 2.0),) if t.instant_ms == 1 else ()
+        self.appels.append(t.instant_fournisseur_ms)
+        commandes = (CommandeEntree('k', 'EURUSD', 'ACHAT', VOLUME, 1.0, 2.0),) if t.instant_fournisseur_ms == 1 else ()
         return SortieMoteur(({'numero': len(self.appels)},), commandes)
 
 

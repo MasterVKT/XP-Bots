@@ -3,14 +3,14 @@ import unittest
 
 from robot.outils.fabrique_ticks import BougieVoulue, ticks_de_bougies
 from robot.outils.specification import configuration_technique
-from xpbots.donnees.squelette import AgregateurM15
-from xpbots.noyau.squelette import Bougie, ErreurDonnees, Tick
+from xpbots.donnees.squelette import AgregateurM15, ErreurAgregation as ErreurDonnees
+from xpbots.noyau.c1a_marche import Bougie, Tick
 
 DUREE = configuration_technique()['common']['timeframe_seconds'] * 1000
 
 
 def tick(instant, bid, sequence=0, symbole='EURUSD'):
-    return Tick(symbole, symbole, instant, sequence, bid, bid + 0.0001)
+    return Tick(symbole, symbole, instant, instant, sequence, bid, bid + 0.0001)
 
 
 class TestAgregation(unittest.TestCase):
@@ -19,7 +19,8 @@ class TestAgregation(unittest.TestCase):
         self.assertEqual(agregateur.ajouter(tick(0, 1.0)), ())
         self.assertEqual(agregateur.ajouter(tick(DUREE - 1, 1.5, 1)), ())
         closes = agregateur.ajouter(tick(DUREE, 2.0, 2))
-        self.assertEqual(closes, (Bougie('EURUSD', 0, DUREE, 1.0, 1.5, 1.0, 1.5, 2),))
+        self.assertEqual(closes, (Bougie('EURUSD', 0, DUREE, 1.0, 1.5, 1.0, 1.5, 2, True, None, DUREE),))
+        self.assertEqual(closes[0].instant_disponibilite_ms, DUREE, 'disponible à la réception du tick de frontière')
         closes = agregateur.ajouter(tick(2 * DUREE, 3.0, 3))
         self.assertEqual(closes[0].ouverture, 2.0, 'le tick de frontière ouvre la bougie suivante')
 
@@ -31,13 +32,13 @@ class TestAgregation(unittest.TestCase):
                                       sequence_initiale=99)[0])
         agregateur = AgregateurM15('EURUSD', DUREE)
         closes = [b for t in ticks for b in agregateur.ajouter(
-            Tick(t.symbole, t.symbole_courtier, t.instant_ms, t.sequence, float(t.bid), float(t.ask)))]
-        self.assertEqual([(b.ouverture, b.haut, b.bas, b.cloture, b.nombre_ticks) for b in closes],
+            Tick(t.symbole, t.symbole_courtier, t.instant_ms, t.instant_ms, t.sequence, float(t.bid), float(t.ask)))]
+        self.assertEqual([(b.ouverture, b.haut, b.bas, b.cloture, b.nombre_evenements) for b in closes],
                          [(float(v.ouverture), float(v.haut), float(v.bas), float(v.cloture), 4) for v in voulues])
 
     def test_le_prix_ask_est_ignore(self):
         agregateur = AgregateurM15('EURUSD', DUREE)
-        agregateur.ajouter(Tick('EURUSD', 'EURUSD', 0, 0, 1.0, 9.0))
+        agregateur.ajouter(Tick('EURUSD', 'EURUSD', 0, 0, 0, 1.0, 9.0))
         bougie = agregateur.ajouter(tick(DUREE, 1.0, 1))[0]
         self.assertEqual((bougie.haut, bougie.bas), (1.0, 1.0))
 

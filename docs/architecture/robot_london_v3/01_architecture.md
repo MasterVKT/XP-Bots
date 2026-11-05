@@ -397,7 +397,7 @@ des snapshots. Rejouer ce journal dans le même cœur doit reproduire à l'ident
 | Veto IA validé | `AI_CONTEXT_VETO` | identifiant de l'événement | A07 |
 | Spread au-dessus du plafond (tentative) | `SPREAD_CAP` | — | C06 |
 | Écart d'entrée au-dessus du maximum (tentative) | `ENTRY_GAP` | — | C06 |
-| TTL atteint sans cotation conforme | `SIGNAL_EXPIRED` | dernière cause (P-08) | C06 |
+| TTL atteint sans cotation conforme | `SIGNAL_EXPIRED` | dernière cause (P-08) : `SPREAD_CAP`, `ENTRY_GAP`, `COTATION_INVALIDE`, ou `AUCUNE_COTATION` si aucune cotation n'est arrivée | C06 |
 | Contrainte native de SL/TP rendant le plan invalide | `PROTECTION_ERROR` (retenu) | `CONTRAINTE_NATIVE_AVANT_ORDRE` | C06 |
 | Volume minimal au-delà du budget | `MIN_VOLUME_OR_RISK_REJECT` | — | C07 |
 | Réserve totale ou nombre de positions | `ACCOUNT_RISK_CAP` | `RESERVE_TOTALE`, `NOMBRE_POSITIONS` | C07 |
@@ -408,6 +408,11 @@ des snapshots. Rejouer ce journal dans le même cœur doit reproduire à l'ident
 | SL absent, TP non rétabli ou dépassé | `PROTECTION_ERROR` | `SL_ABSENT`, `TP_NON_RETABLI`, `TP_DEPASSE` | C08 |
 | Garde quotidienne | `DAILY_LOSS_LOCK` | — | C07 |
 | Arrêt global | `GLOBAL_DRAWDOWN_HALT` | — | C07 |
+| Stratégie minimale du squelette (segment S3, sans signal) | `NO_SETUP` | `SEGMENT_MINIMAL_S3` | Plan, phase 1 |
+| Coordinateur minimal du squelette (segment S4, refus de tout signal) | `ENVIRONMENT_NOT_READY` | `SEGMENT_MINIMAL_S4` | Plan, phase 1 |
+
+Ces détails forment l'énumération versionnée de la couche `domaine` du noyau (version 1) ; un test la compare à ce
+tableau dans les deux sens.
 
 ## 10. Particularités MT5 relevées et à qualifier
 

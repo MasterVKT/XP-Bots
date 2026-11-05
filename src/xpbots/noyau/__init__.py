@@ -1,5 +1,7 @@
-"""Artefact `noyau` : types et règles partagés (construit en phase 2).
+"""Artefact `noyau` : types et règles partagés, purs, sans entrée-sortie (phase 2, figé).
 
-En phase 1, il ne contient que les segments minimaux S1 (types de marché) et S6 (format du journal) du
-squelette, dans le module `squelette`.
+Couches (une couche = un sous-paquet, interface publique dans son `__init__.py`) : `c0a_temps` (instants),
+`c0b_nombres` (décimaux sur grille), `c0c_configuration` (exports figés), `c1a_marche` (ticks, cotations,
+bougies), `c1b_instrument` (profils C04), `c1c_domaine` (signaux, issues, motifs), `c2_journal` (journal C09).
+Carte et contrats : mcl/noyau/.
 """

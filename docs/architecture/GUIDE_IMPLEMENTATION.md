@@ -1,6 +1,6 @@
 # Guide d'implémentation des deux robots
 
-État du dépôt au 5 novembre 2026 : spécifications 3.1.0, paramètres figés, contrats et fonctions de référence disponibles ; plan d'implémentation du robot London arrêté, structure MCL composite posée dans `mcl/robot-london-v3/` et squelette composite déployable dans `src/xpbots/` (segments minimaux, sans logique métier). Aucun robot de plateforme, service HTTP LLM, registre de budget transactionnel ou adaptateur courtier n'est encore fourni. Ce guide oriente la construction ; les deux spécifications autonomes fixent le comportement détaillé.
+État du dépôt au 5 novembre 2026 : spécifications 3.1.0, paramètres figés, contrats et fonctions de référence disponibles ; plan d'implémentation du robot London arrêté, structure MCL composite posée dans `mcl/robot-london-v3/` et squelette composite déployable et noyau partagé figé dans `src/xpbots/` (types, configuration figée, journal C09 ; aucune logique de méthode, de risque ni d'exécution). Aucun robot de plateforme, service HTTP LLM, registre de budget transactionnel ou adaptateur courtier n'est encore fourni. Ce guide oriente la construction ; les deux spécifications autonomes fixent le comportement détaillé.
 
 ## Autorité des ressources
 
@@ -37,7 +37,7 @@ L'analyse fondamentale externe et le complément LLM ont des rôles distincts. U
 
 Les dates et champs de collecte sont décrits dans les [données historiques requises](../data/03_Donnees_Historiques_Requises_et_Validation.md). Un calendrier de collecte ne prouve pas à lui seul que l'effectif de validation sera atteint.
 
-Le [plan d'implémentation intégrale du robot London](robot_london_v3/README.md) (`LONDON_V3`, version 1.4.2 du 5 novembre 2026, validé par l'utilisateur) décline cet ordre en phases MCL avec points d'arrêt ; ses décisions et arbitrages de spécification sont arrêtés. Ses phases 0 à 12 se construisent dans le conteneur de développement contre des contrats de frontière finalisés tôt ; les actions réservées à l'humain (poste, compte de démonstration, données, autorisation des API, annotation, mises en service) sont regroupées dans sa phase 13 de qualification.
+Le [plan d'implémentation intégrale du robot London](robot_london_v3/README.md) (`LONDON_V3`, version 1.4.3 du 5 novembre 2026, validé par l'utilisateur) décline cet ordre en phases MCL avec points d'arrêt ; ses décisions et arbitrages de spécification sont arrêtés. Ses phases 0 à 12 se construisent dans le conteneur de développement contre des contrats de frontière finalisés tôt ; les actions réservées à l'humain (poste, compte de démonstration, données, autorisation des API, annotation, mises en service) sont regroupées dans sa phase 13 de qualification.
 
 ## Emploi des fonctions de référence
 

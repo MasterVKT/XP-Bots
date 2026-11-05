@@ -84,9 +84,9 @@ suite locale complète (sa « CI », D-10).
 - **Frontières (`externes`)** : (a) frontières réelles, autorisées seulement dans les couches d'infrastructure
   désignées ; (b) **interdits** déclarés avec `couches_autorisees` vide, pour rendre l'indépendance des
   méthodes et la pureté du cœur vérifiables (§8).
-- **Règles** : celles par défaut de `mcl.py` (`invariant`, `paralleles`, `externes`, `cycles`,
-  `contrats_figes` strictes ; `divergence` en avertissement, à zéro avant toute construction) ;
-  `checkpoint_tous_les` : 2.
+- **Règles** : toutes strictes (`invariant`, `paralleles`, `externes`, `cycles`, `contrats_figes` et
+  `divergence`) : une dépendance réelle absente de la carte fait échouer le gate, au lieu d'un simple
+  avertissement (leçon de la phase 2) ; `checkpoint_tous_les` : 2.
 - **Gate et gel** : commandes au [document 03](03_acceptation_et_tests.md), §3 ; rien n'est modifié entre un
   gate vert et le gel.
 
@@ -169,7 +169,7 @@ minimaux du squelette (S1, S6).
 | `marche` | 1a | Représenter ticks, cotations et bougies Bid | champs → tick, cotation, bougie validés | `instant`, `nombres` | C03.2, C03.5, C06 |
 | `instrument` | 1b | Représenter et valider les profils d'instrument et de compte de C04 | champs lus → profils, horaires de cotation, liste des champs manquants | `instant`, `nombres`, `configuration` | C04 |
 | `domaine` | 1c | Définir sens, signal technique, clé d'intention, issues, décisions des contrôles et motifs | champs → types validés | `instant` | C05, C06, C08, C09, A07 |
-| `journal` | 2 | Définir les enregistrements C09 et leur sérialisation canonique | objets → lignes JSON canoniques validées | `marche`, `instrument`, `domaine`, `configuration` | C09 |
+| `journal` | 2 | Définir les enregistrements C09 et leur sérialisation canonique | objets → lignes JSON canoniques validées | `instant`, `marche`, `instrument`, `domaine`, `configuration` | C09 |
 
 Carte prévue : couches parallèles 0a, 0b, 0c ; couches parallèles 1a, 1b, 1c ; couche 2 (enveloppe).
 

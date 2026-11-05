@@ -1,13 +1,14 @@
 # Plan d'implémentation intégrale du robot 2 — London Breakout M15 (`LONDON_V3`)
 
-> Plan directeur, version **1.4.2** du **5 novembre 2026**. Statut : **validé par l'utilisateur le
+> Plan directeur, version **1.4.3** du **5 novembre 2026**. Statut : **validé par l'utilisateur le
 > 05/11/2026** ; couverture vérifiée mécaniquement par `python tools/verifier_plan_london.py`
 > ([document 06](06_verification_exhaustive.md)). Toutes les décisions de conception et les douze arbitrages de
 > spécification sont arrêtés. Les phases 0 à 12 s'exécutent entièrement dans le conteneur de développement, sans
 > autre action humaine que la demande de passage à la phase suivante ; les autres **actions humaines** (§5) sont
-> regroupées dans la phase 13. Phases 0 et 1 terminées le 05/11/2026 (structure MCL composite dans
-> [`mcl/robot-london-v3/`](../../../mcl/robot-london-v3/PLAN-MCL.md), squelette déployable et
-> [registre des coutures](../../../mcl/squelette/COUTURES.md)) ; aucune logique métier du robot n'existe encore. Ce plan organise la construction ;
+> regroupées dans la phase 13. Phases 0, 1 et 2 terminées le 05/11/2026 (structure MCL composite dans
+> [`mcl/robot-london-v3/`](../../../mcl/robot-london-v3/PLAN-MCL.md), squelette déployable,
+> [registre des coutures](../../../mcl/squelette/COUTURES.md), noyau figé dans [`mcl/noyau/`](../../../mcl/noyau/PLAN-MCL.md)) ;
+> aucune logique de méthode, de risque ou d'exécution n'existe encore. Ce plan organise la construction ;
 > il n'ajoute, ne retire et ne modifie aucune règle métier, aucun seuil et aucun coût.
 
 ## 0. Autorité, portée et lecture
@@ -246,3 +247,4 @@ Procédure complète de chacune : [document 07](07_procedures_humaines.md).
 | 1.4.0 | 05/11/2026 | Phases 0 à 12 exécutables sans action humaine : contrats des frontières externes finalisés tôt (document 08), d'après l'examen du paquet officiel `MetaTrader5` 5.0.6231 ; infrastructure construite contre ces contrats avec un faux module injecté et répétition générale `PAPER` dans le conteneur ; sondes S-01 à S-08, compilation MQL5, tests de contrat et première séance sur le terminal regroupés en 13.1 ; convertisseurs des exports de ticks déplacés dans l'artefact `donnees-historiques` (13.3) ; autorisation des API redemandée en 13.6 ; `requirements-windows.txt` avec `numpy` ; risque R-18 ; contrôles mécaniques étendus (phases autonomes, moments des actions humaines, frontières contractualisées) |
 | 1.4.1 | 05/11/2026 | Phase 0 exécutée : dossier MCL composite `mcl/robot-london-v3/` (carte au grain des paquets, divergence en mode strict, frontières externes et couches autorisées) ; guide, règles du projet, README et skill de planification alignés sur D-01 et D-02 ; phrases périmées corrigées (document 02 : sondes et intégration continue ; document 03 : vérification d'architecture ; document 04 : commande de la carte composite et suivi des phases) |
 | 1.4.2 | 05/11/2026 | Phase 1 exécutée : squelette composite déployable (segments S1 à S7, lanceur `tools/run_robot_tests.py`, fabrique de ticks, test de bout en bout, gardes de pureté et de carte composite, registre des coutures) ; document 01, §5 (dossier `tests/robot/transverses/`) et document 03, §2 et §8 (options du lanceur, garde de pureté étendue au chargement dynamique de modules) |
+| 1.4.3 | 05/11/2026 | Phase 2 exécutée : artefact `noyau` (sept couches figées) et couture du squelette ; document 01, §9.3 : causes finales de `SIGNAL_EXPIRED` énumérées (`COTATION_INVALIDE`, `AUCUNE_COTATION`, P-08) et détails réservés aux segments S3 et S4 du squelette, l'énumération versionnée du noyau étant comparée à ce tableau dans les deux sens |

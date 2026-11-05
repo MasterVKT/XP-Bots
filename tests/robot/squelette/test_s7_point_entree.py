@@ -2,10 +2,11 @@
 import contextlib
 import io
 from pathlib import Path
+import shutil
 import tempfile
 import unittest
 
-from robot.outils.chemins import CONFIGURATION_TECHNIQUE
+from robot.outils.chemins import CONFIGURATION_IA, CONFIGURATION_TECHNIQUE, PREUVE_CONSERVATION, RACINE_DEPOT
 from robot.outils.fabrique_ticks import BougieVoulue, ecrire_csv, ticks_de_bougies
 from xpbots.app.rejeu_squelette import main
 
@@ -31,10 +32,10 @@ class TestPointEntree(unittest.TestCase):
     def test_usage_invalide(self):
         code, _, erreurs = executer(['--ticks', 'x.csv'])
         self.assertEqual(code, 2)
-        self.assertIn('--configuration', erreurs)
+        self.assertIn('--sortie', erreurs)
 
     def test_fichier_absent(self):
-        code, sortie, erreurs = executer(['--configuration', str(CONFIGURATION_TECHNIQUE),
+        code, sortie, erreurs = executer(['--racine-depot', str(RACINE_DEPOT),
                                           '--ticks', str(self.racine / 'absent.csv'),
                                           '--sortie', str(self.racine / 'sortie')])
         self.assertEqual((code, sortie), (1, ''))
@@ -44,20 +45,47 @@ class TestPointEntree(unittest.TestCase):
     def test_ticks_invalides(self):
         chemin = self.racine / 'ticks.csv'
         chemin.write_text('mauvais,en-tete\n', encoding='utf-8')
-        code, _, erreurs = executer(['--configuration', str(CONFIGURATION_TECHNIQUE), '--ticks', str(chemin),
+        code, _, erreurs = executer(['--racine-depot', str(RACINE_DEPOT), '--ticks', str(chemin),
                                      '--sortie', str(self.racine / 'sortie')])
         self.assertEqual(code, 1)
         self.assertIn('en-tête', erreurs)
 
-    def test_configuration_invalide(self):
-        configuration = self.racine / 'config.json'
-        configuration.write_text('{"common": {}}', encoding='utf-8')
-        ticks = ecrire_csv(self.racine / 'ticks.csv',
-                           ticks_de_bougies('EURUSD', [BougieVoulue(0, '1.1', '1.1', '1.1', '1.1')]))
-        code, _, erreurs = executer(['--configuration', str(configuration), '--ticks', str(ticks),
+    def depot_copie(self, modifier=None):
+        depot = self.racine / 'depot'
+        for source, relatif in ((CONFIGURATION_TECHNIQUE, 'config/parametres_figes_v3.json'),
+                                (CONFIGURATION_IA, 'config/parametres_IA_integration_v1.json'),
+                                (PREUVE_CONSERVATION, 'docs/validation/conservation_ressources.json')):
+            (depot / relatif).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, depot / relatif)
+        if modifier:
+            modifier(depot)
+        return depot
+
+    def ticks(self):
+        return ecrire_csv(self.racine / 'ticks.csv',
+                          ticks_de_bougies('EURUSD', [BougieVoulue(0, '1.1', '1.1', '1.1', '1.1')]))
+
+    def test_configuration_reelle_dans_une_copie_du_depot(self):
+        code, sortie, erreurs = executer(['--racine-depot', str(self.depot_copie()), '--ticks', str(self.ticks()),
+                                          '--sortie', str(self.racine / 'sortie')])
+        self.assertEqual((code, erreurs), (0, ''))
+
+    def test_export_modifie_refuse_par_empreinte(self):
+        def alterer(depot):
+            chemin = depot / 'config' / 'parametres_figes_v3.json'
+            chemin.write_text(chemin.read_text(encoding='utf-8').replace('"timeframe_seconds": 900',
+                                                                         '"timeframe_seconds": 300'), encoding='utf-8')
+        code, _, erreurs = executer(['--racine-depot', str(self.depot_copie(alterer)), '--ticks', str(self.ticks()),
                                      '--sortie', str(self.racine / 'sortie')])
         self.assertEqual(code, 1)
-        self.assertIn('configuration', erreurs)
+        self.assertIn('empreinte', erreurs)
+        self.assertFalse((self.racine / 'sortie').exists())
+
+    def test_configuration_absente(self):
+        code, _, erreurs = executer(['--racine-depot', str(self.racine / 'vide'), '--ticks', str(self.ticks()),
+                                     '--sortie', str(self.racine / 'sortie')])
+        self.assertEqual(code, 1)
+        self.assertIn('rejeu_squelette :', erreurs)
 
 
 if __name__ == '__main__':

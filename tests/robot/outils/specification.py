@@ -23,6 +23,24 @@ def motifs_admis() -> frozenset[str]:
     return frozenset(motifs_c09()) | frozenset(MOTIFS_HORS_C09)
 
 
+def table_des_motifs_document_01() -> list[tuple[tuple[str, ...], tuple[str, ...]]]:
+    """Lignes du tableau du document 01, §9.3 : (codes de motif cités, détails cités en code)."""
+    from robot.outils.chemins import DOCUMENT_ARCHITECTURE
+    texte = DOCUMENT_ARCHITECTURE.read_text(encoding='utf-8')
+    debut = texte.index('### 9.3 ')
+    fin = texte.index('\n## ', debut)
+    lignes = []
+    for ligne in texte[debut:fin].splitlines():
+        cellules = [c.strip() for c in ligne.strip().strip('|').split('|')]
+        if not ligne.startswith('|') or len(cellules) < 3 or set(cellules[0]) <= set('-: '):
+            continue
+        motifs = tuple(re.findall(r'`([A-Z][A-Z0-9_]*)`', cellules[1]))
+        details = tuple(re.findall(r'`([A-Z][A-Z0-9_]*)`', cellules[2]))
+        if motifs:
+            lignes.append((motifs, details))
+    return lignes
+
+
 def configuration_technique() -> dict:
     """Export technique figé, lu tel quel (pour comparer, jamais pour recopier une valeur dans le code)."""
     return json.loads(CONFIGURATION_TECHNIQUE.read_text(encoding='utf-8'))

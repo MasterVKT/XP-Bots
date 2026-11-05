@@ -27,6 +27,19 @@ class TestCarteComposite(unittest.TestCase):
         self.assertEqual(execution.returncode, 0, execution.stdout + execution.stderr)
         self.assertIn('VERT', execution.stdout)
 
+    def test_toutes_les_cartes_sans_avertissement(self):
+        """Cas révélé en phase 2 : une dépendance réelle absente d'une carte ne doit jamais passer en simple
+        avertissement. Chaque carte d'artefact de `mcl/` se vérifie sans violation ni avertissement."""
+        dossiers = sorted(p.parent.name for p in (RACINE_DEPOT / 'mcl').glob('*/carte.json'))
+        self.assertIn('noyau', dossiers)
+        for nom in dossiers:
+            with self.subTest(carte=nom):
+                execution = subprocess.run([sys.executable, '-B', str(OUTIL_MCL), '--racine', str(RACINE_DEPOT),
+                                            '--dossier', f'mcl/{nom}', 'verifier'],
+                                           capture_output=True, text=True, timeout=120)
+                self.assertEqual(execution.returncode, 0, execution.stdout)
+                self.assertNotIn('AVERTISSEMENTS', execution.stdout)
+
     def test_violation_detectee(self):
         with tempfile.TemporaryDirectory() as dossier:
             racine = Path(dossier)

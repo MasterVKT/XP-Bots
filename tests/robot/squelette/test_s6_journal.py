@@ -1,27 +1,34 @@
-"""Segment S6 : forme canonique des enregistrements (noyau) et écriture atomique du journal (infrastructure)."""
+"""Segment S6 : journal canonique du noyau écrit par l'infrastructure (fichier temporaire puis remplacement)."""
 import json
 import os
 from pathlib import Path
 import tempfile
 import unittest
 
-from xpbots.infra.squelette import NOM_JOURNAL_SQUELETTE, ecrire_journal
-from xpbots.noyau.squelette import ErreurDonnees, serialiser_enregistrement
+from robot.outils.configuration import configuration_figee
+from xpbots.infra.squelette import NOM_JOURNAL_SQUELETTE, ecrire_journal, lire_configuration
+from xpbots.noyau.c1a_marche import Tick
+from xpbots.noyau.c2_journal import serialiser
+from xpbots.london.squelette import fabriquer_strategie
+from xpbots.orchestration.squelette import fabriquer_moteur_minimal
+from robot.outils.chemins import RACINE_DEPOT
+from robot.outils.configuration import octets_exports
 
 
-class TestFormeCanonique(unittest.TestCase):
-    def test_cles_triees_sans_espace_utf8(self):
-        ligne = serialiser_enregistrement({'z': 1, 'a': {'é': 'Londres', 'b': [1.5, None]}})
-        self.assertEqual(ligne, '{"a":{"b":[1.5,null],"é":"Londres"},"z":1}')
-        self.assertEqual(serialiser_enregistrement(json.loads(ligne)), ligne)
+class TestJournalDuSquelette(unittest.TestCase):
+    def test_lignes_canoniques_ecrites_puis_relues(self):
+        configuration = configuration_figee()
+        duree = configuration.technique.commun.timeframe_seconds * 1000
+        moteur = fabriquer_moteur_minimal(fabriquer_strategie(configuration), configuration, 'REJEU')
+        enregistrements = [e for i in range(3) for e in moteur.traiter_tick(
+            Tick('EURUSD', 'EURUSD', i * duree, i * duree, i, 1.1, 1.1001)).enregistrements]
+        with tempfile.TemporaryDirectory() as dossier:
+            chemin = ecrire_journal(dossier, (serialiser(e) for e in enregistrements))
+            lignes = Path(chemin).read_text(encoding='utf-8').splitlines()
+        self.assertEqual(len(lignes), 2)
+        for ligne in lignes:
+            self.assertEqual(json.dumps(json.loads(ligne), ensure_ascii=False, sort_keys=True, separators=(',', ':')), ligne)
 
-    def test_nombres_non_finis_refuses(self):
-        for valeur in (float('nan'), float('inf'), -float('inf')):
-            with self.subTest(valeur=valeur), self.assertRaises(ErreurDonnees):
-                serialiser_enregistrement({'x': valeur})
-
-
-class TestEcritureJournal(unittest.TestCase):
     def test_ecriture_et_remplacement(self):
         with tempfile.TemporaryDirectory() as racine:
             dossier = str(Path(racine) / 'sortie' / 'jour')
@@ -39,6 +46,9 @@ class TestEcritureJournal(unittest.TestCase):
                 ecrire_journal(dossier, ['{"a":1}', 'deux\nlignes'])
             self.assertEqual(sorted(os.listdir(dossier)), [NOM_JOURNAL_SQUELETTE])
             self.assertEqual((Path(dossier) / NOM_JOURNAL_SQUELETTE).read_text(encoding='utf-8'), '{"ancien":1}\n')
+
+    def test_lecture_de_la_configuration_du_depot(self):
+        self.assertEqual(lire_configuration(str(RACINE_DEPOT)), octets_exports())
 
 
 if __name__ == '__main__':
