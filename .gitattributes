@@ -4,6 +4,8 @@
 *.json text eol=lf
 *.txt text eol=lf
 *.example text eol=lf
+*.sh text eol=lf
+*.ps1 text eol=lf
 /.gitattributes text eol=lf
 /.gitignore text eol=lf
 # Ces ressources ont une empreinte sur leurs octets d'origine.

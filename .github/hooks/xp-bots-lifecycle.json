@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "sh .agents/hooks/invoke-agent-hook.sh session-start-copilot",
+        "powershell": "powershell -NoProfile -ExecutionPolicy Bypass -File .agents/hooks/invoke-agent-hook.ps1 -Mode session-start-copilot",
+        "cwd": ".",
+        "timeoutSec": 30
+      }
+    ],
+    "userPromptSubmitted": [
+      {
+        "type": "command",
+        "bash": "sh .agents/hooks/invoke-agent-hook.sh prompt-copilot",
+        "powershell": "powershell -NoProfile -ExecutionPolicy Bypass -File .agents/hooks/invoke-agent-hook.ps1 -Mode prompt-copilot",
+        "cwd": ".",
+        "timeoutSec": 30
+      }
+    ],
+    "postToolUse": [
+      {
+        "type": "command",
+        "bash": "sh .agents/hooks/invoke-agent-hook.sh post-tool-copilot",
+        "powershell": "powershell -NoProfile -ExecutionPolicy Bypass -File .agents/hooks/invoke-agent-hook.ps1 -Mode post-tool-copilot",
+        "cwd": ".",
+        "timeoutSec": 60
+      }
+    ],
+    "subagentStart": [
+      {
+        "type": "command",
+        "bash": "sh .agents/hooks/invoke-agent-hook.sh subagent-start-copilot",
+        "powershell": "powershell -NoProfile -ExecutionPolicy Bypass -File .agents/hooks/invoke-agent-hook.ps1 -Mode subagent-start-copilot",
+        "cwd": ".",
+        "timeoutSec": 30
+      }
+    ],
+    "agentStop": [
+      {
+        "type": "command",
+        "bash": "sh .agents/hooks/invoke-agent-hook.sh stop-copilot",
+        "powershell": "powershell -NoProfile -ExecutionPolicy Bypass -File .agents/hooks/invoke-agent-hook.ps1 -Mode stop-copilot",
+        "cwd": ".",
+        "timeoutSec": 600
+      }
+    ]
+  }
+}

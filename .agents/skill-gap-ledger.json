@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "description": "Registre des lacunes de skills XP-Bots : types de tâches non couverts, occurrences, preuves bornées et décision (consignee, proposee, promue, creee, etendue, rejetee). Écrit uniquement par skill_gap_ledger.py et create_skill.py.",
+  "entries": []
+}

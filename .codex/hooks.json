@@ -1,0 +1,56 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.agents/hooks/invoke-agent-hook.sh\" session-start-codex",
+            "commandWindows": "$r = git rev-parse --show-toplevel 2>$null; if (-not $r) { $r = (Get-Location).Path }; powershell -NoProfile -ExecutionPolicy Bypass -File \"$r/.agents/hooks/invoke-agent-hook.ps1\" -Mode session-start-codex",
+            "timeout": 30,
+            "statusMessage": "XP-Bots : chargement de l'orchestrateur"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.agents/hooks/invoke-agent-hook.sh\" prompt-codex",
+            "commandWindows": "$r = git rev-parse --show-toplevel 2>$null; if (-not $r) { $r = (Get-Location).Path }; powershell -NoProfile -ExecutionPolicy Bypass -File \"$r/.agents/hooks/invoke-agent-hook.ps1\" -Mode prompt-codex",
+            "timeout": 30,
+            "statusMessage": "XP-Bots : sélection des skills"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.agents/hooks/invoke-agent-hook.sh\" subagent-start-codex",
+            "commandWindows": "$r = git rev-parse --show-toplevel 2>$null; if (-not $r) { $r = (Get-Location).Path }; powershell -NoProfile -ExecutionPolicy Bypass -File \"$r/.agents/hooks/invoke-agent-hook.ps1\" -Mode subagent-start-codex",
+            "timeout": 30,
+            "statusMessage": "XP-Bots : contexte de sous-tâche"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.agents/hooks/invoke-agent-hook.sh\" stop-codex",
+            "commandWindows": "$r = git rev-parse --show-toplevel 2>$null; if (-not $r) { $r = (Get-Location).Path }; powershell -NoProfile -ExecutionPolicy Bypass -File \"$r/.agents/hooks/invoke-agent-hook.ps1\" -Mode stop-codex",
+            "timeout": 600,
+            "statusMessage": "XP-Bots : audit de fin et portes machine"
+          }
+        ]
+      }
+    ]
+  }
+}

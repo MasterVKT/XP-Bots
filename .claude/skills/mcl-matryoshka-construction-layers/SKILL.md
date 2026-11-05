@@ -2,6 +2,8 @@
 name: mcl-matryoshka-construction-layers
 description: "Ce skill doit être utilisé pour concevoir, programmer, développer, refactorer ou planifier rigoureusement tout logiciel (fonction, module, composant, service, algorithme, API, application web, mobile, CLI, robot, pipeline, code legacy), dans n'importe quel langage, selon la méthode MCL (Matryoshka Construction Layers, ex-« méthode Matryoshka », d'Eric Vekout) : construction inside-out par couches de profondeur de dépendance, chaque couche testée, validée et gelée avant la suivante, contrats avant le code, doublures aux seules frontières externes, regression gate intégral, carte des couches encodée au build, gel et défigeage tracés, checkpoints, mode composite pour une application entière. Déclencheurs : MCL, Matryoshka, poupées russes, couche par couche, inside-out, ordre de dépendance, carte des couches, regression gate, figer ou défiger un contrat, applicabilité, diagnostic par remontée de couches, adoption ou évaluation de MCL ; en anglais : build bottom-up by dependency layers."
 ---
+<!-- xp-bots:generated-skill-mirror source=.agents/skills/mcl-matryoshka-construction-layers/SKILL.md generator=.agents/hooks/skill_mirrors.py : ne pas éditer -->
+> Copie générée de `.agents/skills/mcl-matryoshka-construction-layers/SKILL.md` par `.agents/hooks/skill_mirrors.py --write`. Ne pas éditer : modifier la source puis régénérer. Répertoire des ressources de ce skill : `.agents/skills/mcl-matryoshka-construction-layers/` ; les chemins de ressources ci-dessous sont relatifs à la racine du dépôt.
 
 # MCL — Matryoshka Construction Layers
 
@@ -14,7 +16,7 @@ que la suivante ne soit construite**, dans l'**ordre du graphe des dépendances,
 du flux**.
 
 Le skill fournit : un flux de travail opérationnel (ci-dessous), treize références détaillées
-(`references/`), des gabarits (`assets/gabarits/`) et un outil sans dépendance, `scripts/mcl.py`, qui rend
+(`.agents/skills/mcl-matryoshka-construction-layers/references/`), des gabarits (`.agents/skills/mcl-matryoshka-construction-layers/assets/gabarits/`) et un outil sans dépendance, `.agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py`, qui rend
 mécaniques les contrôles prescrits (carte, invariant au build, gate journalisé, gel, défigeage, baseline,
 traces).
 
@@ -80,7 +82,7 @@ peut tenir dans la réponse.
    application sans composite).
 3. Application entière → **mode composite** : squelette outside-in déployable dès le départ, puis chaque
    remplissage de chair = un artefact MCL distinct (cinq règles de couture).
-Lire : `references/02-applicabilite.md` ; composite : `references/09-stacks-composite-positionnement.md`.
+Lire : `.agents/skills/mcl-matryoshka-construction-layers/references/02-applicabilite.md` ; composite : `.agents/skills/mcl-matryoshka-construction-layers/references/09-stacks-composite-positionnement.md`.
 
 ### Phase 1 — Cartographier (étapes 1 à 4)
 1. **Étape 1** (seul moment outside-in) : quatre réponses — finalité au plus haut niveau ; entrées/sorties de
@@ -97,7 +99,7 @@ Lire : `references/02-applicabilite.md` ; composite : `references/09-stacks-comp
    **signalées** comme constructibles simultanément.
 Outil : renseigner `unites`/`externes` dans `mcl/carte.json`,
 `$M analyser --ecrire`, compléter `chemins`/`imports`/`contrats`, puis `$M analyser` jusqu'à **zéro divergence**.
-Lire : `references/03-cartographie.md` (illustrations, heuristiques bornées, cycles, systèmes non-flux).
+Lire : `.agents/skills/mcl-matryoshka-construction-layers/references/03-cartographie.md` (illustrations, heuristiques bornées, cycles, systèmes non-flux).
 
 ### Phase 2 — Encoder la carte (invariant devenu règle de build)
 Créer un module par couche (« une couche = un module nommé »). Encoder la règle **« dépendances autorisées vers
@@ -105,14 +107,14 @@ n'importe quelle couche plus interne, à profondeur quelconque »** (jamais « a
 de l'écosystème : `$M exporter --outil importlinter|depcruise|archunit|deptrac|netarchtest --sortie …` ;
 Go, Rust, Dart, Kotlin ou absence d'outil : `$M verifier` en CI. Sur l'existant : mode warn, baseline à cliquet,
 strict règle par règle.
-Lire : `references/04-encodage-carte.md`.
+Lire : `.agents/skills/mcl-matryoshka-construction-layers/references/04-encodage-carte.md`.
 
 ### Phase 3 — Contrats et frontières externes (étapes 5 et 6)
 Esquisser tous les contrats (`mcl/contrats/couche-<id>.md`, gabarit sept lignes). Pour chaque frontière
 externe : contrat attendu (port), doublure minimale, usage dans toutes les couches internes, implémentation
 réelle seulement en couche d'infrastructure, tests de contrat contre la dérive de fidélité. Déclarer dans
 `contrats` de chaque couche : fiche de contrat, interface publique, tests de la couche.
-Lire : `references/05-contrats-frontieres.md`.
+Lire : `.agents/skills/mcl-matryoshka-construction-layers/references/05-contrats-frontieres.md`.
 
 ### Phase 4 — Construire couche par couche (étape 7)
 Pour chaque couche, dans l'ordre que donne `$M statut` (colonne « constructible maintenant ») :
@@ -123,7 +125,7 @@ Outil : `$M gate --couche <id> --unitaire "<cat. 1>" --integration "<cat. 2>" --
 puis, sans rien modifier entre-temps, `$M figer --couche <id>`.
 **Exécuter réellement les tests** ; ne jamais annoncer un gate vert non exécuté. Un seul delta par gate. Les
 couches parallèles peuvent s'écrire dans la même passe, chacune avec son gate et son gel.
-Lire : `references/06-boucle-construction.md`.
+Lire : `.agents/skills/mcl-matryoshka-construction-layers/references/06-boucle-construction.md`.
 
 ### Phase 5 — Quand le gate est rouge
 Aiguillage mécanique : catégorie 1 de la couche courante rouge → **régression locale**, corriger la couche
@@ -132,15 +134,15 @@ couches (séquentielle ≤ N sondes, ou dichotomie ~log N) avec doublures de cou
 niveau localisé. Protocole correctif : `$M defiger --couche k --nature correction --motif …`, test capturant le
 cas, correction à la source ; contrat inchangé → re-gel, la propagation s'arrête ; contrat modifié → nature
 `modification`, cascade dans l'ordre des couches.
-Lire : `references/07-diagnostic-correction.md`.
+Lire : `.agents/skills/mcl-matryoshka-construction-layers/references/07-diagnostic-correction.md`.
 
 ### Phase 6 — Checkpoints, gouvernance, parallélisme (étape 8)
 Tous les 2 à 3 niveaux (`$M statut` signale « checkpoint dû ») : révisions d'implémentation en lot à contrat
 constant ; changements de contrat anticipés par défigeage formel ; une seule régression intégrale
 (`$M gate --global --regression …`) ; `$M checkpoint --notes …`. Gouvernance : le circuit suit le rayon d'impact
-(`$M rayon --couche …`) ; modification de contrat → arbitrage tracé (gabarit `assets/gabarits/defigeage-adr.md`) ;
+(`$M rayon --couche …`) ; modification de contrat → arbitrage tracé (gabarit `.agents/skills/mcl-matryoshka-construction-layers/assets/gabarits/defigeage-adr.md`) ;
 baseline → clé du gardien. Ne jamais organiser les équipes par couches.
-Lire : `references/08-gate-gouvernance-parallelisme.md`.
+Lire : `.agents/skills/mcl-matryoshka-construction-layers/references/08-gate-gouvernance-parallelisme.md`.
 
 ### Phase 7 — Clôture
 Enveloppe figée, gate global vert, `$M rapport` (traces auto-instrumentées : gates, aiguillages, coût cumulé,
@@ -190,19 +192,19 @@ l'implémentation, la régression intégrale avant de passer à la couche suivan
 
 | Fichier | Contenu | Charger quand |
 |---|---|---|
-| `references/01-socle-commun.md` | Identité, concept, invariant, vocabulaire normatif, notations, échelles, six axes, statut épistémique | Toujours au premier usage ; doute sur un terme |
-| `references/02-applicabilite.md` | Périmètre, test en trois questions, exemples, chemin exploratoire, signaux, frontières | Phase 0 |
-| `references/03-cartographie.md` | Étapes 1 à 4 détaillées, illustrations, heuristiques, systèmes non-flux, cycles | Phase 1 |
-| `references/04-encodage-carte.md` | Règle de build, conditions, outils par écosystème, warn/strict | Phase 2 |
-| `references/05-contrats-frontieres.md` | Contrat en deux temps, gabarit, YAGNI de contrat, extension additive, frontières externes | Phase 3 et avant chaque couche |
-| `references/06-boucle-construction.md` | Boucle en sept sous-étapes, deux catégories de tests, gel, loi de Hyrum, règles opératoires | Phase 4 |
-| `references/07-diagnostic-correction.md` | Aiguillage, remontée de couches, protocole correctif | Gate rouge |
-| `references/08-gate-gouvernance-parallelisme.md` | Gate à l'échelle, cliquet, deux vitesses, gouvernance, checkpoints, parallélisme | Équipe, CI, checkpoint, changement de contrat |
-| `references/09-stacks-composite-positionnement.md` | Stacks du document et dérivées, mode composite, couture, Agile/TDD/BDD/Clean | Choix d'une carte type, application entière |
-| `references/10-adoption-benefices-conditions.md` | Plan d'adoption, objections, bénéfices, conditions | Introduction en équipe, décision d'engagement |
-| `references/11-fondements-scientifiques.md` | Revendications typées, fondements formels, état de l'art, comparaison par axe, mécanismes, huit hypothèses | « Pourquoi », comparaison, évaluation, rédaction scientifique |
-| `references/12-exemples-travailles.md` | Facturation de bout en bout, chaîne d'appels, machine à états, legacy | Besoin d'un modèle concret |
-| `references/13-outil-mcl-py.md` | Schéma de `carte.json`, commandes, journal, séquences, CI, limites | Usage de l'outil |
+| `.agents/skills/mcl-matryoshka-construction-layers/references/01-socle-commun.md` | Identité, concept, invariant, vocabulaire normatif, notations, échelles, six axes, statut épistémique | Toujours au premier usage ; doute sur un terme |
+| `.agents/skills/mcl-matryoshka-construction-layers/references/02-applicabilite.md` | Périmètre, test en trois questions, exemples, chemin exploratoire, signaux, frontières | Phase 0 |
+| `.agents/skills/mcl-matryoshka-construction-layers/references/03-cartographie.md` | Étapes 1 à 4 détaillées, illustrations, heuristiques, systèmes non-flux, cycles | Phase 1 |
+| `.agents/skills/mcl-matryoshka-construction-layers/references/04-encodage-carte.md` | Règle de build, conditions, outils par écosystème, warn/strict | Phase 2 |
+| `.agents/skills/mcl-matryoshka-construction-layers/references/05-contrats-frontieres.md` | Contrat en deux temps, gabarit, YAGNI de contrat, extension additive, frontières externes | Phase 3 et avant chaque couche |
+| `.agents/skills/mcl-matryoshka-construction-layers/references/06-boucle-construction.md` | Boucle en sept sous-étapes, deux catégories de tests, gel, loi de Hyrum, règles opératoires | Phase 4 |
+| `.agents/skills/mcl-matryoshka-construction-layers/references/07-diagnostic-correction.md` | Aiguillage, remontée de couches, protocole correctif | Gate rouge |
+| `.agents/skills/mcl-matryoshka-construction-layers/references/08-gate-gouvernance-parallelisme.md` | Gate à l'échelle, cliquet, deux vitesses, gouvernance, checkpoints, parallélisme | Équipe, CI, checkpoint, changement de contrat |
+| `.agents/skills/mcl-matryoshka-construction-layers/references/09-stacks-composite-positionnement.md` | Stacks du document et dérivées, mode composite, couture, Agile/TDD/BDD/Clean | Choix d'une carte type, application entière |
+| `.agents/skills/mcl-matryoshka-construction-layers/references/10-adoption-benefices-conditions.md` | Plan d'adoption, objections, bénéfices, conditions | Introduction en équipe, décision d'engagement |
+| `.agents/skills/mcl-matryoshka-construction-layers/references/11-fondements-scientifiques.md` | Revendications typées, fondements formels, état de l'art, comparaison par axe, mécanismes, huit hypothèses | « Pourquoi », comparaison, évaluation, rédaction scientifique |
+| `.agents/skills/mcl-matryoshka-construction-layers/references/12-exemples-travailles.md` | Facturation de bout en bout, chaîne d'appels, machine à états, legacy | Besoin d'un modèle concret |
+| `.agents/skills/mcl-matryoshka-construction-layers/references/13-outil-mcl-py.md` | Schéma de `carte.json`, commandes, journal, séquences, CI, limites | Usage de l'outil |
 
-Gabarits (`assets/gabarits/`) : `PLAN-MCL.md` (plan étapes 0 à 8), `contrat-couche.md` (contrat sept lignes),
+Gabarits (`.agents/skills/mcl-matryoshka-construction-layers/assets/gabarits/`) : `PLAN-MCL.md` (plan étapes 0 à 8), `contrat-couche.md` (contrat sept lignes),
 `defigeage-adr.md` (trace de gouvernance), `carte.exemple.json` (carte complète de l'exemple facturation).

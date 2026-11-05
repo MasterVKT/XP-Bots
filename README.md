@@ -24,6 +24,7 @@ Les spécifications et les fichiers JSON doivent rester cohérents. Toute diverg
 | `reference/` | [Fonctions de référence](reference/README.md) sans connexion au courtier ni inférence |
 | `tests/`, `tools/` | Contrôles des contrats, calculs, documents et préparation du merge |
 | `docs/validation/` | [Portée des contrôles et preuves conservées](docs/validation/README.md) |
+| `.agents/` | Gouvernance des agents AI de développement : skills, hooks, règles et [compatibilité](.agents/COMPATIBILITY.md) |
 
 L'IA utilise exclusivement des **API distantes**, avec un service partagé par les deux méthodes. Le mode initial est `PAPER_AB`, les routes gratuites sont prioritaires et le secours payant est désactivé. Plafonds partagés : **15 USD/mois au total**, dont **3 USD/mois maximum pour les API payantes**. Aucun modèle local n'est admis. Le complément IA n'est jamais une permission fondamentale ni un générateur d'ordres.
 
@@ -46,8 +47,18 @@ python tools/verify_project.py --git
 
 Cette simulation utilise un index temporaire et conserve l'index réel, la branche et les fichiers de travail. Elle ne remplace pas une nouvelle vérification si le distant change.
 
+## Agents AI de développement
+
+Les agents qui travaillent dans ce dépôt (Claude Code, Codex, GitHub Copilot, Cline) suivent [AGENTS.md](AGENTS.md) et les [règles transversales](.agents/PROJECT_RULES.md) : orchestrateur de skills en premier, audit de fin avec pied d'audit et marqueur, création contrôlée des skills manquantes. Les skills ont une seule source éditable, `.agents/skills/` ; `.claude/skills/` n'en contient que des copies générées. Les hooks de chaque outil appellent un moteur unique, `.agents/hooks/agent_lifecycle.py`. Cette gouvernance est distincte du complément IA des robots (sections A01–A15).
+
+```powershell
+python .agents/skills/xp-bots-maintain-agent-skills/scripts/run_governance_suite.py
+```
+
+La compatibilité par outil, l'activation des hooks et les limites connues sont décrites dans [.agents/COMPATIBILITY.md](.agents/COMPATIBILITY.md).
+
 ## Archives et Git
 
 Le [registre de nettoyage et de merge](docs/maintenance/NETTOYAGE_ET_MERGE.md) décrit les éléments écartés, leur sauvegarde récupérable et les ajouts distants identifiés. Les anciens ZIP, générateurs et résultats volumineux ne font plus partie des ressources actives. Les caches, secrets et sorties d'exécution sont exclus par `.gitignore`.
 
-Les apports du distant sont intégrés dans `.claude/skills/` et `livrables/skills/`, avec leurs chemins et leur historique d'origine. Le registre distingue le nettoyage initial de la fusion réalisée ensuite. L'outil de vérification reste une simulation : il ne crée ni commit, ni merge, ni push.
+Les apports du distant (skill MCL et son archive) ont d'abord été intégrés dans `.claude/skills/` et `livrables/skills/`. Le 5 novembre 2026, la source de MCL a été migrée à l'identique vers `.agents/skills/` ; l'archive `livrables/skills/` reste une distribution datée, jamais chargée comme source active. Le registre distingue le nettoyage initial, la fusion et cette migration. L'outil de vérification reste une simulation : il ne crée ni commit, ni merge, ni push.

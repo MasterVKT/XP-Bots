@@ -60,3 +60,9 @@ Les deux fichiers de paramètres figés et la référence utilisateur conservent
 Le README décrit désormais l'arborescence réunie. La publication utilise un push ordinaire de `master`, sans réécriture de l'historique. La concordance finale se contrôle en comparant le commit annoncé par GitHub, `HEAD`, `origin/master`, les arbres Git et les octets des fichiers suivis. Les archives de recherche et données privées exclues du dépôt restent locales.
 
 Le rapport `docs/validation/verification_projet.json` reste la copie datée de l'audit du nettoyage initial. Les contrôles après fusion et la preuve de synchronisation sont conservés localement dans `.local/reports/` ; ces sorties générées ne sont pas ajoutées aux sources du projet.
+
+## Migration de la gouvernance des agents (5 novembre 2026)
+
+La skill MCL a été migrée de `.claude/skills/mcl-matryoshka-construction-layers/` vers la source canonique `.agents/skills/mcl-matryoshka-construction-layers/`. Les empreintes SHA-256 des 19 fichiers ont été relevées avant la migration, revérifiées dans la nouvelle source puis seulement ensuite l'ancien emplacement a été remplacé par une copie générée de `SKILL.md`. La liste des empreintes et la provenance figurent dans `.agents/agent-integrations.json` ; le validateur de gouvernance les contrôle à chaque exécution.
+
+L'archive `livrables/skills/mcl-matryoshka-construction-layers.zip`, identique aux 19 fichiers migrés, reste une distribution datée : elle n'est ni régénérée ni chargée comme skill active. Les chemins `.claude/skills/...` cités plus haut dans ce registre décrivent l'état historique de la fusion, pas l'emplacement courant de la source.

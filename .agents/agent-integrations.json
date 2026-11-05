@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "description": "Registre machine de la gouvernance des agents XP-Bots : source canonique des skills, miroirs générés, adaptateurs, fichiers de hooks par outil, chemins obsolètes et sources de skills préservées. Lu par skill_mirrors.py et validate_governance.py.",
+  "verified_on": "2026-11-05",
+  "canonical_skills_dir": ".agents/skills",
+  "mirrors": [
+    {
+      "id": "claude-skills",
+      "dir": ".claude/skills",
+      "consumers": [
+        "claude-code",
+        "cline",
+        "copilot"
+      ],
+      "reason": "Claude Code 2.1.318 ne découvre les skills de projet que dans .claude/skills ; Cline (documentation courante) lit .cline/skills, .clinerules/skills ou .claude/skills. Copilot CLI lit aussi ce dossier en plus de .agents/skills : le contenu des copies est équivalent à la source."
+    }
+  ],
+  "tools": [
+    {
+      "id": "claude-code",
+      "observed_version": "2.1.318",
+      "installed_here": true,
+      "instruction_files": [
+        "CLAUDE.md"
+      ],
+      "hook_file": ".claude/settings.json",
+      "hook_format": "claude-settings",
+      "events": {
+        "SessionStart": "session-start-claude",
+        "UserPromptSubmit": "prompt-claude",
+        "PostToolUse": "post-tool-claude",
+        "SubagentStart": "subagent-start-claude",
+        "Stop": "stop-claude"
+      },
+      "launcher": "sh",
+      "required_command_fields": [
+        "command"
+      ]
+    },
+    {
+      "id": "codex",
+      "observed_version": "0.166.0",
+      "installed_here": false,
+      "instruction_files": [
+        "AGENTS.md"
+      ],
+      "hook_file": ".codex/hooks.json",
+      "hook_format": "codex-hooks",
+      "events": {
+        "SessionStart": "session-start-codex",
+        "UserPromptSubmit": "prompt-codex",
+        "SubagentStart": "subagent-start-codex",
+        "Stop": "stop-codex"
+      },
+      "launcher": "sh+powershell",
+      "required_command_fields": [
+        "command",
+        "commandWindows"
+      ]
+    },
+    {
+      "id": "copilot",
+      "observed_version": "CLI 1.0.63 (bundle inspecté) ; 1.0.105 publiée",
+      "installed_here": false,
+      "instruction_files": [
+        "AGENTS.md",
+        "CLAUDE.md"
+      ],
+      "hook_file": ".github/hooks/xp-bots-lifecycle.json",
+      "hook_format": "copilot-hooks-v1",
+      "events": {
+        "sessionStart": "session-start-copilot",
+        "userPromptSubmitted": "prompt-copilot",
+        "postToolUse": "post-tool-copilot",
+        "subagentStart": "subagent-start-copilot",
+        "agentStop": "stop-copilot"
+      },
+      "launcher": "sh+powershell",
+      "required_command_fields": [
+        "bash",
+        "powershell"
+      ]
+    },
+    {
+      "id": "cline",
+      "observed_version": "documentation main du 2026-11-05 ; CLI 3.0.74 publiée",
+      "installed_here": false,
+      "instruction_files": [
+        "AGENTS.md",
+        ".clinerules/xp-bots-cycle.md"
+      ],
+      "hook_file": null,
+      "hook_format": null,
+      "events": {},
+      "manual_modes": [
+        "prompt-cline",
+        "completion-cline"
+      ],
+      "launcher": "none",
+      "required_command_fields": []
+    }
+  ],
+  "adapters": [
+    {
+      "path": "AGENTS.md",
+      "max_bytes": 7000,
+      "must_contain": [
+        ".agents/PROJECT_RULES.md",
+        "xp-bots-request-skill-orchestrator",
+        "xp-bots-completion-audit",
+        "livrables/strategies_m15/01_Triple_EMA_RSI_Repli_M15_Specification_IA.md",
+        "livrables/strategies_m15/02_London_Breakout_M15_Specification_IA.md",
+        "config/parametres_figes_v3.json",
+        "tools/verify_project.py",
+        "[XP-BOTS-AUDIT:OK]"
+      ]
+    },
+    {
+      "path": "CLAUDE.md",
+      "max_bytes": 1800,
+      "must_contain": [
+        "@AGENTS.md"
+      ]
+    },
+    {
+      "path": ".clinerules/xp-bots-cycle.md",
+      "max_bytes": 3200,
+      "must_contain": [
+        "AGENTS.md",
+        "prompt-cline",
+        "completion-cline"
+      ]
+    }
+  ],
+  "canonical_blocks": [
+    ".agents/PROJECT_RULES.md",
+    ".agents/skills/xp-bots-request-skill-orchestrator/SKILL.md",
+    ".agents/skills/xp-bots-completion-audit/SKILL.md"
+  ],
+  "obsolete_paths": [
+    ".claude/skills/mcl-matryoshka-construction-layers/references",
+    ".claude/skills/mcl-matryoshka-construction-layers/scripts",
+    ".claude/skills/mcl-matryoshka-construction-layers/assets",
+    ".clinerules/hooks",
+    ".cline/skills",
+    ".clinerules/skills",
+    ".github/skills",
+    ".codex/skills",
+    ".cursor"
+  ],
+  "obsolete_references": [
+    ".claude/skills/mcl-matryoshka-construction-layers/scripts",
+    ".claude/skills/mcl-matryoshka-construction-layers/references",
+    ".claude/skills/mcl-matryoshka-construction-layers/assets"
+  ],
+  "active_governance_files": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".clinerules/xp-bots-cycle.md",
+    ".agents/PROJECT_RULES.md",
+    ".agents/COMPATIBILITY.md",
+    ".agents/skills",
+    ".agents/hooks",
+    "README.md"
+  ],
+  "historical_reference_allowed": [
+    "docs/maintenance/NETTOYAGE_ET_MERGE.md",
+    "docs/INSTRUCTIONS_REPRODUCTION_MECANISME_SKILLS_AI.md",
+    ".agents/agent-integrations.json"
+  ],
+  "preserved_skill_sources": [
+    {
+      "skill": "mcl-matryoshka-construction-layers",
+      "migrated_from": ".claude/skills/mcl-matryoshka-construction-layers",
+      "migrated_to": ".agents/skills/mcl-matryoshka-construction-layers",
+      "migration_date": "2026-11-05",
+      "proof": "Empreintes SHA-256 relevées avant migration et revérifiées dans la source canonique avant remplacement de l'ancien emplacement par une copie générée.",
+      "archive": {
+        "path": "livrables/skills/mcl-matryoshka-construction-layers.zip",
+        "sha256": "7a8cd80b1e4f22c6dd1e41e2e64e292a225d08c791fc566b1e502b1063eccc3c",
+        "role": "Distribution datée, identique aux 19 fichiers migrés ; jamais chargée comme source active ni régénérée."
+      },
+      "files_sha256": {
+        "SKILL.md": "94e899e287e9149ddb7bdfcf9e39d6f46935aa04a85ec2d81c2c3db7bca5c975",
+        "assets/gabarits/PLAN-MCL.md": "162206471b9acc3974a57d04044dde37ff652a1dc2ad42a2c05bf4ae498d891c",
+        "assets/gabarits/carte.exemple.json": "b7c5e5c4cd236f378050ab7033e190cd26de12c9b26aea9e0e2ea7970969fda6",
+        "assets/gabarits/contrat-couche.md": "779cda8615521756ccfa85e2232e3a2c0f60d2951099b7002c1628ab83baa23b",
+        "assets/gabarits/defigeage-adr.md": "b249c5810563b75222a63d7def83603df239c95897584a13799795322c28f78f",
+        "references/01-socle-commun.md": "385ca540950d49e5abe5e382fa6a81f0060b4fafd10e6ad3b16bec91e5374931",
+        "references/02-applicabilite.md": "024b5a0f230d857da048df97e59b02ee519b17db70a8155a1d126bcb0d0dcc35",
+        "references/03-cartographie.md": "c6dc44ddd0421d927d281623317627cff73e016ba4cc28e3abdd043004061ecc",
+        "references/04-encodage-carte.md": "0f12c625984341cab1a544f8623c900665c4baf5856b022cc94f3972873882bf",
+        "references/05-contrats-frontieres.md": "8ead2e56109ef0c8aaa0424f21e9a112d785cd16f5aec05ba44cdd1c6db12801",
+        "references/06-boucle-construction.md": "e6f31f534b9009c1a741054631c4b6399aa30b761868697e3dcbdf2c24c67576",
+        "references/07-diagnostic-correction.md": "bdaf49b4f476a0219652850cc41615a4d59208e82f875e5dd95ff18847920fd9",
+        "references/08-gate-gouvernance-parallelisme.md": "108a455c99ae69ef117a6c0699ad105d0c2ef2d335ba5245fff84cab81ce0b70",
+        "references/09-stacks-composite-positionnement.md": "f96806b290b154f978723cfb9c51c12db91b8bfce0f262a43b96ed29170a5bc1",
+        "references/10-adoption-benefices-conditions.md": "f87ad578b3b9399480d3b31eb49bdf6773d81e8cbb378ce4dfd997822b8904d1",
+        "references/11-fondements-scientifiques.md": "999bcbdf9320735135fde969cfa71923ac9938e675bf82876f6bd6334c95a513",
+        "references/12-exemples-travailles.md": "413a4afdc537d233385a30745ea9a6b1c8eb3d9f5f912eb568069a3c482b16ef",
+        "references/13-outil-mcl-py.md": "4929eaac41e5491342f6144596dafce0777b2e295a62ea6ab02aef3242f6cbd8",
+        "scripts/mcl.py": "9033ad257f04cd37d50857b54b440fdda2507c500af89bd5da180529e90098b4"
+      }
+    }
+  ]
+}

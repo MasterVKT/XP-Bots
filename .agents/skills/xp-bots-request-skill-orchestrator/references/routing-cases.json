@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "description": "Cas de test du sélecteur : requêtes réalistes de XP-Bots avec la sélection exacte attendue, ou des appartenances (includes) et exclusions (excludes), éventuellement le signal no_match et un plafond de skills sélectionnées.",
+  "cases": [
+    {
+      "request": "vérifier le repli EMA15/25/50 et RSI14",
+      "expect_exact": ["xp-bots-request-skill-orchestrator", "xp-bots-ema-rsi-repli", "xp-bots-skill-gap-detector",
+                       "xp-bots-completion-audit"]
+    },
+    {
+      "request": "contrôler le range London 02:00–07:00 et le gel de l'ATR H1",
+      "includes": ["xp-bots-london-breakout"],
+      "excludes": ["xp-bots-ema-rsi-repli", "xp-bots-maintain-agent-skills"]
+    },
+    {
+      "request": "auditer le contrat de veto IA et son budget partagé",
+      "includes": ["xp-bots-llm-integration-contracts"],
+      "excludes": ["xp-bots-london-breakout", "xp-bots-ema-rsi-repli"]
+    },
+    {
+      "request": "vérifier la cohérence entre les deux spécifications et les paramètres JSON",
+      "includes": ["xp-bots-specification-consistency"],
+      "excludes": ["xp-bots-validation-replay", "xp-bots-maintain-agent-skills"]
+    },
+    {
+      "request": "construire le moteur par couches MCL",
+      "includes": ["xp-bots-mcl-robot-planning", "mcl-matryoshka-construction-layers"]
+    },
+    {
+      "request": "Planifie l'implémentation du robot London selon la méthode MCL avant d'écrire le code",
+      "includes": ["xp-bots-mcl-robot-planning", "mcl-matryoshka-construction-layers", "xp-bots-london-breakout"]
+    },
+    {
+      "request": "corrige une faute de frappe dans le README",
+      "expect_exact": ["xp-bots-request-skill-orchestrator", "xp-bots-specification-consistency",
+                       "xp-bots-skill-gap-detector", "xp-bots-completion-audit"]
+    },
+    {
+      "request": "Le mode PAPER_AB doit comparer les deux bras à 100 USD avec bootstrap de blocs",
+      "includes": ["xp-bots-validation-replay"],
+      "excludes": ["xp-bots-maintain-agent-skills"]
+    },
+    {
+      "request": "Pourquoi tools/verify_project.py échoue sur conservation_ressources.json après mon commit ?",
+      "includes": ["xp-bots-specification-consistency"],
+      "excludes": ["xp-bots-ema-rsi-repli"]
+    },
+    {
+      "request": "dimensionner le volume au risque all-in de 0,5 % avec la marge du compte commun et le coordinateur",
+      "includes": ["xp-bots-risk-execution-contracts"],
+      "excludes": ["xp-bots-london-breakout"]
+    },
+    {
+      "request": "Le contrat micro EURUSDmicro de Deriv est-il disponible sur mon compte standard MT5 ?",
+      "includes": ["xp-bots-broker-account-qualification"],
+      "excludes": ["xp-bots-llm-integration-contracts"]
+    },
+    {
+      "request": "Une permission fondamentale FLATTEN expirée doit bloquer les entrées et le calendrier d'annonces HIGH",
+      "includes": ["xp-bots-fundamental-permissions"],
+      "excludes": ["xp-bots-validation-replay"]
+    },
+    {
+      "request": "convertir les ticks Bid/Ask Dukascopy en bougies M15 sans anticipation, avec l'heure d'été de Londres",
+      "includes": ["xp-bots-market-data-causality"],
+      "excludes": ["xp-bots-maintain-agent-skills"]
+    },
+    {
+      "request": "checklist go/no-go avant le passage en démo puis en compte réel",
+      "includes": ["xp-bots-deployment-readiness"],
+      "excludes": ["xp-bots-ema-rsi-repli"]
+    },
+    {
+      "request": "ajoute un hook Copilot et régénère les miroirs des skills dans .claude/skills",
+      "includes": ["xp-bots-maintain-agent-skills"],
+      "excludes": ["xp-bots-ema-rsi-repli", "xp-bots-london-breakout", "xp-bots-risk-execution-contracts"]
+    },
+    {
+      "request": "ajoute une règle de repli au sélecteur de skills sans casser le routage",
+      "includes": ["xp-bots-maintain-agent-skills"],
+      "excludes": ["xp-bots-ema-rsi-repli"]
+    },
+    {
+      "request": "reprise de session après compaction : vérifie que le hook réinjecte l'orchestrateur",
+      "includes": ["xp-bots-maintain-agent-skills"],
+      "excludes": ["xp-bots-ema-rsi-repli", "xp-bots-deployment-readiness"]
+    },
+    {
+      "request": "les quotas Groq et Gemini et les tokens réservés par jour",
+      "includes": ["xp-bots-llm-integration-contracts"],
+      "excludes": ["xp-bots-london-breakout"]
+    },
+    {
+      "request": "écrire les tests du cas d'acceptation C11 sur le spread au plafond et le TTL de cinq secondes",
+      "includes": ["xp-bots-validation-replay", "xp-bots-risk-execution-contracts"]
+    },
+    {
+      "request": "porter reference/technical.py en MQL5 pour le moteur EMA",
+      "includes": ["xp-bots-ema-rsi-repli", "xp-bots-broker-account-qualification"]
+    },
+    {
+      "request": "explique la bougie de reprise et l'armement de la méthode Triple EMA",
+      "includes": ["xp-bots-ema-rsi-repli"],
+      "excludes": ["xp-bots-london-breakout"]
+    },
+    {
+      "request": "la cassure London avec stop local et quota par sens après un fill partiel",
+      "includes": ["xp-bots-london-breakout", "xp-bots-risk-execution-contracts"]
+    },
+    {
+      "request": "relis llm_contracts.py et le schéma schema_extraction_LLM_v1.json",
+      "includes": ["xp-bots-llm-integration-contracts"]
+    },
+    {
+      "request": "améliorer la stratégie de trading pour le robot",
+      "includes": ["xp-bots-specification-consistency"],
+      "excludes": ["xp-bots-maintain-agent-skills"]
+    },
+    {
+      "request": "refactoriser le module de calcul en couches inside-out",
+      "includes": ["mcl-matryoshka-construction-layers"]
+    },
+    {
+      "request": "implémente le service de collecte RSS du complément IA",
+      "includes": ["xp-bots-llm-integration-contracts", "mcl-matryoshka-construction-layers"]
+    },
+    {
+      "request": "le pied d'audit et le marqueur de fin sont-ils vérifiés par le hook Stop de Claude Code ?",
+      "includes": ["xp-bots-maintain-agent-skills"],
+      "excludes": ["xp-bots-risk-execution-contracts"]
+    },
+    {
+      "request": "consigne une lacune de skill au registre",
+      "includes": ["xp-bots-maintain-agent-skills", "xp-bots-skill-gap-detector"]
+    },
+    {
+      "request": "bonjour",
+      "expect_exact": ["xp-bots-request-skill-orchestrator", "xp-bots-skill-gap-detector", "xp-bots-completion-audit"],
+      "expect_no_match": true
+    },
+    {
+      "request": "indique en lecture seule où sont définies les deux stratégies et leurs validations",
+      "includes": ["xp-bots-specification-consistency"],
+      "excludes": ["xp-bots-maintain-agent-skills", "xp-bots-deployment-readiness"],
+      "max_selected": 6
+    },
+    {
+      "request": "documentation : mets à jour l'index des preuves de docs/validation",
+      "includes": ["xp-bots-specification-consistency"],
+      "max_selected": 5
+    }
+  ]
+}

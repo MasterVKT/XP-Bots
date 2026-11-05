@@ -196,6 +196,7 @@ def audit_git():
                'reference/__pycache__/example.pyc', '.code-review-graph/graph.db',
                'exports/example.zip']
     kept = ['.env.example', 'reference/technical.py',
+            '.agents/skills/mcl-matryoshka-construction-layers/SKILL.md',
             '.claude/skills/mcl-matryoshka-construction-layers/SKILL.md',
             'livrables/skills/mcl-matryoshka-construction-layers.zip']
     ignore_output = git(['check-ignore', '--no-index', '--stdin', '-z'],
