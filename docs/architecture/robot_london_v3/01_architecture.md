@@ -56,6 +56,11 @@ Poste Windows de l'utilisateur
 Les emplacements du dépôt sont déjà exclus par `.gitignore` (`runtime/`, `logs/`, `data/raw/`, `.local/`) ; les
 échanges vivent hors du dépôt, dans le dossier commun du terminal.
 
+**Contrôle du dossier commun au démarrage** : le service IA écrit sous `XPBOTS_COMMON_FILES_DIR` (A02) et le robot
+lit sous `terminal_info().commondata_path`. Si la variable est définie dans l'environnement du robot, elle doit
+désigner le même dossier ; sinon, alerte locale déterministe. Dans tous les cas, un snapshot absent ou périmé
+laisse le complément IA `NEUTRAL` (A12) et déclenche une alerte, sans effet sur les règles du socle.
+
 ### 2.1 Dossier d'échange des permissions fondamentales (D-11)
 
 - **Emplacement** : `XPBots/fondamental/v1/` sous le dossier commun réel du terminal
@@ -176,7 +181,8 @@ Pour chaque événement, dans chaque bras d'expérience, le cœur applique stric
    c. contexte IA en mémoire (A07) : pour London, après validation de la cassure et du stop local, avant la
    réservation ;
    d. cotation, stop et TP exécutables, taille, marge et réservations (C06, C07) ; la permission fondamentale
-   est **recontrôlée juste avant l'envoi** (C05).
+   (C05) et la copie mémoire du contexte IA (A03) sont **recontrôlées juste avant l'envoi**, avec les seules
+   informations alors reçues.
 5. **Envoi de l'entrée protégée** ; confirmation de la position, du volume et des protections réellement
    créés ; le signal est consommé, même en cas de refus définitif.
 

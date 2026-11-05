@@ -33,8 +33,9 @@ actions humaines du plan directeur, §5, restent à accomplir, aux phases indiqu
 **À la sortie de la phase**
 
 7. Gate global de l'artefact ; checkpoint si `statut` le signale ; `mcl.py verifier` de la carte composite.
-8. `python tools/run_robot_tests.py` et `python tools/verify_project.py` (l'intégration continue distante n'est
-   pas autorisée, D-10) ; suite de gouvernance si un fichier de gouvernance a changé.
+8. `python tools/run_robot_tests.py`, `python tools/verify_project.py` et `python tools/verifier_plan_london.py`
+   (couverture du plan, à garder verte quand le plan évolue) ; l'intégration continue distante n'est pas
+   autorisée (D-10) ; suite de gouvernance si un fichier de gouvernance a changé.
 9. Commit et push sur la branche de travail, sans réécriture d'historique.
 10. **Rapport d'arrêt** : unités et couches figées, contrats, effectifs des tests par catégorie, résultat de la
     régression intégrale, coutures modifiées, défauts trouvés et leur traitement, limites, prérequis de la

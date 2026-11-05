@@ -1,7 +1,8 @@
 # Plan d'implémentation intégrale du robot 2 — London Breakout M15 (`LONDON_V3`)
 
-> Plan directeur, version **1.1.0** du **5 novembre 2026**. Statut : **validé par l'utilisateur le
-> 05/11/2026**. Toutes les décisions de conception et les douze arbitrages de spécification sont arrêtés ; il
+> Plan directeur, version **1.2.0** du **5 novembre 2026**. Statut : **validé par l'utilisateur le
+> 05/11/2026** ; couverture vérifiée mécaniquement par `python tools/verifier_plan_london.py`
+> ([document 06](06_verification_exhaustive.md)). Toutes les décisions de conception et les douze arbitrages de spécification sont arrêtés ; il
 > ne reste que des **actions humaines** datées par phase (§5). Aucune ligne de code du robot n'existe encore.
 > Ce plan organise la construction ; il n'ajoute, ne retire et ne modifie aucune règle métier, aucun seuil et
 > aucun coût.
@@ -41,6 +42,7 @@
 | [03 — Acceptation et tests](03_acceptation_et_tests.md) | Catégories de tests, lanceur, commandes de gate, affectation des cas C11, S02.6 et A14, scénarios London détaillés |
 | [04 — Phases d'exécution](04_phases.md) | Phases 0 à 13 : objectifs, prérequis, étapes, livrables, critères de sortie, points d'arrêt |
 | [05 — Expert, risques, traçabilité](05_expert_risques_tracabilite.md) | Lecture d'expert M15, registre des risques, coûts et garanties MCL, matrice spécification → plan |
+| [06 — Vérification exhaustive](06_verification_exhaustive.md) | Rattachement de chaque paramètre (163 clés), de chaque exigence (155 lignes, 46 sections) et de chaque consigne d'expert (71) à un emplacement du plan ; contrôle de codifiabilité ; manques trouvés et corrigés |
 
 ## 1. Règle d'exécution par phases (demande explicite de l'utilisateur)
 
@@ -194,3 +196,4 @@ entrent dans les contrats des couches indiquées.
 |---|---|---|
 | 1.0.0 | 05/11/2026 | Création : décisions D-01 et D-02 arrêtées par l'utilisateur, plan complet en six documents |
 | 1.1.0 | 05/11/2026 | Validation par l'utilisateur : douze arbitrages tranchés (recommandations retenues), D-03 à D-09 approuvées, `MetaTrader5` autorisée, intégration continue distante et appels d'API non autorisés, D-11 à D-15 arrêtées ; contrats du dossier d'échange et de l'export MQL5 ; stratégies injectées (D-18) ; moteur V1 de comparaison ; sous-étapes 13.1 à 13.7 |
+| 1.2.0 | 05/11/2026 | Vérification exhaustive (document 06) et script `tools/verifier_plan_london.py` ; six manques corrigés : recontrôle du contexte IA juste avant l'ordre (A03), mesures séparées de C09, indicateurs descriptifs de la lecture d'expert, éléments de rapport C10, contrôle du dossier commun (A02), suspension pour dérive (A13.10) |

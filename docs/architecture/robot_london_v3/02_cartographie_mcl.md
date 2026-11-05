@@ -361,7 +361,8 @@ Esquisses de contrat :
   `exit_retry_interval_seconds` dès que le marché est négociable ; aucune entrée rétroactive.
 - `reprise_rapprochement` : étapes 3 et 4 du [document 01](01_architecture.md), §7.3.
 - `coordinateur` : réception des réponses, événements de marché et minuteries, soumission des signaux ;
-  pipeline d'admission du §4.3, étapes 4 et 5, avec recontrôle fondamental juste avant l'envoi ; un veto IA
+  pipeline d'admission du §4.3, étapes 4 et 5, avec recontrôle de la permission fondamentale et de la copie
+  mémoire du contexte IA juste avant l'envoi (C05, A03) ; un veto IA
   refuse la seule bougie courante (issue « refus définitif » avec `AI_CONTEXT_VETO`, aucun quota consommé) ;
   enregistrements C09 complets ; issues rendues aux stratégies.
 
@@ -470,9 +471,13 @@ Esquisses de contrat :
   phase 11 ; fonds propres = solde + flottant (achat au Bid, vente à l'Ask) ; aucun apport ni retrait ; une
   position qui chevaucherait le blackout est une erreur de code ; mode scénarisé (partiels, délais) pour les
   tests.
-- `metriques` : par méthode, symbole, bras et bloc ; profit factor sans perte → non applicable signalé ;
-  drawdown sur la courbe de fonds propres ; fréquence par jour de marché au sens de C09, jours à zéro inclus ;
-  rétention N/A si référence nulle, « trop faible » sous 50 trades ; ratio de configurations rapporté à part.
+- `metriques` : par méthode, symbole, bras et bloc ; les sept mesures séparées de C09 (configurations
+  techniques potentielles, signaux émis en état négociable, refus par motif, entrées réellement remplies,
+  positions closes, résultats nets, drawdown de fonds propres) ; profit factor sans perte → non applicable
+  signalé ; drawdown sur la courbe de fonds propres ; fréquence par jour de marché au sens de C09, jours à zéro
+  inclus ; rétention N/A si référence nulle, « trop faible » sous 50 trades ; ratio de configurations rapporté à
+  part ; indicateurs descriptifs attendus par la lecture d'expert (taux de réussite, R moyen réalisé net,
+  ventilés par heure, jour de semaine et symbole), rapportés sans jamais servir de critère de décision.
 - `bootstrap` : algorithme exact de C10 et A13.7 (blocs contigus dans chaque période continue, tirage avec
   remise de ⌈n/5⌉ blocs, concaténation, troncature, sommes journalières de P&L net et de trades clos au jour de
   sortie, espérance = somme / nombre, indices appariés, réplications sans trade comptées) ; générateur
@@ -483,7 +488,10 @@ Esquisses de contrat :
   diagnostics séparés par un objet d'écart explicite, journalisé, refusé hors rejeu ; verrou du test réservé
   (refus de la période 01/01/2025–30/04/2026 sans empreinte de robot figé, option explicite et
   journalisation) ; période 01/05–03/11/2026 étiquetée diagnostic.
-- `rapports` : tableau des critères face aux seuils fixés a priori ; ventilation A11 London (par W/ATR_H1,
+- `rapports` : tableau des critères face aux seuils fixés a priori ; effet propre du fondamental (référence
+  technique neutre contre permissions) et fréquences brutes avant filtrage (C10) ; pertes et arrêts de chacune
+  des six perturbations ; comparaison des hypothèses de coûts de référence et de stress aux journaux de
+  démonstration (C10, sous-étape 13.7) ; ventilation A11 London (par W/ATR_H1,
   heure de première cassure, sens, stop local, coût, nouveau signal après veto : performance, gagnants bloqués,
   opportunités tardives, ratio de remplissage) ; rapport A/B ; garde « une précision JSON n'est pas un taux de
   réussite de trades ».
@@ -549,6 +557,12 @@ tout artefact, `mcl.py analyser` fixe les profondeurs définitives avant la prem
 | `ecrivain_snapshot` | 2c | Écrire le snapshot de façon atomique, séquence persistée | `types_service` | système de fichiers | A10 |
 | `planificateur` | 3 | Planifier briefing, classification, journal, revue et cas de dérive sous les plafonds | `routeur`, `collecteur_rss`, `constructeur_veto` | — | A09, A11, A13 |
 | `service` | 4 | Enveloppe : heartbeat indépendant, travailleur d'inférence unique, collecteur séparé | `planificateur`, `ecrivain_snapshot` | — | A03, A10 |
+
+**Dérive d'un fournisseur (A13.10, A12)** : chaque semaine, le planificateur rejoue les `weekly_golden_cases` cas
+fixes ; si plus de `golden_drift_suspend_if_changed_cases_greater_than` classements matériels changent, le service
+cesse de publier dans le snapshot les vetos issus de ce fournisseur (suspension consignée dans son journal),
+poursuit l'observation dans le journal informatif et signale l'écart ; un nouveau modèle ou un nouveau prompt
+exige une nouvelle qualification A13. Le robot n'a rien à faire : les vetos non publiés n'existent pas pour lui.
 
 ### 6.12 Composant MQL5 `XPBotsExport` (phase 11, hors carte `mcl.py`)
 

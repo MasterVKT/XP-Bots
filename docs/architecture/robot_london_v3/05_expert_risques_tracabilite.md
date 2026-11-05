@@ -100,6 +100,10 @@ logique de martingale, de revanche ou d'augmentation du risque après pertes n'e
 
 ## 4. Matrice de traçabilité spécification → plan
 
+Vue par section ; le [document 06](06_verification_exhaustive.md) la détaille exigence par exigence (155 lignes),
+confronte chaque consigne de la skill d'expert à un choix de conception (71 consignes) et se contrôle par
+`python tools/verifier_plan_london.py`.
+
 | Section | Contenu | Artefacts et couches | Phases | Cas |
 |---|---|---|---|---|
 | C01 | Statut, compte, risque | `noyau` 0c ; `points-entree` 2 | 2, 11 | Refus des modes non autorisés |
