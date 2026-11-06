@@ -3,7 +3,7 @@ import unittest
 
 from robot.outils.configuration import configuration_figee
 from xpbots.donnees.c0a_types import UniteTemps
-from xpbots.london.squelette import fabriquer_strategie
+from robot.outils.london import strategie_squelette as fabriquer_strategie
 from xpbots.noyau.c1a_marche import Tick
 from xpbots.noyau.c1b_instrument import Intervalle
 from xpbots.noyau.c2_journal import TypeEnregistrement
@@ -31,6 +31,9 @@ class StrategieEspionne:
     def sur_bougie(self, enrichie):
         self.unites.append(enrichie.unite)
         return self._minimale.sur_bougie(enrichie)
+
+    def sur_issue(self, issue):
+        self._minimale.sur_issue(issue)
 
 
 def rejouer_moteur(ticks, strategie=None, horaires=None, periodes=None):

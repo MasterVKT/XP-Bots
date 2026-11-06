@@ -1,0 +1,337 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "moteur-london",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": "Méthode S02 pure : range Londres, gel causal H1, cassure, stop local, quotas et enveloppe par symbole."
+  },
+  "langage": "python",
+  "sources": [
+    "src"
+  ],
+  "exclure": [],
+  "couches": [
+    {
+      "id": "0a",
+      "profondeur": 0,
+      "nom": "parametres_london",
+      "chemins": [
+        "src/xpbots/london/c0a_parametres"
+      ],
+      "imports": [
+        "xpbots.london.c0a_parametres"
+      ],
+      "contrats": [
+        "mcl/moteur-london/contrats/couche-0a.md",
+        "src/xpbots/london/c0a_parametres/__init__.py",
+        "tests/robot/moteur_london/test_cat1_c0a_parametres_london.py"
+      ]
+    },
+    {
+      "id": "0b",
+      "profondeur": 0,
+      "nom": "types_london",
+      "chemins": [
+        "src/xpbots/london/c0b_types"
+      ],
+      "imports": [
+        "xpbots.london.c0b_types"
+      ],
+      "contrats": [
+        "mcl/moteur-london/contrats/couche-0b.md",
+        "src/xpbots/london/c0b_types/__init__.py",
+        "tests/robot/moteur_london/test_cat1_c0b_types_london.py"
+      ]
+    },
+    {
+      "id": "1a",
+      "profondeur": 1,
+      "nom": "range_londres",
+      "chemins": [
+        "src/xpbots/london/c1a_range"
+      ],
+      "imports": [
+        "xpbots.london.c1a_range"
+      ],
+      "contrats": [
+        "mcl/moteur-london/contrats/couche-1a.md",
+        "src/xpbots/london/c1a_range/__init__.py",
+        "tests/robot/moteur_london/test_cat1_c1a_range_londres.py",
+        "tests/robot/moteur_london/test_cat2_c1a_range_londres.py"
+      ]
+    },
+    {
+      "id": "1b",
+      "profondeur": 1,
+      "nom": "gel_atr_h1",
+      "chemins": [
+        "src/xpbots/london/c1b_gel_atr_h1"
+      ],
+      "imports": [
+        "xpbots.london.c1b_gel_atr_h1"
+      ],
+      "contrats": [
+        "mcl/moteur-london/contrats/couche-1b.md",
+        "src/xpbots/london/c1b_gel_atr_h1/__init__.py",
+        "tests/robot/moteur_london/test_cat1_c1b_gel_atr_h1.py",
+        "tests/robot/moteur_london/test_cat2_c1b_gel_atr_h1.py"
+      ]
+    },
+    {
+      "id": "1c",
+      "profondeur": 1,
+      "nom": "bougie_cassure",
+      "chemins": [
+        "src/xpbots/london/c1c_cassure"
+      ],
+      "imports": [
+        "xpbots.london.c1c_cassure"
+      ],
+      "contrats": [
+        "mcl/moteur-london/contrats/couche-1c.md",
+        "src/xpbots/london/c1c_cassure/__init__.py",
+        "tests/robot/moteur_london/test_cat1_c1c_bougie_cassure.py",
+        "tests/robot/moteur_london/test_cat2_c1c_bougie_cassure.py"
+      ]
+    },
+    {
+      "id": "1d",
+      "profondeur": 1,
+      "nom": "stop_local",
+      "chemins": [
+        "src/xpbots/london/c1d_stop"
+      ],
+      "imports": [
+        "xpbots.london.c1d_stop"
+      ],
+      "contrats": [
+        "mcl/moteur-london/contrats/couche-1d.md",
+        "src/xpbots/london/c1d_stop/__init__.py",
+        "tests/robot/moteur_london/test_cat1_c1d_stop_local.py",
+        "tests/robot/moteur_london/test_cat2_c1d_stop_local.py"
+      ]
+    },
+    {
+      "id": "1e",
+      "profondeur": 1,
+      "nom": "quotas_london",
+      "chemins": [
+        "src/xpbots/london/c1e_quotas"
+      ],
+      "imports": [
+        "xpbots.london.c1e_quotas"
+      ],
+      "contrats": [
+        "mcl/moteur-london/contrats/couche-1e.md",
+        "src/xpbots/london/c1e_quotas/__init__.py",
+        "tests/robot/moteur_london/test_cat1_c1e_quotas_london.py",
+        "tests/robot/moteur_london/test_cat2_c1e_quotas_london.py"
+      ]
+    },
+    {
+      "id": "2",
+      "profondeur": 2,
+      "nom": "moteur_london",
+      "chemins": [
+        "src/xpbots/london/c2_moteur"
+      ],
+      "imports": [
+        "xpbots.london.c2_moteur"
+      ],
+      "contrats": [
+        "mcl/moteur-london/contrats/couche-2.md",
+        "src/xpbots/london/c2_moteur/__init__.py",
+        "tests/robot/moteur_london/test_cat1_c2_moteur_london.py",
+        "tests/robot/moteur_london/test_cat2_c2_moteur_london.py"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "parametres_london",
+      "couche": "0a",
+      "responsabilite": "Valider et typer le bloc London.",
+      "depend_de": []
+    },
+    {
+      "id": "types_london",
+      "couche": "0b",
+      "responsabilite": "Définir les valeurs immuables intermédiaires.",
+      "depend_de": []
+    },
+    {
+      "id": "range_londres",
+      "couche": "1a",
+      "responsabilite": "Construire le range exact des ouvertures attendues.",
+      "depend_de": [
+        "parametres_london",
+        "types_london"
+      ]
+    },
+    {
+      "id": "gel_atr_h1",
+      "couche": "1b",
+      "responsabilite": "Sélectionner la dernière H1 valide admissible.",
+      "depend_de": [
+        "parametres_london",
+        "types_london"
+      ]
+    },
+    {
+      "id": "bougie_cassure",
+      "couche": "1c",
+      "responsabilite": "Évaluer les prédicats et mesures de cassure.",
+      "depend_de": [
+        "parametres_london",
+        "types_london"
+      ]
+    },
+    {
+      "id": "stop_local",
+      "couche": "1d",
+      "responsabilite": "Calculer les trois composantes du stop.",
+      "depend_de": [
+        "parametres_london",
+        "types_london"
+      ]
+    },
+    {
+      "id": "quotas_london",
+      "couche": "1e",
+      "responsabilite": "Compter les premiers remplissages du jour Londres.",
+      "depend_de": [
+        "parametres_london",
+        "types_london"
+      ]
+    },
+    {
+      "id": "moteur_london",
+      "couche": "2",
+      "responsabilite": "Combiner S02 par symbole et appliquer les issues.",
+      "depend_de": [
+        "parametres_london",
+        "types_london",
+        "range_londres",
+        "gel_atr_h1",
+        "bougie_cassure",
+        "stop_local",
+        "quotas_london"
+      ]
+    }
+  ],
+  "externes": [
+    {
+      "id": "horloge",
+      "imports": [
+        "time"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "fichiers",
+      "imports": [
+        "os",
+        "pathlib",
+        "io",
+        "shutil",
+        "tempfile",
+        "glob",
+        "gzip"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "reseau",
+      "imports": [
+        "socket",
+        "ssl",
+        "http",
+        "urllib"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "sqlite3",
+      "imports": [
+        "sqlite3"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "threading",
+      "imports": [
+        "threading",
+        "concurrent",
+        "queue"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "processus",
+      "imports": [
+        "subprocess",
+        "multiprocessing"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "aleatoire",
+      "imports": [
+        "random",
+        "secrets"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "chargement_dynamique",
+      "imports": [
+        "importlib"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "MetaTrader5",
+      "imports": [
+        "MetaTrader5"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "reference",
+      "imports": [
+        "reference"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "paquets_aval",
+      "imports": [
+        "xpbots.london_v1",
+        "xpbots.execution",
+        "xpbots.fondamental",
+        "xpbots.contexte_ia",
+        "xpbots.orchestration",
+        "xpbots.rejeu",
+        "xpbots.infra",
+        "xpbots.app",
+        "xpbots.service_ia",
+        "xpbots.donnees_historiques",
+        "xpbots.donnees.squelette",
+        "xpbots.london.squelette",
+        "xpbots.moteur_ema",
+        "xpbots.donnees_temps"
+      ],
+      "couches_autorisees": []
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "strict",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}

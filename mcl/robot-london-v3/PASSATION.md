@@ -1,8 +1,8 @@
-# Rapport de passation — robot London (`LONDON_V3`), reprise à la phase 4
+# Rapport de passation — robot London (`LONDON_V3`), reprise à la phase 5
 
-> Rédigé le 06/11/2026 à la fin de la phase 3, à l'intention de l'agent qui reprend l'exécution du plan dans une
+> Mis à jour le 06/11/2026 à la fin de la phase 4, à l'intention de l'agent qui reprend l'exécution du plan dans une
 > autre session, éventuellement avec un autre modèle ou un autre outil. Son but : que la suite soit construite
-> exactement selon la logique, la rigueur et les conventions des phases 0 à 3. Ce rapport est un **contexte de
+> exactement selon la logique, la rigueur et les conventions des phases 0 à 4. Ce rapport est un **contexte de
 > reprise**, pas une source normative : en cas d'écart avec les spécifications, les exports figés, le plan ou le
 > code réel, ce sont eux qui prévalent, et l'écart se signale (plan directeur, §0).
 
@@ -11,12 +11,12 @@
 | Élément | Valeur |
 |---|---|
 | Dépôt | `MasterVKT/XP-Bots` |
-| Branche de travail | `claude/stoic-brown-l3qbv3` (dernier commit de code : `70c60d9`, « Exécute la phase 3 du robot London : artefact donnees-temps figé ») |
-| Plan suivi | [Plan directeur 1.4.4](../../docs/architecture/robot_london_v3/README.md), documents 01 à 08 du même dossier |
-| Phases terminées | 0, 1, 2, 3 (toutes commitées et poussées) |
-| Prochaine action | **Phase 4 — artefact `moteur-london`**, à lancer seulement sur demande explicite de l'humain |
-| Suite du robot | 197 tests verts (noyau 77, london-donnees-temps 71, squelette 33, gardes transverses 11, outils 5) |
-| Contrôles | `tools/verify_project.py` PASS ; suite de gouvernance verte ; `tools/verifier_plan_london.py` sans problème ; `mcl.py verifier` VERT sur les trois cartes |
+| Branche de travail | `master`, après intégration en coexistence structurée (`5e5e288`) ; les commits `9c39d23` et `70c60d9` sont présents ; le commit de phase 4 porte cette mise à jour |
+| Plan suivi | [Plan directeur 1.4.5](../../docs/architecture/robot_london_v3/README.md), documents 01 à 08 du même dossier |
+| Phases terminées | 0, 1, 2, 3 et 4 ; état et publication vérifiables dans le journal Git |
+| Prochaine action | **Phase 5 — calculs purs du coordinateur, couches 0 à 3**, seulement sur demande explicite de l’humain ; traiter d’abord les règles de coexistence R4 et R5 |
+| Suite du robot | 532 tests verts des deux lignées ; 79 tests propres à moteur-london après correction adversariale, 35 tests du squelette |
+| Contrôles | Régression intégrale, ressources métier, plan London, gouvernance et cartes strictes : preuves de phase 4 dans [le bilan](../moteur-london/PLAN-MCL.md) et le journal MCL |
 | Environnement vérifié | Python 3.13 ; `numpy` 2.4.1, `pandas` 3.0.0, `tzdata` 2025.3 (`requirements-dev.txt`, tests seulement) ; aucun accès réseau requis |
 
 ## 1. Résumé exécutif
@@ -27,8 +27,9 @@ au gate de régression intégrale puis figée). Le plan compte 14 phases (0 à 1
 explicitement et l'agent s'arrête à la fin de chacune. Les phases 0 à 3 ont posé la carte composite, un squelette
 de bout en bout déployable, le noyau partagé figé (types, configuration figée, journal C09) et l'artefact
 `london-donnees-temps` figé (bougies M15 et H1 causales, validées, enrichies de TR, ATR, A_t, du rang de préchargement et
-des repères de Londres, avec reprise exacte). La prochaine phase construit la méthode S02 elle-même
-(`moteur-london`), pure, puis la branche sur le squelette à la place de la stratégie minimale.
+des repères de Londres, avec reprise exacte). La phase 4 a ajouté `moteur-london`, huit couches figées, et
+remplacé S3 : de vraies cassures sont journalisées puis refusées sans ordre par le coordinateur minimal. La
+phase 5 construira les calculs purs du coordinateur, après l’arbitrage de coexistence requis par R4 et R5.
 
 ## 2. Mission et règle d'exécution
 
@@ -57,7 +58,7 @@ Lecture obligatoire avant de toucher au code, dans cet ordre :
 3. [Document 04](../../docs/architecture/robot_london_v3/04_phases.md) : gabarit commun des phases et fiche de la
    phase à exécuter.
 4. [Document 02](../../docs/architecture/robot_london_v3/02_cartographie_mcl.md) : section de l'artefact (pour la
-   phase 4 : §6.3), conventions des cartes, tableau des artefacts (§5), squelette (§3).
+   phase 5 : §6.4), conventions des cartes, tableau des artefacts (§5), squelette (§3).
 5. [Document 03](../../docs/architecture/robot_london_v3/03_acceptation_et_tests.md) : catégories de tests,
    commandes de gate, affectation des cas C11, S02.6 et A14, scénarios L-01 à L-19, gardes transverses.
 6. [Document 01](../../docs/architecture/robot_london_v3/01_architecture.md), §9.3 : table des motifs et des
@@ -93,7 +94,7 @@ Lecture obligatoire avant de toucher au code, dans cet ordre :
 - **Skills** : ne s'éditent que dans `.agents/skills/` ; les copies `.claude/skills/` se régénèrent par
   `python .agents/hooks/skill_mirrors.py --write` ; une nouvelle skill passe par
   `.agents/skills/xp-bots-skill-gap-detector/scripts/create_skill.py`.
-- **Git** : travailler sur la branche que désigne la session (à défaut `claude/stoic-brown-l3qbv3`), sans
+- **Git** : travailler sur la branche que désigne la session (à défaut celle de la fiche §0), sans
   réécriture d'historique ; `git push -u origin <branche>`, avec nouvelles tentatives à 2, 4, 8 et 16 s en cas
   d'erreur réseau seulement ; **aucune pull request** sans demande explicite ; aucun identifiant de modèle dans
   les commits, le code ou les documents ; lignes d'attribution des commits : celles que fixe l'environnement de
@@ -122,6 +123,7 @@ Lecture obligatoire avant de toucher au code, dans cet ordre :
 | 1 | `6821747` | Squelette composite S1 à S7, lanceur `tools/run_london_tests.py`, fabrique de ticks, test de bout en bout, gardes de pureté et de carte |
 | 2 | `7d22b6f` | Artefact `noyau` figé (7 couches) ; couture S1, S6 ; défigeages `correction` de la couche 2 |
 | 3 | `70c60d9` | Artefact `london-donnees-temps` figé (8 couches) ; couture S2 ; défigeage `extension` de 1a et `correction` de 2b ; 24 mutations détectées |
+| 4 | Commit portant ce rapport | Artefact `moteur-london` figé (8 couches), checkpoint après le niveau 1 et couture S3 ; protocole `sur_issue` et taille de tick explicite ; mutations et défigeages éventuels au bilan de l’artefact |
 
 ### 6.2 Carte composite (`mcl/robot-london-v3/carte.json`, divergence stricte)
 
@@ -148,7 +150,7 @@ Noyau (`xpbots.noyau.*`) :
   `Arrondi`, `EPSILON_GRILLE`, `ErreurNombre`).
 - `c0c_configuration` : `charger_configuration_figee(octets_technique, octets_ia, octets_preuve)` → `ConfigurationFigee(technique, ia)` ;
   `ExportTechnique(commun, london, ema, empreinte_octets, empreinte_canonique)` ; `ParametresCommuns` (73 clés typées
-  de `common`) ; `london` reste un `Mapping` brut à typer par la phase 4 ; `ErreurConfiguration`.
+  de `common`) ; `london` reste un `Mapping` brut, typé par `charger_parametres_london` en phase 4 ; `ErreurConfiguration`.
 - `c1a_marche` : `Tick(symbole, symbole_courtier, instant_fournisseur_ms, instant_reception_ms, numero, bid, ask, drapeaux=0)`,
   `Cotation`, `cotation_depuis_tick`, `Bougie(symbole, debut_ms, duree_ms, ouverture, haut, bas, cloture,
   nombre_evenements, valide, motif_invalidite, instant_disponibilite_ms)` avec `fin_ms`.
@@ -182,14 +184,25 @@ Données (`xpbots.donnees.*`) :
 - S1 : `xpbots.rejeu.squelette.analyser_lignes_ticks` et `hypotheses_marche_squelette` (marché réputé coté et
   couvert sur l'étendue du fichier, alignée sur H1) ; lecture par `xpbots.infra.squelette`.
 - S2 : **remplacé** par `FluxBougies` (un flux par symbole dans le moteur minimal).
-- S3 : `xpbots.london.squelette.StrategieMinimale` : `sur_bougie(BougieEnrichie)` rend `NO_SETUP` /
-  `SEGMENT_MINIMAL_S3` pour chaque M15, rien pour une H1 ; `fabriquer_strategie(configuration)`.
+- S3 : **remplacé** par `xpbots.london.c2_moteur` (`MoteurLondon`, `StrategieLondon`,
+  `fabriquer_strategie(configuration, tailles_tick)`) ; un moteur par symbole, taille `Decimal` explicite,
+  vrai signal S02 ou motif à chaque nouvelle M15 ; rien pour H1 ou issue ; aucune réévaluation d’une M15 ancienne.
 - S4 : `xpbots.orchestration.squelette.MoteurMinimal` et `fabriquer_moteur_minimal(strategie, configuration, mode,
   deploiement='squelette', *, horaires, periodes_couvertes)` ; protocole structurel `Strategie` (attribut
-  `identifiant`, méthode `sur_bougie`) ; `CoordinateurMinimal` refuse tout signal (`ENVIRONMENT_NOT_READY`,
-  `SEGMENT_MINIMAL_S4`) ; `CLOTURE` par M15 avec indicateurs, `INTENTION` par signal, `ALERTE` par trou ou anomalie.
+  `identifiant`, méthodes `sur_bougie` et `sur_issue`, contrôlées structurellement) ; `CoordinateurMinimal` refuse tout signal (`ENVIRONMENT_NOT_READY`,
+  `SEGMENT_MINIMAL_S4`, issue transmise à la stratégie) ; `CLOTURE` par M15 avec indicateurs, `INTENTION` par signal, `ALERTE` par trou ou anomalie.
 - S5 : exécution papier minimale ; S6 : journal canonique écrit par `ecrire_journal` ; S7 :
-  `python -m xpbots.app.rejeu_squelette --ticks <csv> --sortie <dossier> [--racine-depot .]`.
+  `python -m xpbots.app.rejeu_squelette --ticks <csv> --sortie <dossier> --tick-size EURUSD=0.00001 [--racine-depot .]` ; répéter `--tick-size` pour chaque symbole synthétique présent.
+
+### 6.5 Interfaces London disponibles (figées)
+
+`xpbots.london.c0a_parametres` expose `ParametresLondon` et `charger_parametres_london` ; `c0b_types`
+porte les valeurs immuables et `ErreurLondon`. Les unités de niveau 1 exposent `construire_range`,
+`construire_gel`, `evaluer_cassure`, `calculer_stop` et `QuotasLondon`. L'enveloppe `c2_moteur` expose
+`MoteurLondon`, `StrategieLondon` et `fabriquer_strategie(configuration, tailles_tick)`.
+Les signatures, refus et garanties exacts sont dans les [contrats de moteur-london](../moteur-london/PLAN-MCL.md).
+Une issue `REMPLIE` suppose un premier volume effectivement non nul ; aucun volume n'existe dans `Issue`.
+La propriété d'une position persiste au changement de jour jusqu'à sa clôture explicite.
 
 ## 7. Méthode MCL telle qu'appliquée
 
@@ -298,7 +311,7 @@ nouveau gel, puis nouvelle passe de mutations jusqu'à détection totale. Phase 
    artefact).
 2. Documents : `mcl/<artefact>/PLAN-MCL.md` §5 (bilan : couches, défigeages et leurs motifs, choix de conception
    arrêtés, contrôles dérivés des sources, mutations, couture) ; ligne de la phase dans
-   `mcl/robot-london-v3/PLAN-MCL.md` §7 ; plan directeur : version d'un cran (phase 4 → **1.4.5**), date, phrase
+   `mcl/robot-london-v3/PLAN-MCL.md` §7 ; plan directeur : version d'un cran (phase 5 → **1.4.6**), date, phrase
    d'état de l'en-tête, ligne du journal des révisions (§7) ; [guide](../../docs/architecture/GUIDE_IMPLEMENTATION.md) :
    phrase « État du dépôt au … » et numéro de version du plan ; document 02 seulement si une dépendance ou une
    sortie réelle diffère de l'esquisse ; ce rapport de passation : §0 et §6.1 (état), §9 (briefing de la phase
@@ -328,98 +341,51 @@ Le marqueur `[XP-BOTS-AUDIT:BLOQUE]` ne sert qu'à un blocage prouvé et expliqu
 l'humain). Les sous-agents n'émettent jamais de marqueur. Sous Claude Code, le hook de fin refuse une réponse sans
 pied complet ; ailleurs, la règle s'applique sans hook.
 
-## 9. Briefing de la phase 4 — artefact `moteur-london` (paquet `xpbots.london`)
+## 9. Briefing de la phase 5 — calculs purs du coordinateur, couches 0 à 3
 
-### 9.1 Objet et sources
+### 9.1 Préparation et coexistence
 
-Appliquer S02 aux bougies enrichies d'un symbole et rendre, à chaque clôture M15, un signal technique ou un motif ;
-appliquer les issues reçues. Pur : ni coordinateur, ni courtier, ni horloge. Sources : document 02, §6.3 (unités,
-carte, esquisses de contrat, ordre d'évaluation de l'enveloppe) ; document 04, phase 4 ; document 03 (S02.6-1 à 8,
-L-01 à L-13 au niveau du moteur, C11.1, C11.2, C11.4) ; document 01, §9.3 (motifs et détails) ; spécification
-S02.1 à S02.6 ; `reference/technical.py` (`london_signal`, `london_setups`, `LONDON_CFG`). Skills :
-`xp-bots-london-breakout`, MCL, et `anthropic-skills:expert-scalper-m15` pour une lecture critique des cas sans
-changer de règle (si cette skill n'existe pas dans l'outil, s'appuyer sur la lecture d'expert du document 05 et le
-déclarer dans `couverture_skills`). Arbitrages : P-09 (couche 1b), P-03 et P-10 (déjà portés par london-donnees-temps,
-consommés ici), P-07 (motifs).
+La phase 4 est terminée ; la phase 5 n'est pas commencée. Lire le document 04, fiche de phase 5, le document
+02, §6.4, le document 01 (prix, ports et états), C04, C06 à C09 et les cas C11.2, C11.5 à C11.7 et C11.10.
+Skills : MCL, planification, risque/exécution, qualification du compte pour les profils synthétiques ;
+aucune connexion ni lecture réelle de courtier n'est nécessaire.
 
-### 9.2 Carte prévue
+Le dépôt contient désormais deux lignées. Lire avant toute création le
+[document de coexistence](../../docs/architecture/COEXISTENCE_ROBOT1_LONDON.md). Ses règles R4 et R5 imposent
+un arbitrage daté avant de construire un composant partagé : comparer les deux contrats de signal, marché,
+temps et journal ; retenir explicitement adaptateurs ou convergence par défigeages tracés, ou séparation
+justifiée avec noms préfixés. `mcl/execution-coordinateur` appartient déjà à la lignée EMA ; ne pas réutiliser ce dossier sans arbitrage. Aucun choix de convergence
+n'est arrêté par cette passation ; ne pas créer deux coordinateurs sous le même paquet par inadvertance.
 
-0a `parametres_london` ∥ 0b `types_london` ; 1a `range_londres` ∥ 1b `gel_atr_h1` ∥ 1c `bougie_cassure` ∥ 1d
-`stop_local` ∥ 1e `quotas_london` ; 2 `moteur_london` (enveloppe). Sous-paquets suggérés, sur le modèle des phases
-précédentes : `c0a_parametres`, `c0b_types`, `c1a_range`, `c1b_gel_atr_h1`, `c1c_cassure`, `c1d_stop`, `c1e_quotas`,
-`c2_moteur`. Tests : `tests/robot/moteur_london/` (le lanceur convertit `moteur-london` en `moteur_london`).
-Checkpoint après le niveau 1, puis gate global. Interdits de la carte : ceux de `london-donnees-temps` plus
-`xpbots.execution` (couche composite parallèle), `xpbots.london.squelette` (segment remplacé) et tous les
-paquets en aval. Déclarer chaque dépendance réelle : les couches de niveau 1 dépendent de 0a et 0b ; l'enveloppe de
-toutes celles qu'elle importe.
+### 9.2 Carte et ordre
 
-### 9.3 Points de conception à trancher dans les contrats (recommandations)
+Le plan prévoit : 0a `types_execution` ∥ 0b `ports_controles` ∥ 0c `garde_cotation` ∥ 0d `prix_executables` ∥
+0e `echeances_sortie` ; puis 1a `port_calcul` ∥ 1b `gardes_compte` ∥ 1c `registre_reservations` ; puis
+2a `risque_all_in` ∥ 2b `arbitrage` ; puis 3 `dimensionnement`. Finaliser chaque contrat seulement avant son
+code. Déclarer toutes les dépendances directes réelles dans la carte, notamment vers les types. Checkpoints
+après les niveaux 1 et 3. La phase 5 s'arrête à ces onze couches ; les couches 4 à 6 appartiennent à la phase 6.
 
-1. **Paramètres** (0a) : typer le bloc `london` (le `Mapping` brut de `ExportTechnique.london`) et lire dans
-   `ParametresCommuns` les clés communes utilisées par S02 (`maximum_signal_true_range_atr`, `structural_buffer_atr`,
-   `minimum_chart_stop_atr`, `maximum_chart_stop_atr`, `warmup_closed_m15_bars`, `warmup_closed_h1_bars`,
-   `timeframe_seconds`, `h1_seconds`, fuseau, jours actifs). Refuser au démarrage `fresh_close_cross_required`,
-   `h1_directional_filter_enabled` et `exit_on_close_back_inside_range_enabled` s'ils ne sont pas faux ; contrôler
-   `expected_range_m15_bars` = durée du range / `timeframe_seconds` et l'ordre début de séance < fin d'entrée ≤
-   sortie forcée. Aucun seuil écrit en dur.
-2. **Taille de tick** : elle n'est pas dans `config/` ; elle vient du profil d'instrument C04
-   (`ProfilInstrument.tick_size`, `Decimal`). Recommandation : un contrat étroit qui reçoit, par symbole, une taille
-   de tick décimale (et la convertit une fois en flottant pour les comparaisons, comme la référence), plutôt que tout
-   le profil. Le squelette n'ayant pas de profil, prévoir pour S7 une **option explicite** de la ligne de commande
-   (par exemple une taille de tick par symbole, obligatoire pour chaque symbole du fichier, code 1 si elle manque),
-   tracée au registre des coutures comme hypothèse du squelette remplacée plus tard par le vrai profil ; éviter de
-   la déduire du nombre de décimales des prix.
-3. **Contrat de stratégie (D-18)** : le protocole structurel déclaré par `xpbots.orchestration.squelette` est
-   `identifiant` et `sur_bougie(BougieEnrichie) -> ResultatTechnique | None` (un résultat pour chaque M15 close,
-   valide ou non ; rien pour une H1, reçue avant la M15 de même fin). « Appliquer les issues » exige une extension
-   additive du protocole, par exemple `sur_issue(issue: Issue) -> None`, appelée par le moteur minimal après chaque
-   issue (le coordinateur minimal ne rend que des refus : aucun quota consommé). Le moteur London ne doit importer ni
-   `xpbots.orchestration` ni `xpbots.execution` ; un test vérifie sa conformité structurelle au protocole.
-4. **Instances** : un état par symbole (et par bras, plus tard, par l'orchestration) ; la stratégie injectée peut
-   contenir un moteur par symbole créé à la première bougie, à partir des paramètres et de la taille de tick du
-   symbole.
-5. **Ordre d'évaluation et motifs** (document 02, §6.3) : trou actif → hors fenêtre ou jour inactif → préchargement
-   et A → validité du range → disponibilité du gel → admissibilité → position London possédée sur le symbole →
-   cassure → quota du sens → stop ; sinon signal avec son contexte (H, L, W, A_H1, W/A_H1, disponibilité du gel,
-   mesures de la bougie). Chaque refus prend un `Motif` et un détail de `DETAILS_ENUMERES` conformes à la table du
-   document 01, §9.3 (par exemple `NO_SETUP`/`RANGE_HORS_BORNES`, `DATA_GAP`/`RANGE_INCOMPLET`,
-   `WARMUP`/`ATR_H1_INDISPONIBLE`, `OUTSIDE_SESSION`/`HORS_FENETRE`, `SYMBOL_BUSY`/`POSITION_METHODE`,
-   `DAILY_ENTRY_CAP`/`SENS_DEJA_REMPLI`, `STOP_TOO_WIDE`). Le préchargement se lit sur `IndicateursBougie.rang`
-   (P-10 : rang ≥ `warmup_closed_m15_bars` − 1) ; la fenêtre par `CalendrierLondres.decision_dans_fenetre` ; le jour
-   par `BougieEnrichie.jour_londres` ; l'état de trou par les bougies invalides et les motifs `TROU_DONNEES`
-   (P-03 : range effacé au début du trou, recalculé après récupération si ses 20 bougies sont valides).
-6. **Gel de A_H1** (P-09) : instant de gel 07:00 Londres ; dernière H1 **valide** close au plus tard à 07:00 et
-   datant d'au plus 3 600 s ; ATR > 0 ; au moins `warmup_closed_h1_bars` H1 valides jusqu'à elle (rang) ;
-   disponibilité = instant de disponibilité de sa bougie ; première version figée, aucune mise à jour ensuite ;
-   décision antérieure à la disponibilité refusée.
-7. **Quotas** : enregistrement au premier remplissage non nul, idempotent par clé d'intention ; remise à zéro au
-   seul changement de jour Londres ; un refus sans remplissage ne consomme rien ; jamais deux signaux pour une même
-   bougie ni de rattrapage.
+### 9.3 Arbitrages et tests
 
-### 9.4 Tests clés et données
+Intégrer P-04 (deux âges de cotation) et P-05 (spread nul admis) en 0c ; P-12 (base quotidienne UTC reconstituée)
+en 1b ; P-06 (fraction de marge lue en décimal) en 3. Comparer 0d à `rounded_levels` sans importer la référence
+en production. La conversion short en Ask, l'objectif depuis l'entrée réelle, la réserve de glissement,
+les frais minimaux non linéaires, le volume minimal au-delà du budget, les positions externes et la marge
+cumulée sont des contrôles de phase 5, pas des garanties déjà données par le moteur S02.
 
-- Catégorie 1 par couche, bornes exactes avec des valeurs dyadiques (exactement représentables en binaire) et
-  cas de la spécification cités tels quels (L-01, exemple S02.5).
-- Égalité de `bougie_cassure` et `stop_local` avec `london_signal` sur des cas synthétiques ; égalité des signaux de
-  l'enveloppe avec `london_setups` (cadres pandas construits comme en phase 3 avec `add_indicators` pour les M15 et
-  les H1) quand aucun remplissage n'est rapporté ; causalité par préfixe (C11.1) ; réinitialisation au changement
-  de jour Londres ; non-recopie des seuils (paramètres modifiés par `robot.outils.configuration.octets_technique_modifies`
-  qui changent le comportement) ; S02.6-1 à 8 et L-01 à L-13 au niveau du moteur.
-- **Fabrique de journées London à écrire** dans `tests/robot/outils/` (document 03, §4) : ticks (et non bougies)
-  produisant un historique d'au moins 1 000 M15 et 300 H1 valides de TR constant (clôture précédente dans `[L, H]`,
-  donc TR = H − L) pour obtenir exactement l'A et l'A_H1 voulus, puis une journée avec un range voulu et une bougie
-  de cassure voulue ; elle sert aussi au test de bout en bout de la couture (au moins treize jours de ticks avant la
-  journée de décision : 1 000 M15 ≈ 10,4 jours et 300 H1 = 12,5 jours).
+Les profils et le calculateur de courtier sont synthétiques, aux seules frontières externes. Aucun compte,
+aucun identifiant ni ordre réel ; aucun réseau. Les signaux de `moteur-london` sont disponibles et leurs
+mesures sont dans le contexte C09. Une issue `REMPLIE` représente un volume effectivement non nul : ne pas
+l'envoyer pour un accusé ou un volume nul. Les refus et expirations ne consomment aucun quota London.
 
-### 9.5 Couture S3 et critères de sortie
+### 9.4 Sortie attendue
 
-Remplacer `xpbots.london.squelette` par la fabrique du vrai moteur ; le squelette journalise alors de vrais signaux
-London, refusés explicitement par le coordinateur minimal (`INTENTION` refusée) ; adapter S4 (appel des issues),
-S7 (taille de tick, fabrique London) et le test de bout en bout (préchargement suffisant et au moins un vrai
-signal). Sortie : huit unités figées, gate global vert, bout en bout vert, cartes vertes, mutations toutes détectées,
-documents et plan 1.4.5, commit, push, rapport d'arrêt.
+Aucune couture en phase 5 : S4 reste minimal jusqu'à la phase 6. Le bout en bout de S3 demeure vert avec au
+moins une vraie cassure refusée. Régression des deux lignées à chaque gate, cartes strictes, mutations sur
+copie extérieure, bilan et suivi composite, plan directeur 1.4.6, guide et passation à jour, commit et push,
+puis rapport d'arrêt invitant à la phase 6. Aucun travail de phase 6 sans demande explicite.
 
-## 10. Leçons et pièges des phases 0 à 3
+## 10. Leçons et pièges des phases 0 à 4
 
 1. **Divergence stricte** : une dépendance réelle oubliée dans la carte fait échouer le gate ; déclarer aussi les
    dépendances vers les couches de types.
@@ -442,7 +408,10 @@ documents et plan 1.4.5, commit, push, rapport d'arrêt.
     mettent à jour dans le même lot que la couture.
 11. **Rapports** : `tools/run_london_tests.py` écrit `.local/reports/robot_tests.json` (ignoré par Git) ; le
     résumé JSON final donne `tests`, `echecs`, `erreurs`, `statut`.
-12. **Liens Markdown** : la porte `markdown-links` vérifie les liens relatifs des fichiers modifiés.
+12. **Portabilité des gels** : les fichiers contractuels doivent avoir les mêmes octets que leurs blobs Git ;
+    écrire en UTF-8 et LF avant le gel. En phase 4, huit défigeages `correction` ont rendu cette conservation
+    explicite ; celui de 1a a aussi ajouté le test exact des extrêmes hétérogènes révélé par mutation.
+13. **Liens Markdown** : la porte `markdown-links` vérifie les liens relatifs des fichiers modifiés.
 
 ## 11. Aperçu des phases 5 à 13 (points d'attention)
 
@@ -475,16 +444,25 @@ documents et plan 1.4.5, commit, push, rapport d'arrêt.
   (sans `--integration` en profondeur 0), puis `... figer --couche <id> --par agent`.
 - Gate global : `... gate --global --regression "python tools/run_london_tests.py" --regression "python tools/verify_project.py"`.
 - Vérification des cartes : `... --dossier mcl/robot-london-v3 verifier`, idem pour chaque artefact ; `statut`.
-- Démonstration du squelette : `PYTHONPATH=src python -m xpbots.app.rejeu_squelette --ticks <fichier.csv> --sortie <dossier>`.
+- Démonstration du squelette : `PYTHONPATH=src python -m xpbots.app.rejeu_squelette --ticks <fichier.csv> --sortie <dossier> --tick-size EURUSD=0.00001` (répéter pour chaque symbole synthétique).
 
 ## 13. Contrôle de reprise (à faire avant tout changement)
 
-1. La branche contient le commit `70c60d9` et ce fichier ; sinon récupérer `origin/claude/stoic-brown-l3qbv3`
-   (et, si la session impose une autre branche, la faire partir de ce commit) avant toute autre action.
-2. `mcl.py statut` indique « Toutes les couches sont figées » pour `mcl/noyau` et `mcl/london-donnees-temps`.
-3. `python tools/run_london_tests.py` donne au moins 197 tests verts ; `python tools/verify_project.py` PASS ;
-   `mcl.py --dossier mcl/robot-london-v3 verifier` VERT ; `git status --short` vide.
-4. Tout écart est signalé dans la réponse avant de commencer, avec sa preuve ; il n'est jamais masqué.
+1. La branche contient `9c39d23`, l’intégration `5e5e288`, ce rapport et le moteur `c2_moteur` ; vérifier
+   le commit de phase 4 dans `git log` et le récupérer depuis la branche publiée si nécessaire. Ne pas repartir
+   de la seule ancienne branche de phase 3, qui ne contient ni coexistence ni moteur S02.
+2. `mcl.py statut` indique « Toutes les couches sont figées » pour `mcl/noyau`,
+   `mcl/london-donnees-temps` et `mcl/moteur-london`.
+3. `python tools/run_london_tests.py` donne au moins 532 tests verts des deux lignées ; `python tools/verify_project.py` PASS ;
+   `mcl.py --dossier mcl/robot-london-v3 verifier` VERT ; `git status --short` comparé à la fin de phase 4 : deux modifications préexistantes de
+   `.gitattributes` et `tests/robot/fixtures/squelette_ticks.csv` ont été préservées hors du commit de phase 4 ;
+   tout autre écart doit être identifié et expliqué.
+4. Sous Windows, conserver les octets LF de la fixture CSV lors d'un export pour les tests : employer
+   `git -c core.autocrlf=false archive` pour obtenir les blobs exacts. Le réglage `core.autocrlf=true` avec
+   l'ancienne règle CSV absente de la version commitée peut convertir cette fixture en CRLF ; ce cas a été
+   reproduit sur le commit initial et ne vient pas du moteur London. La règle CSV ajoutée initialement dans
+   le répertoire de travail reste une modification non commitée de l'utilisateur.
+5. Tout écart est signalé dans la réponse avant de commencer, avec sa preuve ; il n'est jamais masqué.
 
 ## 14. Glossaire minimal
 

@@ -12,7 +12,7 @@ enregistrement `ALERTE`.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Mapping, Protocol, Sequence
+from typing import Mapping, Protocol, Sequence, runtime_checkable
 
 from xpbots.donnees.c0a_types import AnomalieDonnees, BougieEnrichie, ChangementTrou, UniteTemps
 from xpbots.donnees.c1c_couverture import RegistreCouverture
@@ -29,6 +29,7 @@ BRAS_UNIQUE = 'REFERENCE'
 LONGUEUR_EMPREINTE_SQUELETTE = 16  # provisoire : la longueur du commentaire est qualifiée par la sonde S-05 (D-08)
 
 
+@runtime_checkable
 class Strategie(Protocol):
     """Contrat structurel d'une stratégie injectée."""
 
@@ -36,6 +37,10 @@ class Strategie(Protocol):
 
     def sur_bougie(self, bougie: BougieEnrichie) -> ResultatTechnique | None:
         """Un résultat pour chaque M15 close, rien pour une H1."""
+        ...
+
+    def sur_issue(self, issue: Issue) -> None:
+        """Applique l'issue confirmée sans produire de commande ni de signal rétroactif."""
         ...
 
 
@@ -52,6 +57,8 @@ class MoteurMinimal:
 
     def __init__(self, strategie: Strategie, configuration: ConfigurationFigee, mode: str, deploiement: str,
                  horaires: Mapping[str, HorairesCotation], periodes_couvertes: Mapping[str, Sequence[Intervalle]]) -> None:
+        if not isinstance(strategie, Strategie):
+            raise ValueError('stratégie injectée avec identifiant, sur_bougie et sur_issue attendue')
         if set(horaires) != set(periodes_couvertes):
             raise ValueError('horaires et périodes couvertes attendus pour les mêmes symboles')
         self._strategie = strategie
@@ -104,6 +111,7 @@ class MoteurMinimal:
                 cle = CleIntention(self._deploiement, resultat.strategie, resultat.symbole, resultat.cloture_ms,
                                    resultat.sens)
                 issue = Issue(cle, NatureIssue.REFUSEE, instant, decision.motif, decision.detail)
+                self._strategie.sur_issue(issue)
                 enregistrements.append(enregistrement_intention(
                     self._enveloppe(instant), cle=cle, longueur_empreinte=LONGUEUR_EMPREINTE_SQUELETTE, tentatives=[],
                     issue=issue, cout_ia_usd=None))

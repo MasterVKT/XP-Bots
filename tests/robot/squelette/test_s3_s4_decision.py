@@ -1,4 +1,4 @@
-"""Segments S3 et S4 : stratégie minimale, coordinateur minimal et enchaînement du moteur minimal."""
+"""S3 remplacé par le vrai moteur London ; S4 applique chaque issue du coordinateur minimal."""
 from datetime import date, datetime, timezone
 from decimal import Decimal
 import unittest
@@ -7,12 +7,13 @@ from robot.outils.configuration import configuration_figee, octets_exports, octe
 from robot.outils.specification import motifs_admis
 from xpbots.donnees.c0a_types import BougieEnrichie, IndicateursBougie, UniteTemps
 from xpbots.execution.squelette import CommandeEntree, CoordinateurMinimal
-from xpbots.london.squelette import StrategieMinimale, fabriquer_strategie
+from robot.outils.london import bougie, strategie_squelette as fabriquer_strategie
+from xpbots.london.c2_moteur import fabriquer_strategie as fabriquer_london
 from xpbots.noyau.c0c_configuration import ConfigurationFigee, analyser_export_ia, analyser_export_technique
 from xpbots.noyau.c1a_marche import Bougie, Tick
 from xpbots.noyau.c1c_domaine import AbsenceDeSignal, Motif, SignalTechnique
 from xpbots.noyau.c2_journal import TypeEnregistrement
-from xpbots.orchestration.squelette import fabriquer_moteur_minimal
+from xpbots.orchestration.squelette import Strategie, fabriquer_moteur_minimal
 from xpbots.rejeu.squelette import hypotheses_marche_squelette
 
 CONFIGURATION = configuration_figee()
@@ -24,6 +25,12 @@ class StrategieQuiSignale:
     """Doublure de test du contrat structurel de stratégie : rend un signal d'achat à chaque M15 close."""
 
     identifiant = 'TEST'
+
+    def __init__(self):
+        self.issues = []
+
+    def sur_issue(self, issue):
+        self.issues.append(issue)
 
     def sur_bougie(self, enrichie):
         if enrichie.unite is not UniteTemps.M15:
@@ -50,16 +57,17 @@ def enrichie(unite, duree):
 
 
 class TestStrategieEtCoordinateur(unittest.TestCase):
-    def test_strategie_minimale(self):
+    def test_strategie_london_reelle_et_conformite_structurelle(self):
         strategie = fabriquer_strategie(CONFIGURATION)
         self.assertEqual(strategie.identifiant, IDENTIFIANT)
-        self.assertIsNone(strategie.sur_bougie(enrichie(UniteTemps.H1, 4 * DUREE)), 'rien pour une H1')
-        resultat = strategie.sur_bougie(enrichie(UniteTemps.M15, DUREE))
+        self.assertIsInstance(strategie, Strategie)
+        self.assertIsNone(strategie.sur_bougie(bougie(unite=UniteTemps.H1, heure='06:00:00')), 'rien pour une H1')
+        resultat = strategie.sur_bougie(bougie(rang=0))
         self.assertIsInstance(resultat, AbsenceDeSignal)
-        self.assertEqual((resultat.motif, resultat.detail, resultat.cloture_ms), (Motif.NO_SETUP, 'SEGMENT_MINIMAL_S3', DUREE))
+        self.assertEqual((resultat.motif, resultat.detail), (Motif.WARMUP, 'M15_INSUFFISANTES'))
         self.assertIn(resultat.motif, motifs_admis())
         with self.assertRaises(ValueError):
-            StrategieMinimale('')
+            fabriquer_london(CONFIGURATION, {'EURUSD': Decimal(0)})
 
     def test_coordinateur_refuse_tout_signal(self):
         coordinateur = CoordinateurMinimal()
@@ -92,14 +100,16 @@ class TestMoteurMinimal(unittest.TestCase):
         premier = enregistrements[0]
         self.assertEqual((premier['type'], premier['mode'], premier['bras'], premier['deploiement'], premier['motif'],
                           premier['signal'], premier['strategie'], premier['instant_utc_ms']),
-                         (TypeEnregistrement.CLOTURE, 'REJEU', 'REFERENCE', 'squelette', 'NO_SETUP', None, IDENTIFIANT,
+                         (TypeEnregistrement.CLOTURE, 'REJEU', 'REFERENCE', 'squelette', 'OUTSIDE_SESSION', None, IDENTIFIANT,
                           DUREE))
         self.assertEqual(premier['bougie']['fin_utc_ms'], DUREE)
         self.assertEqual(dict(premier['empreinte_regles'])['technique'], CONFIGURATION.technique.empreinte_canonique)
 
     def test_la_duree_vient_de_la_configuration(self):
-        technique = analyser_export_technique(octets_technique_modifies(
-            lambda r: r['common'].__setitem__('timeframe_seconds', 300)))
+        def modifier(r):
+            r['london']['expected_range_m15_bars'] *= r['common']['timeframe_seconds'] // 300
+            r['common']['timeframe_seconds'] = 300
+        technique = analyser_export_technique(octets_technique_modifies(modifier))
         autre = ConfigurationFigee(technique, analyser_export_ia(octets_exports()[1]))
         suite = ticks(DUREE // 3)
         moteur = moteur_sur(fabriquer_strategie(autre), autre, suite)
@@ -109,7 +119,8 @@ class TestMoteurMinimal(unittest.TestCase):
 
     def test_signal_injecte_refuse_sans_commande(self):
         suite = ticks(DUREE // 3)
-        moteur = moteur_sur(StrategieQuiSignale(), CONFIGURATION, suite)
+        strategie = StrategieQuiSignale()
+        moteur = moteur_sur(strategie, CONFIGURATION, suite)
         sorties = [moteur.traiter_tick(t) for t in suite]
         enregistrements = [e.vers_dict() for s in sorties for e in s.enregistrements]
         types = [e['type'] for e in enregistrements]
@@ -119,6 +130,9 @@ class TestMoteurMinimal(unittest.TestCase):
                             and e['issue']['nature'] == 'REFUSEE' for e in intentions))
         self.assertEqual([e['numero'] for e in enregistrements], list(range(1, 7)))
         self.assertEqual([c for s in sorties for c in s.commandes], [])
+        self.assertEqual(len(strategie.issues), len(intentions))
+        self.assertEqual([i.cle.texte() for i in strategie.issues], [e['cle'] for e in intentions])
+        self.assertTrue(all(i.nature.value == 'REFUSEE' for i in strategie.issues))
 
     def test_symboles_independants(self):
         flux = [Tick('EURUSD', 'EURUSD', 0, 0, 1, 1.1, 1.2), Tick('GBPUSD', 'GBPUSD', 1, 1, 2, 1.3, 1.4),

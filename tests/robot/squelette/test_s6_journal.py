@@ -9,7 +9,7 @@ from robot.outils.configuration import configuration_figee
 from xpbots.infra.squelette import NOM_JOURNAL_SQUELETTE, ecrire_journal, lire_configuration
 from xpbots.noyau.c1a_marche import Tick
 from xpbots.noyau.c2_journal import serialiser
-from xpbots.london.squelette import fabriquer_strategie
+from robot.outils.london import strategie_squelette as fabriquer_strategie
 from xpbots.orchestration.squelette import fabriquer_moteur_minimal
 from xpbots.rejeu.squelette import hypotheses_marche_squelette
 from robot.outils.chemins import RACINE_DEPOT

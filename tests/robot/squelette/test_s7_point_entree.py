@@ -67,8 +67,32 @@ class TestPointEntree(unittest.TestCase):
 
     def test_configuration_reelle_dans_une_copie_du_depot(self):
         code, sortie, erreurs = executer(['--racine-depot', str(self.depot_copie()), '--ticks', str(self.ticks()),
-                                          '--sortie', str(self.racine / 'sortie')])
+                                          '--sortie', str(self.racine / 'sortie'), '--tick-size', 'EURUSD=0.00001'])
         self.assertEqual((code, erreurs), (0, ''))
+
+    def test_taille_de_tick_obligatoire_et_non_deduite_des_decimales(self):
+        fichier = self.ticks()
+        for tailles in ([], ['EURUSD=0'], ['EURUSD=-1'], ['EURUSD=NaN'], ['EURUSD=Infinity'],
+                       ['EURUSD=1e9999'], ['EURUSD=1e-9999'], ['EURUSD=texte'], ['EURUSD'],
+                       ['GBPUSD=0.00001'], ['EURUSD=0.00001', 'EURUSD=0.00001']):
+            arguments = ['--racine-depot', str(RACINE_DEPOT), '--ticks', str(fichier),
+                         '--sortie', str(self.racine / 'sortie')]
+            for taille in tailles:
+                arguments.extend(['--tick-size', taille])
+            with self.subTest(tailles=tailles):
+                code, sortie, erreurs = executer(arguments)
+                self.assertEqual((code, sortie), (1, ''))
+                self.assertTrue(erreurs)
+                self.assertFalse((self.racine / 'sortie').exists())
+
+    def test_taille_obligatoire_pour_chacun_des_symboles_du_fichier(self):
+        fichier = self.racine / 'deux_symboles.csv'
+        fichier.write_text('canonical_symbol,broker_symbol,time_utc_ms,sequence,bid,ask\n'
+                           'EURUSD,EURUSD,0,1,1.1,1.1001\nGBPUSD,GBPUSD,0,2,1.3,1.3001\n', encoding='utf-8')
+        arguments = ['--racine-depot', str(RACINE_DEPOT), '--ticks', str(fichier),
+                     '--sortie', str(self.racine / 'sortie'), '--tick-size', 'EURUSD=0.00001']
+        self.assertEqual(executer(arguments)[0], 1)
+        self.assertEqual(executer([*arguments, '--tick-size', 'GBPUSD=0.00001'])[0], 0)
 
     def test_export_modifie_refuse_par_empreinte(self):
         def alterer(depot):

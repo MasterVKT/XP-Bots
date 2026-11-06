@@ -261,7 +261,7 @@ courtier.
 | `bougie_cassure` | 1c | Tester cassure, buffer, corps, clôture et TR d'une bougie de signal | bougie, range, `tick_size` → sens ou motif | `parametres_london`, `types_london` | noyau | S02.3 |
 | `stop_local` | 1d | Calculer B_SL à trois composantes, refuser au-delà du maximum, fixer le multiple d'objectif | bougie, range, sens, A, `tick_size` → B_SL et k, ou `STOP_TOO_WIDE` | `parametres_london`, `types_london` | noyau | S02.4, C06 |
 | `quotas_london` | 1e | Compter les entrées remplies par jour Londres et par sens, au premier remplissage non nul | issues → quotas ; « ce sens est-il admissible ? » | `parametres_london`, `types_london` | noyau | S02.4 |
-| `moteur_london` | 2 | Enveloppe : combiner admissibilité du range, fenêtre, cassure, stop et quotas ; rendre signal ou motif ; appliquer les issues | bougies M15 et H1 enrichies, issues → résultats techniques | 1a, 1b, 1c, 1d, 1e | london-donnees-temps, noyau | S02, A07, C08 |
+| `moteur_london` | 2 | Enveloppe : combiner admissibilité du range, fenêtre, cassure, stop et quotas ; rendre signal ou motif ; appliquer les issues | bougies M15 et H1 enrichies, issues → résultats techniques | 0a, 0b, 1a, 1b, 1c, 1d, 1e | london-donnees-temps, noyau | S02, A07, C08 |
 
 Carte prévue : 0a ∥ 0b ; 1a ∥ 1b ∥ 1c ∥ 1d ∥ 1e ; 2.
 
@@ -272,8 +272,9 @@ Esquisses de contrat :
   démarrage sinon) ; cohérence `expected_range_m15_bars` = durée du range / `timeframe_seconds` ; ordre
   début de séance < fin d'entrée ≤ sortie forcée.
 - `range_londres` : uniquement les ouvertures de `sessions_londres` ; toutes présentes et valides ; H = max des
-  H, L = min des L, W = H − L > 0 ; une bougie ouverte à 07:00 ou après n'est jamais lue ; range disponible à
-  l'instant de disponibilité de la bougie de 06:45 ; motifs d'invalidité détaillés (P-07).
+  H, L = min des L, W = H − L > 0 ; une bougie ouverte à 07:00 ou après n'est jamais lue ; range disponible au
+  maximum des disponibilités de ses vingt bougies (normalement celle de 06:45, mais jamais avant une autre
+  réception tardive, C03.1) ; motifs d'invalidité détaillés (P-07).
 - `gel_atr_h1` : instant de gel F = 07:00 Londres ; candidate = dernière H1 valide de clôture ≤ F et datant
   d'au plus 3 600 s ; ATR > 0 ; au moins `warmup_closed_h1_bars` H1 valides jusqu'à elle (P-10) ; première
   version valide figée, disponibilité = réception de son événement de clôture ; aucune mise à jour ensuite
@@ -300,6 +301,13 @@ Esquisses de contrat :
   « position clôturée » : la position possédée est levée, une seconde direction n'est possible que sur un
   nouveau signal clos. Jamais deux signaux pour une même bougie, jamais de rattrapage sur une bougie ancienne.
   Changement de jour Londres : range, gel et quotas réinitialisés.
+
+Réalisation de phase 4 : les contrats finalisés sont dans `mcl/moteur-london/contrats/`. Les tailles de tick
+sont des `Decimal` explicites par symbole, fournis à la fabrique de stratégie ; S7 exige `--tick-size` pour
+chaque symbole du fichier, en attendant le vrai profil C04. Le protocole injecté est étendu par `sur_issue`.
+Une issue `REMPLIE` signifie un premier volume confirmé non nul, le type du noyau n'exposant pas de volume.
+La façade conserve un moteur par symbole ; chaque bras utilisera une autre façade. Les valeurs de diagnostic
+et les composantes du stop sont exposées dans le contexte ; la position possédée ne disparaît pas à minuit.
 
 ### 6.4 Artefact `execution-coordinateur` (paquet `xpbots.execution`, phases 5 et 6)
 
