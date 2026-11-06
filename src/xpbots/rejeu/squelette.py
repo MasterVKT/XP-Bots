@@ -10,16 +10,24 @@ tick suivant la soumission (achat à l'Ask, vente au Bid), sans coût ; protecti
 tick suivant le remplissage, achat sur Bid et vente sur Ask, au prix du tick qui les déclenche ; clôture au
 premier tick suivant du symbole. Limites assumées : aucun délai, aucun tick adverse, aucun remplissage partiel,
 aucun coût (simulateur C10 en phase 10).
+
+Hypothèse de marché du squelette (`hypotheses_marche_squelette`) : faute d'horaires de séance et de registre de
+couverture historiques (C10, phase 10), chaque symbole du fichier est réputé coté et son flux couvert sur toute
+l'étendue du fichier, de l'heure UTC pleine qui contient son premier tick à l'heure pleine qui suit son dernier.
+Une bougie sans tick dans cette étendue est donc invalide `AUCUN_BID`, jamais un trou.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from decimal import Decimal
 import math
-from typing import Iterable, Iterator, Protocol
+from typing import Iterable, Iterator, Protocol, Sequence
 
 from xpbots.execution.squelette import CommandeCloture, CommandeEntree
+from xpbots.noyau.c0a_temps import aligner
+from xpbots.noyau.c0c_configuration import ConfigurationFigee
 from xpbots.noyau.c1a_marche import ErreurMarche, Tick
+from xpbots.noyau.c1b_instrument import HorairesCotation, Intervalle
 from xpbots.noyau.c1c_domaine import Sens
 from xpbots.noyau.c2_journal import Enregistrement
 from xpbots.orchestration.squelette import SortieMoteur
@@ -74,6 +82,23 @@ def analyser_lignes_ticks(lignes: Iterable[str]) -> Iterator[Tick]:
             raise ErreurDonnees(f'ligne {numero} : ticks non strictement ordonnés par instant puis séquence')
         precedent = cle
         yield tick
+
+
+def hypotheses_marche_squelette(ticks: Sequence[Tick], configuration: ConfigurationFigee
+                                ) -> tuple[dict[str, HorairesCotation], dict[str, tuple[Intervalle, ...]]]:
+    """Horaires et périodes couvertes de l'hypothèse du squelette, par symbole (voir l'en-tête du module)."""
+    duree = configuration.technique.commun.h1_seconds * 1000
+    etendues: dict[str, tuple[int, int]] = {}
+    for tick in ticks:
+        debut, fin = etendues.get(tick.symbole, (tick.instant_fournisseur_ms, tick.instant_fournisseur_ms))
+        etendues[tick.symbole] = (min(debut, tick.instant_fournisseur_ms), max(fin, tick.instant_fournisseur_ms))
+    horaires: dict[str, HorairesCotation] = {}
+    periodes: dict[str, tuple[Intervalle, ...]] = {}
+    for symbole, (premier, dernier) in etendues.items():
+        etendue = Intervalle(aligner(premier, duree), aligner(dernier, duree) + duree)
+        horaires[symbole] = HorairesCotation((etendue,), (), etendue.debut_ms, etendue.fin_ms)
+        periodes[symbole] = (etendue,)
+    return horaires, periodes
 
 
 @dataclass(frozen=True)

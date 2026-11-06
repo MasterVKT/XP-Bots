@@ -1,9 +1,11 @@
 """Segments S3 et S4 : stratégie minimale, coordinateur minimal et enchaînement du moteur minimal."""
+from datetime import date, datetime, timezone
 from decimal import Decimal
 import unittest
 
 from robot.outils.configuration import configuration_figee, octets_exports, octets_technique_modifies
 from robot.outils.specification import motifs_admis
+from xpbots.donnees.c0a_types import BougieEnrichie, IndicateursBougie, UniteTemps
 from xpbots.execution.squelette import CommandeEntree, CoordinateurMinimal
 from xpbots.london.squelette import StrategieMinimale, fabriquer_strategie
 from xpbots.noyau.c0c_configuration import ConfigurationFigee, analyser_export_ia, analyser_export_technique
@@ -11,6 +13,7 @@ from xpbots.noyau.c1a_marche import Bougie, Tick
 from xpbots.noyau.c1c_domaine import AbsenceDeSignal, Motif, SignalTechnique
 from xpbots.noyau.c2_journal import TypeEnregistrement
 from xpbots.orchestration.squelette import fabriquer_moteur_minimal
+from xpbots.rejeu.squelette import hypotheses_marche_squelette
 
 CONFIGURATION = configuration_figee()
 DUREE = CONFIGURATION.technique.commun.timeframe_seconds * 1000
@@ -18,11 +21,14 @@ IDENTIFIANT = CONFIGURATION.technique.london['strategy_id']
 
 
 class StrategieQuiSignale:
-    """Doublure de test du contrat structurel de stratégie : rend un signal d'achat à chaque clôture."""
+    """Doublure de test du contrat structurel de stratégie : rend un signal d'achat à chaque M15 close."""
 
     identifiant = 'TEST'
 
-    def sur_cloture(self, bougie):
+    def sur_bougie(self, enrichie):
+        if enrichie.unite is not UniteTemps.M15:
+            return None
+        bougie = enrichie.bougie
         return SignalTechnique('TEST', bougie.symbole, bougie.fin_ms, 'ACHAT', bougie.cloture, 0.001,
                                bougie.cloture - 0.002, 2.0)
 
@@ -32,11 +38,23 @@ def ticks(espacement, nombre=10):
             for i in range(nombre)]
 
 
+def moteur_sur(strategie, configuration, suite):
+    horaires, periodes = hypotheses_marche_squelette(suite, configuration)
+    return fabriquer_moteur_minimal(strategie, configuration, 'REJEU', horaires=horaires, periodes_couvertes=periodes)
+
+
+def enrichie(unite, duree):
+    utc = datetime(1970, 1, 1, tzinfo=timezone.utc)
+    return BougieEnrichie(Bougie('EURUSD', 0, duree, 1.0, 1.0, 1.0, 1.0, 1, True, None, duree), unite,
+                          IndicateursBougie(0.0, None, None, 0), date(1970, 1, 1), utc, utc, date(1970, 1, 1))
+
+
 class TestStrategieEtCoordinateur(unittest.TestCase):
     def test_strategie_minimale(self):
         strategie = fabriquer_strategie(CONFIGURATION)
         self.assertEqual(strategie.identifiant, IDENTIFIANT)
-        resultat = strategie.sur_cloture(Bougie('EURUSD', 0, DUREE, 1.0, 1.0, 1.0, 1.0, 1, True, None, DUREE))
+        self.assertIsNone(strategie.sur_bougie(enrichie(UniteTemps.H1, 4 * DUREE)), 'rien pour une H1')
+        resultat = strategie.sur_bougie(enrichie(UniteTemps.M15, DUREE))
         self.assertIsInstance(resultat, AbsenceDeSignal)
         self.assertEqual((resultat.motif, resultat.detail, resultat.cloture_ms), (Motif.NO_SETUP, 'SEGMENT_MINIMAL_S3', DUREE))
         self.assertIn(resultat.motif, motifs_admis())
@@ -67,8 +85,9 @@ class TestStrategieEtCoordinateur(unittest.TestCase):
 
 class TestMoteurMinimal(unittest.TestCase):
     def test_un_enregistrement_par_bougie_close(self):
-        moteur = fabriquer_moteur_minimal(fabriquer_strategie(CONFIGURATION), CONFIGURATION, 'REJEU')
-        enregistrements = [e.vers_dict() for t in ticks(DUREE // 3) for e in moteur.traiter_tick(t).enregistrements]
+        suite = ticks(DUREE // 3)
+        moteur = moteur_sur(fabriquer_strategie(CONFIGURATION), CONFIGURATION, suite)
+        enregistrements = [e.vers_dict() for t in suite for e in moteur.traiter_tick(t).enregistrements]
         self.assertEqual([e['numero'] for e in enregistrements], [1, 2, 3])
         premier = enregistrements[0]
         self.assertEqual((premier['type'], premier['mode'], premier['bras'], premier['deploiement'], premier['motif'],
@@ -82,14 +101,16 @@ class TestMoteurMinimal(unittest.TestCase):
         technique = analyser_export_technique(octets_technique_modifies(
             lambda r: r['common'].__setitem__('timeframe_seconds', 300)))
         autre = ConfigurationFigee(technique, analyser_export_ia(octets_exports()[1]))
-        moteur = fabriquer_moteur_minimal(fabriquer_strategie(autre), autre, 'REJEU')
-        enregistrements = [e.vers_dict() for t in ticks(DUREE // 3) for e in moteur.traiter_tick(t).enregistrements]
+        suite = ticks(DUREE // 3)
+        moteur = moteur_sur(fabriquer_strategie(autre), autre, suite)
+        enregistrements = [e.vers_dict() for t in suite for e in moteur.traiter_tick(t).enregistrements]
         self.assertEqual(len(enregistrements), 9)
         self.assertEqual({e['bougie']['duree_ms'] for e in enregistrements}, {300_000})
 
     def test_signal_injecte_refuse_sans_commande(self):
-        moteur = fabriquer_moteur_minimal(StrategieQuiSignale(), CONFIGURATION, 'REJEU')
-        sorties = [moteur.traiter_tick(t) for t in ticks(DUREE // 3)]
+        suite = ticks(DUREE // 3)
+        moteur = moteur_sur(StrategieQuiSignale(), CONFIGURATION, suite)
+        sorties = [moteur.traiter_tick(t) for t in suite]
         enregistrements = [e.vers_dict() for s in sorties for e in s.enregistrements]
         types = [e['type'] for e in enregistrements]
         self.assertEqual(types, [TypeEnregistrement.CLOTURE, TypeEnregistrement.INTENTION] * 3)
@@ -100,9 +121,9 @@ class TestMoteurMinimal(unittest.TestCase):
         self.assertEqual([c for s in sorties for c in s.commandes], [])
 
     def test_symboles_independants(self):
-        moteur = fabriquer_moteur_minimal(fabriquer_strategie(CONFIGURATION), CONFIGURATION, 'REJEU')
         flux = [Tick('EURUSD', 'EURUSD', 0, 0, 1, 1.1, 1.2), Tick('GBPUSD', 'GBPUSD', 1, 1, 2, 1.3, 1.4),
                 Tick('EURUSD', 'EURUSD', DUREE, DUREE, 3, 1.1, 1.2), Tick('GBPUSD', 'GBPUSD', DUREE + 1, DUREE + 1, 4, 1.3, 1.4)]
+        moteur = moteur_sur(fabriquer_strategie(CONFIGURATION), CONFIGURATION, flux)
         symboles = [e.vers_dict()['symbole'] for t in flux for e in moteur.traiter_tick(t).enregistrements]
         self.assertEqual(symboles, ['EURUSD', 'GBPUSD'])
 

@@ -11,6 +11,7 @@ from xpbots.noyau.c1a_marche import Tick
 from xpbots.noyau.c2_journal import serialiser
 from xpbots.london.squelette import fabriquer_strategie
 from xpbots.orchestration.squelette import fabriquer_moteur_minimal
+from xpbots.rejeu.squelette import hypotheses_marche_squelette
 from robot.outils.chemins import RACINE_DEPOT
 from robot.outils.configuration import octets_exports
 
@@ -19,9 +20,11 @@ class TestJournalDuSquelette(unittest.TestCase):
     def test_lignes_canoniques_ecrites_puis_relues(self):
         configuration = configuration_figee()
         duree = configuration.technique.commun.timeframe_seconds * 1000
-        moteur = fabriquer_moteur_minimal(fabriquer_strategie(configuration), configuration, 'REJEU')
-        enregistrements = [e for i in range(3) for e in moteur.traiter_tick(
-            Tick('EURUSD', 'EURUSD', i * duree, i * duree, i, 1.1, 1.1001)).enregistrements]
+        ticks = [Tick('EURUSD', 'EURUSD', i * duree, i * duree, i, 1.1, 1.1001) for i in range(3)]
+        horaires, periodes = hypotheses_marche_squelette(ticks, configuration)
+        moteur = fabriquer_moteur_minimal(fabriquer_strategie(configuration), configuration, 'REJEU',
+                                          horaires=horaires, periodes_couvertes=periodes)
+        enregistrements = [e for t in ticks for e in moteur.traiter_tick(t).enregistrements]
         with tempfile.TemporaryDirectory() as dossier:
             chemin = ecrire_journal(dossier, (serialiser(e) for e in enregistrements))
             lignes = Path(chemin).read_text(encoding='utf-8').splitlines()

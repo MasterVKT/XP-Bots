@@ -2,8 +2,9 @@
 
 Segment minimal du squelette, remplacé en phase 11 par l'artefact `points-entree`. Contrat de la couture :
 mcl/squelette/COUTURES.md. Point de composition : il charge la configuration figée par le chargeur de production
-du noyau (empreintes contrôlées contre la preuve de conservation), lit les ticks par l'infrastructure, injecte la
-stratégie dans le moteur minimal (D-18), rejoue, puis écrit le journal canonique du noyau.
+du noyau (empreintes contrôlées contre la preuve de conservation), lit les ticks par l'infrastructure, en déduit
+l'hypothèse de marché du squelette (horaires et couverture sur l'étendue du fichier, `xpbots.rejeu.squelette`),
+injecte la stratégie dans le moteur minimal (D-18), rejoue, puis écrit le journal canonique du noyau.
 
 Usage (depuis la racine du dépôt, `PYTHONPATH` désignant `src`) :
     python -m xpbots.app.rejeu_squelette --ticks <fichier.csv> --sortie <dossier> [--racine-depot <dossier>]
@@ -20,7 +21,8 @@ from xpbots.london.squelette import fabriquer_strategie
 from xpbots.noyau.c0c_configuration import charger_configuration_figee
 from xpbots.noyau.c2_journal import serialiser
 from xpbots.orchestration.squelette import fabriquer_moteur_minimal
-from xpbots.rejeu.squelette import ExecutionPapierMinimale, analyser_lignes_ticks, rejouer
+from xpbots.rejeu.squelette import (ExecutionPapierMinimale, analyser_lignes_ticks, hypotheses_marche_squelette,
+                                    rejouer)
 
 MODE_REJEU = 'REJEU'
 
@@ -34,8 +36,11 @@ def main(argv: list[str] | None = None) -> int:
     arguments = analyseur.parse_args(argv)
     try:
         configuration = charger_configuration_figee(*lire_configuration(arguments.racine_depot))
-        moteur = fabriquer_moteur_minimal(fabriquer_strategie(configuration), configuration, MODE_REJEU)
-        resultat = rejouer(analyser_lignes_ticks(lire_lignes(arguments.ticks)), moteur, ExecutionPapierMinimale())
+        ticks = list(analyser_lignes_ticks(lire_lignes(arguments.ticks)))
+        horaires, periodes = hypotheses_marche_squelette(ticks, configuration)
+        moteur = fabriquer_moteur_minimal(fabriquer_strategie(configuration), configuration, MODE_REJEU,
+                                          horaires=horaires, periodes_couvertes=periodes)
+        resultat = rejouer(ticks, moteur, ExecutionPapierMinimale())
         chemin = ecrire_journal(arguments.sortie, (serialiser(e) for e in resultat.enregistrements))
     except (ValueError, OSError) as erreur:
         print(f'rejeu_squelette : {erreur}', file=sys.stderr)

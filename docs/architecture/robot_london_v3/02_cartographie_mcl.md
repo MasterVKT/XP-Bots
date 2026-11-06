@@ -212,12 +212,12 @@ repères de session ; précharger, persister (par export) et reprendre les état
 |---|---|---|---|---|---|---|
 | `types_donnees` | 0a | Définir les objets intermédiaires du flux de données | — | — | noyau | C03 |
 | `sessions_londres` | 0b | Calculer jours et heures de Londres, fenêtres, jour UTC et blackout | instant, date, heure locale → booléens, instants, dates | — | noyau | C03.3, S02.1, S02.2, C08 |
-| `constructeur_bougies` | 1a | Agréger les ticks en M15 et H1 brutes, clore à l'événement de frontière, signaler les intervalles vides | ticks ordonnés → bougies brutes, intervalles vides | `types_donnees` | noyau | C03.2, C11.3 |
+| `constructeur_bougies` | 1a | Agréger les ticks en M15 et H1 brutes, clore à l'événement de frontière, signaler les intervalles vides | ticks ordonnés → bougies brutes, intervalles vides ; export et import de l'état complet, bougie ouverte comprise | `types_donnees` | noyau | C03.2, C11.3 |
 | `indicateurs` | 1b | Calculer TR, ATR14 Wilder et A_t par récurrence incrémentale | bougie valide et état → TR, ATR, nouvel état | `types_donnees` | noyau | C03.10, C03.11 |
 | `couverture_flux` | 1c | Classer un intervalle en couvert, fermeture officielle ou trou | connexions, horaires, registre de trous → statut | `types_donnees` | noyau | C03.5, P-01 |
-| `validation_bougies` | 2a | Combiner bougie brute et couverture en bougie valide ou invalide motivée, et signaler les trous | bougie brute et statut → bougie, signalement | `constructeur_bougies`, `couverture_flux` | noyau | C03.5, C03.6, P-02 |
-| `etat_indicateurs` | 2b | Tenir les chaînes d'indicateurs par symbole et unité de temps, le préchargement, les compteurs et la reprise | bougies validées → bougies enrichies ; export et import d'état | `indicateurs` | noyau | C03.7, P-03, P-10 |
-| `flux_bougies` | 3 | Enveloppe : ticks et connexions → bougies M15 et H1 enrichies et état de trou par symbole | événements → bougies enrichies, changements d'état | `validation_bougies`, `etat_indicateurs`, `sessions_londres` | noyau | C03 |
+| `validation_bougies` | 2a | Combiner bougie brute et couverture en bougie valide ou invalide motivée, et signaler les trous | bougie brute et statut → bougie, signalement | `types_donnees`, `constructeur_bougies`, `couverture_flux` | noyau | C03.5, C03.6, P-02 |
+| `etat_indicateurs` | 2b | Tenir les chaînes d'indicateurs par symbole et unité de temps, le préchargement, les compteurs et la reprise | bougies validées → TR, ATR, A et rang, identité du préchargement ; export et import d'état | `types_donnees`, `indicateurs` | noyau | C03.7, P-03, P-10 |
+| `flux_bougies` | 3 | Enveloppe : ticks et connexions → bougies M15 et H1 enrichies et état de trou par symbole | événements → bougies enrichies, changements d'état | `types_donnees`, `sessions_londres`, `constructeur_bougies`, `couverture_flux`, `validation_bougies`, `etat_indicateurs` | noyau | C03 |
 
 Carte prévue : 0a ∥ 0b ; 1a ∥ 1b ∥ 1c ; 2a ∥ 2b ; 3.
 

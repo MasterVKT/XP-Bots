@@ -1,4 +1,4 @@
-"""Artefact `donnees-temps` : bougies M15 et H1 causales (construit en phase 3).
+"""Artefact `donnees-temps` : ticks → bougies M15 et H1 causales, validées et enrichies (C03), figé en phase 3.
 
-En phase 1, il ne contient que le segment minimal S2 du squelette (agrégation Bid), module `squelette`.
+Couches MCL `c0a_types` à `c3_flux` ; carte et contrats : mcl/donnees-temps/. Point d'entrée : `c3_flux.FluxBougies`.
 """

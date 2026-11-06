@@ -1,0 +1,332 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "donnees-temps",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": "Ticks Bid/Ask → bougies M15 et H1 causales, validées, enrichies de TR, ATR, A_t et des repères de session de Londres ; préchargement, export et reprise des états (C03). Pur, sans entrée-sortie."
+  },
+  "langage": "python",
+  "sources": [
+    "src"
+  ],
+  "exclure": [],
+  "couches": [
+    {
+      "id": "0a",
+      "profondeur": 0,
+      "nom": "types_donnees",
+      "chemins": [
+        "src/xpbots/donnees/c0a_types"
+      ],
+      "imports": [
+        "xpbots.donnees.c0a_types"
+      ],
+      "contrats": [
+        "mcl/donnees-temps/contrats/couche-0a.md",
+        "src/xpbots/donnees/c0a_types/__init__.py",
+        "tests/robot/donnees_temps/test_cat1_c0a_types.py"
+      ]
+    },
+    {
+      "id": "0b",
+      "profondeur": 0,
+      "nom": "sessions_londres",
+      "chemins": [
+        "src/xpbots/donnees/c0b_sessions"
+      ],
+      "imports": [
+        "xpbots.donnees.c0b_sessions"
+      ],
+      "contrats": [
+        "mcl/donnees-temps/contrats/couche-0b.md",
+        "src/xpbots/donnees/c0b_sessions/__init__.py",
+        "tests/robot/donnees_temps/test_cat1_c0b_sessions.py"
+      ]
+    },
+    {
+      "id": "1a",
+      "profondeur": 1,
+      "nom": "constructeur_bougies",
+      "chemins": [
+        "src/xpbots/donnees/c1a_constructeur"
+      ],
+      "imports": [
+        "xpbots.donnees.c1a_constructeur"
+      ],
+      "contrats": [
+        "mcl/donnees-temps/contrats/couche-1a.md",
+        "src/xpbots/donnees/c1a_constructeur/__init__.py",
+        "tests/robot/donnees_temps/test_cat1_c1a_constructeur.py",
+        "tests/robot/donnees_temps/test_cat2_c1a_constructeur.py"
+      ]
+    },
+    {
+      "id": "1b",
+      "profondeur": 1,
+      "nom": "indicateurs",
+      "chemins": [
+        "src/xpbots/donnees/c1b_indicateurs"
+      ],
+      "imports": [
+        "xpbots.donnees.c1b_indicateurs"
+      ],
+      "contrats": [
+        "mcl/donnees-temps/contrats/couche-1b.md",
+        "src/xpbots/donnees/c1b_indicateurs/__init__.py",
+        "tests/robot/donnees_temps/test_cat1_c1b_indicateurs.py",
+        "tests/robot/donnees_temps/test_cat2_c1b_indicateurs.py"
+      ]
+    },
+    {
+      "id": "1c",
+      "profondeur": 1,
+      "nom": "couverture_flux",
+      "chemins": [
+        "src/xpbots/donnees/c1c_couverture"
+      ],
+      "imports": [
+        "xpbots.donnees.c1c_couverture"
+      ],
+      "contrats": [
+        "mcl/donnees-temps/contrats/couche-1c.md",
+        "src/xpbots/donnees/c1c_couverture/__init__.py",
+        "tests/robot/donnees_temps/test_cat1_c1c_couverture.py",
+        "tests/robot/donnees_temps/test_cat2_c1c_couverture.py"
+      ]
+    },
+    {
+      "id": "2a",
+      "profondeur": 2,
+      "nom": "validation_bougies",
+      "chemins": [
+        "src/xpbots/donnees/c2a_validation"
+      ],
+      "imports": [
+        "xpbots.donnees.c2a_validation"
+      ],
+      "contrats": [
+        "mcl/donnees-temps/contrats/couche-2a.md",
+        "src/xpbots/donnees/c2a_validation/__init__.py",
+        "tests/robot/donnees_temps/test_cat1_c2a_validation.py",
+        "tests/robot/donnees_temps/test_cat2_c2a_validation.py"
+      ]
+    },
+    {
+      "id": "2b",
+      "profondeur": 2,
+      "nom": "etat_indicateurs",
+      "chemins": [
+        "src/xpbots/donnees/c2b_etat_indicateurs"
+      ],
+      "imports": [
+        "xpbots.donnees.c2b_etat_indicateurs"
+      ],
+      "contrats": [
+        "mcl/donnees-temps/contrats/couche-2b.md",
+        "src/xpbots/donnees/c2b_etat_indicateurs/__init__.py",
+        "tests/robot/donnees_temps/test_cat1_c2b_etat_indicateurs.py",
+        "tests/robot/donnees_temps/test_cat2_c2b_etat_indicateurs.py"
+      ]
+    },
+    {
+      "id": "3",
+      "profondeur": 3,
+      "nom": "flux_bougies",
+      "chemins": [
+        "src/xpbots/donnees/c3_flux"
+      ],
+      "imports": [
+        "xpbots.donnees.c3_flux"
+      ],
+      "contrats": [
+        "mcl/donnees-temps/contrats/couche-3.md",
+        "src/xpbots/donnees/c3_flux/__init__.py",
+        "tests/robot/donnees_temps/test_cat1_c3_flux.py",
+        "tests/robot/donnees_temps/test_cat2_c3_flux.py"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "types_donnees",
+      "responsabilite": "Définir les objets intermédiaires du flux de données.",
+      "depend_de": [],
+      "couche": "0a"
+    },
+    {
+      "id": "sessions_londres",
+      "responsabilite": "Calculer jours et heures de Londres, fenêtres, jour UTC et blackout.",
+      "depend_de": [],
+      "couche": "0b"
+    },
+    {
+      "id": "constructeur_bougies",
+      "responsabilite": "Agréger les ticks en bougies brutes, clore à l'événement de frontière, signaler les intervalles vides.",
+      "depend_de": [
+        "types_donnees"
+      ],
+      "couche": "1a"
+    },
+    {
+      "id": "indicateurs",
+      "responsabilite": "Calculer TR, ATR14 Wilder et A_t par récurrence incrémentale.",
+      "depend_de": [
+        "types_donnees"
+      ],
+      "couche": "1b"
+    },
+    {
+      "id": "couverture_flux",
+      "responsabilite": "Classer un intervalle en couvert, fermeture officielle ou trou.",
+      "depend_de": [
+        "types_donnees"
+      ],
+      "couche": "1c"
+    },
+    {
+      "id": "validation_bougies",
+      "responsabilite": "Combiner bougie brute et couverture en bougie valide ou invalide motivée, et signaler les trous.",
+      "depend_de": [
+        "types_donnees",
+        "constructeur_bougies",
+        "couverture_flux"
+      ],
+      "couche": "2a"
+    },
+    {
+      "id": "etat_indicateurs",
+      "responsabilite": "Tenir la chaîne d'indicateurs, le préchargement, les rangs et la reprise par export et import.",
+      "depend_de": [
+        "types_donnees",
+        "indicateurs"
+      ],
+      "couche": "2b"
+    },
+    {
+      "id": "flux_bougies",
+      "responsabilite": "Enveloppe : ticks et connexions → bougies M15 et H1 enrichies et état de trou par symbole.",
+      "depend_de": [
+        "types_donnees",
+        "sessions_londres",
+        "constructeur_bougies",
+        "couverture_flux",
+        "validation_bougies",
+        "etat_indicateurs"
+      ],
+      "couche": "3"
+    }
+  ],
+  "externes": [
+    {
+      "id": "horloge",
+      "imports": [
+        "time"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "fichiers",
+      "imports": [
+        "os",
+        "pathlib",
+        "io",
+        "shutil",
+        "tempfile",
+        "glob",
+        "gzip"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "reseau",
+      "imports": [
+        "socket",
+        "ssl",
+        "http",
+        "urllib"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "sqlite3",
+      "imports": [
+        "sqlite3"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "threading",
+      "imports": [
+        "threading",
+        "concurrent",
+        "queue"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "processus",
+      "imports": [
+        "subprocess",
+        "multiprocessing"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "aleatoire",
+      "imports": [
+        "random",
+        "secrets"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "chargement_dynamique",
+      "imports": [
+        "importlib"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "MetaTrader5",
+      "imports": [
+        "MetaTrader5"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "reference",
+      "imports": [
+        "reference"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "paquets_aval",
+      "imports": [
+        "xpbots.london",
+        "xpbots.london_v1",
+        "xpbots.execution",
+        "xpbots.fondamental",
+        "xpbots.contexte_ia",
+        "xpbots.orchestration",
+        "xpbots.rejeu",
+        "xpbots.infra",
+        "xpbots.app",
+        "xpbots.service_ia",
+        "xpbots.donnees_historiques",
+        "xpbots.donnees.squelette"
+      ],
+      "couches_autorisees": []
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "strict",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}

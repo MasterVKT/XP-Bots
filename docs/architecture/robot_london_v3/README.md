@@ -1,13 +1,14 @@
 # Plan d'implémentation intégrale du robot 2 — London Breakout M15 (`LONDON_V3`)
 
-> Plan directeur, version **1.4.3** du **5 novembre 2026**. Statut : **validé par l'utilisateur le
+> Plan directeur, version **1.4.4** du **6 novembre 2026**. Statut : **validé par l'utilisateur le
 > 05/11/2026** ; couverture vérifiée mécaniquement par `python tools/verifier_plan_london.py`
 > ([document 06](06_verification_exhaustive.md)). Toutes les décisions de conception et les douze arbitrages de
 > spécification sont arrêtés. Les phases 0 à 12 s'exécutent entièrement dans le conteneur de développement, sans
 > autre action humaine que la demande de passage à la phase suivante ; les autres **actions humaines** (§5) sont
-> regroupées dans la phase 13. Phases 0, 1 et 2 terminées le 05/11/2026 (structure MCL composite dans
-> [`mcl/robot-london-v3/`](../../../mcl/robot-london-v3/PLAN-MCL.md), squelette déployable,
-> [registre des coutures](../../../mcl/squelette/COUTURES.md), noyau figé dans [`mcl/noyau/`](../../../mcl/noyau/PLAN-MCL.md)) ;
+> regroupées dans la phase 13. Phases 0, 1 et 2 terminées le 05/11/2026, phase 3 le 06/11/2026 (structure MCL
+> composite dans [`mcl/robot-london-v3/`](../../../mcl/robot-london-v3/PLAN-MCL.md), squelette déployable,
+> [registre des coutures](../../../mcl/squelette/COUTURES.md), noyau figé dans [`mcl/noyau/`](../../../mcl/noyau/PLAN-MCL.md),
+> bougies M15 et H1 causales et enrichies figées dans [`mcl/donnees-temps/`](../../../mcl/donnees-temps/PLAN-MCL.md)) ;
 > aucune logique de méthode, de risque ou d'exécution n'existe encore. Ce plan organise la construction ;
 > il n'ajoute, ne retire et ne modifie aucune règle métier, aucun seuil et aucun coût.
 
@@ -248,3 +249,4 @@ Procédure complète de chacune : [document 07](07_procedures_humaines.md).
 | 1.4.1 | 05/11/2026 | Phase 0 exécutée : dossier MCL composite `mcl/robot-london-v3/` (carte au grain des paquets, divergence en mode strict, frontières externes et couches autorisées) ; guide, règles du projet, README et skill de planification alignés sur D-01 et D-02 ; phrases périmées corrigées (document 02 : sondes et intégration continue ; document 03 : vérification d'architecture ; document 04 : commande de la carte composite et suivi des phases) |
 | 1.4.2 | 05/11/2026 | Phase 1 exécutée : squelette composite déployable (segments S1 à S7, lanceur `tools/run_robot_tests.py`, fabrique de ticks, test de bout en bout, gardes de pureté et de carte composite, registre des coutures) ; document 01, §5 (dossier `tests/robot/transverses/`) et document 03, §2 et §8 (options du lanceur, garde de pureté étendue au chargement dynamique de modules) |
 | 1.4.3 | 05/11/2026 | Phase 2 exécutée : artefact `noyau` (sept couches figées) et couture du squelette ; document 01, §9.3 : causes finales de `SIGNAL_EXPIRED` énumérées (`COTATION_INVALIDE`, `AUCUNE_COTATION`, P-08) et détails réservés aux segments S3 et S4 du squelette, l'énumération versionnée du noyau étant comparée à ce tableau dans les deux sens |
+| 1.4.4 | 06/11/2026 | Phase 3 exécutée : artefact `donnees-temps` (huit couches figées, défigeage `extension` de 1a pour la reprise exacte, défigeage `correction` de 2b pour l'empreinte chaînée) et couture S2 ; contrat de stratégie du squelette `sur_bougie(BougieEnrichie)` ; document 02, §6.2 : dépendances directes réelles des unités 2a, 2b et 3 déclarées, export d'état de `constructeur_bougies` et sortie de `etat_indicateurs` précisés |
