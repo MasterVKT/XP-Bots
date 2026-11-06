@@ -12,17 +12,26 @@ sources métier sans les remplacer. Une skill ne recopie pas ces règles : elle 
 | [Paramètres techniques](../config/parametres_figes_v3.json), [paramètres IA](../config/parametres_IA_integration_v1.json) | Exports figés | Les citer, ne jamais recopier ni modifier leurs valeurs |
 | [Schémas](../schemas/), [prompts](../prompts/prompts_IA_v1.json) | Contrats JSON et prompts exacts de l'IA métier | Concordance obligatoire avec les deux spécifications |
 | [Fonctions de référence](../reference/README.md) | Calculs et contrats de comparaison hors ligne | Vérifier le code et ses limites avant de guider un portage |
-| `tests/check_technical.py`, `tests/check_llm.py`, `tools/verify_project.py` | Contrôles techniques, IA et documentaires | Seules commandes métier existantes ; ce ne sont pas des tests de production |
+| `tests/check_technical.py`, `tests/check_llm.py`, `tools/verify_project.py` | Contrôles techniques, IA et documentaires des ressources de référence | Ce ne sont pas des tests du robot |
+| `tools/run_robot_tests.py`, `tests/robot/` | Suite du robot en construction (squelette, gardes transverses, puis tests MCL de chaque couche) | Rejouée à chaque gate MCL, à chaque fin de phase et avant chaque commit (D-10) |
 | [Guide](../docs/architecture/GUIDE_IMPLEMENTATION.md), [données](../docs/data/03_Donnees_Historiques_Requises_et_Validation.md), [décision](../docs/decisions/00_Decision_Conception_et_Faisabilite_V3.md) | Construction, données requises, décisions | Orientent conception et validation |
+| [Plan du robot London](../docs/architecture/robot_london_v3/README.md), [plan MCL composite](../mcl/robot-london-v3/PLAN-MCL.md) | Implémentation de `LONDON_V3` et des composants partagés par phases MCL ; décisions D-01 à D-18 | Une phase à la fois, sur demande explicite ; n'ajoute ni ne modifie aucune règle métier |
 | [Preuves conservées](../docs/validation/README.md) | Empreintes, provenance, diagnostics datés | Historique intouchable ; nouveaux rapports dans `.local/reports/` |
 | [Références de contexte](../docs/references/README.md) | Textes historiques | Jamais des instructions normatives |
 
 Le dépôt contient des spécifications, des exports et des fonctions de référence. Les robots de plateforme,
 l'adaptateur courtier, le service HTTP LLM et l'analyse fondamentale externe restent à implémenter. Pour le
-robot 1, Python 3.13 et MT5 sont arrêtés et sa construction suit
-[son plan d'implémentation](../docs/architecture/PLAN_IMPLEMENTATION_ROBOT_EMA_V3.md) ; seul son squelette
-composite existe dans `src/xpbots/`. Ne jamais présenter un composant comme existant sans l'avoir vu dans le
-code.
+robot 1 (`EMA_V3`) comme pour le robot London (`LONDON_V3`), Python 3.13 et MT5 sont arrêtés et chaque robot se construit
+selon son propre plan et sa méthode MCL, dans `src/xpbots/` :
+
+- robot 1 (`EMA_V3`) : [plan d'implémentation](../docs/architecture/PLAN_IMPLEMENTATION_ROBOT_EMA_V3.md) ; état MCL dans `mcl/`
+  (`robot-ema-v3` et artefacts voisins) ;
+- robot London (`LONDON_V3`) : plan [robot_london_v3](../docs/architecture/robot_london_v3/README.md) (décisions D-01 et D-02 :
+  paquet officiel `MetaTrader5`) ; état MCL dans `mcl/robot-london-v3/`, `mcl/noyau/` et `mcl/london-donnees-temps/`.
+
+Les deux lignées coexistent sans module commun : `src/xpbots/noyau/` réunit deux familles de modules distinctes, et les dossiers
+MCL et de tests propres au London portent le préfixe `london-` ou `london_` lorsque le robot 1 occupait déjà le nom
+(`donnees-temps`). Ne jamais présenter un composant comme existant sans l'avoir vu dans le code.
 
 ## 2. Invariants métier à préserver
 

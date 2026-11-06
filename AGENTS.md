@@ -60,7 +60,8 @@ en échec, et impose au plus deux passes correctives.
 
 - Gouvernance des agents : `python .agents/skills/xp-bots-maintain-agent-skills/scripts/run_governance_suite.py`.
 - Contrats et ressources métier : `python tools/verify_project.py` (relance déjà les deux suites de
-  référence). Aucun de ces contrôles n'appelle une API, un modèle ou un courtier.
+  référence). Robots en construction : `python tools/run_robot_tests.py` (suite intégrale des deux robots ; lanceur du
+  London : `tools/run_london_tests.py`, voir `docs/architecture/COEXISTENCE_ROBOT1_LONDON.md`). Aucun de ces contrôles n'appelle une API, un modèle ou un courtier.
 - Une exécution distante (cloud, CI, agent de dépôt) ne voit que les fichiers commités.
 
 La compatibilité par outil, l'activation des hooks et les limites connues sont décrites dans

@@ -1,6 +1,6 @@
 # Guide d'implémentation des deux robots
 
-État du dépôt au 4 novembre 2026 : spécifications 3.1.0, paramètres figés, contrats et fonctions de référence disponibles. Aucun robot de plateforme, service HTTP LLM, registre de budget transactionnel ou adaptateur courtier n'est encore fourni. Ce guide oriente la construction ; les deux spécifications autonomes fixent le comportement détaillé.
+État du dépôt au 6 novembre 2026 : spécifications 3.1.0, paramètres figés, contrats et fonctions de référence disponibles ; plan d'implémentation du robot London arrêté, structure MCL composite posée dans `mcl/robot-london-v3/`, squelette composite déployable, noyau partagé et données de marché figés dans `src/xpbots/` (types, configuration figée, journal C09, bougies M15 et H1 causales enrichies de TR, ATR et repères de Londres ; aucune logique de méthode, de risque ni d'exécution). Aucun robot de plateforme, service HTTP LLM, registre de budget transactionnel ou adaptateur courtier n'est encore fourni. Ce guide oriente la construction ; les deux spécifications autonomes fixent le comportement détaillé.
 
 Mise à jour du 5 novembre 2026 : la construction du robot 1 (Python 3.13, MT5) suit le [plan d'implémentation du robot 1](PLAN_IMPLEMENTATION_ROBOT_EMA_V3.md) ; son squelette composite existe dans `src/xpbots/`, sans adaptateur courtier réel. Le robot 2 reste à planifier.
 
@@ -39,10 +39,12 @@ L'analyse fondamentale externe et le complément LLM ont des rôles distincts. U
 
 Les dates et champs de collecte sont décrits dans les [données historiques requises](../data/03_Donnees_Historiques_Requises_et_Validation.md). Un calendrier de collecte ne prouve pas à lui seul que l'effectif de validation sera atteint.
 
+Le [plan d'implémentation intégrale du robot London](robot_london_v3/README.md) (`LONDON_V3`, version 1.4.4 du 6 novembre 2026, validé par l'utilisateur) décline cet ordre en phases MCL avec points d'arrêt ; ses décisions et arbitrages de spécification sont arrêtés. Ses phases 0 à 12 se construisent dans le conteneur de développement contre des contrats de frontière finalisés tôt ; les actions réservées à l'humain (poste, compte de démonstration, données, autorisation des API, annotation, mises en service) sont regroupées dans sa phase 13 de qualification.
+
 ## Emploi des fonctions de référence
 
 `reference/technical.py` fournit les indicateurs et détecteurs de configurations, sans portefeuille, dimensionnement complet ou modèle de fills. `reference/llm_contracts.py` illustre validation textuelle, causalité, veto et bornes de coût, sans client HTTP, verrouillage concurrent du budget ou persistance de production. Leur [notice](../../reference/README.md) précise les limites.
 
-Les dépendances de `requirements-dev.txt` concernent ces contrôles Python. Le robot 1 n'utilise que la bibliothèque standard ; le paquet `MetaTrader5` sera réservé à son infrastructure (plan, section 1). Aucun adaptateur factice n'a été ajouté.
+Les dépendances de `requirements-dev.txt` concernent ces contrôles Python. Deux robots sont en construction, chacun selon son plan : le robot 1 (`EMA_V3`, [plan](PLAN_IMPLEMENTATION_ROBOT_EMA_V3.md)) n'utilise que la bibliothèque standard, le paquet `MetaTrader5` étant réservé à son infrastructure (plan, section 1) ; pour le robot London (`LONDON_V3`, [plan](robot_london_v3/README.md)), le langage et la plateforme sont arrêtés depuis le 5 novembre 2026 : Python 3.13 et MT5, piloté par le paquet officiel `MetaTrader5`, avec les sources dans `src/xpbots/` (décisions D-01 et D-02) ; ses dépendances d'exécution suivent sa décision D-05. Aucun adaptateur factice n'a été ajouté : le code naît phase par phase, selon chaque plan, et l'état MCL de chaque artefact est tenu dans `mcl/`.
 
 Pour les futurs historiques, traces et états privés, utiliser les emplacements exclus `data/raw/`, `data/cache/`, `data/private/`, `runtime/`, `logs/` et `.local/`. Les résultats synthétiques servant de fixtures peuvent être ajoutés explicitement dans `tests/` après revue.

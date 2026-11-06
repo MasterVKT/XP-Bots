@@ -1,0 +1,304 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "noyau",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": "Types et règles partagés du robot London et du futur robot EMA : instants, nombres décimaux sur grille, configuration figée, marché, instrument et compte C04, domaine (signaux, issues, motifs C09), journal C09. Pur, sans entrée-sortie."
+  },
+  "langage": "python",
+  "sources": [
+    "src"
+  ],
+  "exclure": [],
+  "couches": [
+    {
+      "id": "0a",
+      "profondeur": 0,
+      "nom": "instant",
+      "chemins": [
+        "src/xpbots/noyau/c0a_temps"
+      ],
+      "imports": [
+        "xpbots.noyau.c0a_temps"
+      ],
+      "contrats": [
+        "mcl/noyau/contrats/couche-0a.md",
+        "src/xpbots/noyau/c0a_temps/__init__.py",
+        "tests/robot/noyau/test_cat1_c0a_temps.py"
+      ]
+    },
+    {
+      "id": "0b",
+      "profondeur": 0,
+      "nom": "nombres",
+      "chemins": [
+        "src/xpbots/noyau/c0b_nombres"
+      ],
+      "imports": [
+        "xpbots.noyau.c0b_nombres"
+      ],
+      "contrats": [
+        "mcl/noyau/contrats/couche-0b.md",
+        "src/xpbots/noyau/c0b_nombres/__init__.py",
+        "tests/robot/noyau/test_cat1_c0b_nombres.py"
+      ]
+    },
+    {
+      "id": "0c",
+      "profondeur": 0,
+      "nom": "configuration",
+      "chemins": [
+        "src/xpbots/noyau/c0c_configuration"
+      ],
+      "imports": [
+        "xpbots.noyau.c0c_configuration"
+      ],
+      "contrats": [
+        "mcl/noyau/contrats/couche-0c.md",
+        "src/xpbots/noyau/c0c_configuration/__init__.py",
+        "tests/robot/noyau/test_cat1_c0c_configuration.py"
+      ]
+    },
+    {
+      "id": "1a",
+      "profondeur": 1,
+      "nom": "marche",
+      "chemins": [
+        "src/xpbots/noyau/c1a_marche"
+      ],
+      "imports": [
+        "xpbots.noyau.c1a_marche"
+      ],
+      "contrats": [
+        "mcl/noyau/contrats/couche-1a.md",
+        "src/xpbots/noyau/c1a_marche/__init__.py",
+        "tests/robot/noyau/test_cat1_c1a_marche.py",
+        "tests/robot/noyau/test_cat2_c1a_marche.py"
+      ]
+    },
+    {
+      "id": "1b",
+      "profondeur": 1,
+      "nom": "instrument",
+      "chemins": [
+        "src/xpbots/noyau/c1b_instrument"
+      ],
+      "imports": [
+        "xpbots.noyau.c1b_instrument"
+      ],
+      "contrats": [
+        "mcl/noyau/contrats/couche-1b.md",
+        "src/xpbots/noyau/c1b_instrument/__init__.py",
+        "tests/robot/noyau/test_cat1_c1b_instrument.py",
+        "tests/robot/noyau/test_cat2_c1b_instrument.py"
+      ]
+    },
+    {
+      "id": "1c",
+      "profondeur": 1,
+      "nom": "domaine",
+      "chemins": [
+        "src/xpbots/noyau/c1c_domaine"
+      ],
+      "imports": [
+        "xpbots.noyau.c1c_domaine"
+      ],
+      "contrats": [
+        "mcl/noyau/contrats/couche-1c.md",
+        "src/xpbots/noyau/c1c_domaine/__init__.py",
+        "tests/robot/noyau/test_cat1_c1c_domaine.py",
+        "tests/robot/noyau/test_cat2_c1c_domaine.py"
+      ]
+    },
+    {
+      "id": "2",
+      "profondeur": 2,
+      "nom": "journal",
+      "chemins": [
+        "src/xpbots/noyau/c2_journal"
+      ],
+      "imports": [
+        "xpbots.noyau.c2_journal"
+      ],
+      "contrats": [
+        "mcl/noyau/contrats/couche-2.md",
+        "src/xpbots/noyau/c2_journal/__init__.py",
+        "tests/robot/noyau/test_cat1_c2_journal.py",
+        "tests/robot/noyau/test_cat2_c2_journal.py"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "instant",
+      "responsabilite": "Représenter un instant UTC en millisecondes entières et ordonner les événements de façon stable.",
+      "depend_de": [],
+      "couche": "0a"
+    },
+    {
+      "id": "nombres",
+      "responsabilite": "Convertir les flottants du courtier en décimaux sûrs et ramener une valeur sur une grille avec contrôle d'erreur.",
+      "depend_de": [],
+      "couche": "0b"
+    },
+    {
+      "id": "configuration",
+      "responsabilite": "Valider les octets des deux exports figés et exposer des paramètres typés immuables.",
+      "depend_de": [],
+      "couche": "0c"
+    },
+    {
+      "id": "marche",
+      "responsabilite": "Représenter ticks, cotations et bougies Bid validés.",
+      "depend_de": [
+        "instant",
+        "nombres"
+      ],
+      "couche": "1a"
+    },
+    {
+      "id": "instrument",
+      "responsabilite": "Représenter et valider les profils d'instrument et de compte de C04, sans champ manquant valant zéro.",
+      "depend_de": [
+        "instant",
+        "nombres",
+        "configuration"
+      ],
+      "couche": "1b"
+    },
+    {
+      "id": "domaine",
+      "responsabilite": "Définir sens, signal technique, clé d'intention, issues, décisions des contrôles et motifs fermés.",
+      "depend_de": [
+        "instant"
+      ],
+      "couche": "1c"
+    },
+    {
+      "id": "journal",
+      "responsabilite": "Définir les enregistrements C09 et leur sérialisation canonique.",
+      "depend_de": [
+        "instant",
+        "marche",
+        "instrument",
+        "domaine",
+        "configuration"
+      ],
+      "couche": "2"
+    }
+  ],
+  "externes": [
+    {
+      "id": "horloge",
+      "imports": [
+        "time"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "fichiers",
+      "imports": [
+        "os",
+        "pathlib",
+        "io",
+        "shutil",
+        "tempfile",
+        "glob",
+        "gzip"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "reseau",
+      "imports": [
+        "socket",
+        "ssl",
+        "http",
+        "urllib"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "sqlite3",
+      "imports": [
+        "sqlite3"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "threading",
+      "imports": [
+        "threading",
+        "concurrent",
+        "queue"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "processus",
+      "imports": [
+        "subprocess",
+        "multiprocessing"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "aleatoire",
+      "imports": [
+        "random",
+        "secrets"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "chargement_dynamique",
+      "imports": [
+        "importlib"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "MetaTrader5",
+      "imports": [
+        "MetaTrader5"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "reference",
+      "imports": [
+        "reference"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "paquets_aval",
+      "imports": [
+        "xpbots.donnees",
+        "xpbots.london",
+        "xpbots.london_v1",
+        "xpbots.execution",
+        "xpbots.fondamental",
+        "xpbots.contexte_ia",
+        "xpbots.orchestration",
+        "xpbots.rejeu",
+        "xpbots.infra",
+        "xpbots.app",
+        "xpbots.service_ia",
+        "xpbots.donnees_historiques",
+        "xpbots.noyau.squelette"
+      ],
+      "couches_autorisees": []
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "strict",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}

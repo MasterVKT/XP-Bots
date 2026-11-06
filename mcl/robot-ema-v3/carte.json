@@ -10,7 +10,16 @@
   "sources": [
     "src"
   ],
-  "exclure": [],
+  "exclure": [
+    "src/xpbots/app/rejeu_squelette.py",
+    "src/xpbots/donnees/*",
+    "src/xpbots/execution/squelette.py",
+    "src/xpbots/infra/*",
+    "src/xpbots/london/*",
+    "src/xpbots/noyau/c[0-9]*",
+    "src/xpbots/orchestration/*",
+    "src/xpbots/rejeu/*"
+  ],
   "couches": [
     {
       "id": "0",

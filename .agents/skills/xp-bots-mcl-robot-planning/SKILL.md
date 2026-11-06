@@ -28,9 +28,11 @@ d'acceptation propres au projet. La cartographie proposée est une **hypothèse*
 1. **Périmètre.** Nommer l'artefact demandé et son échelle. Le système complet (deux robots et services
    partagés) est une application : mode composite, squelette déployable puis un artefact MCL par composant. Un
    moteur seul est un composant. L'ordre de livraison vient du guide d'implémentation, jamais de MCL.
-2. **Décisions ouvertes.** Le langage et la plateforme ne sont pas arrêtés : demander à l'humain la plateforme
-   (par exemple MT5/MQL5 ou un autre runtime), le langage et le répertoire des sources avant toute écriture de
-   `carte.json` ; consigner la réponse dans la section 2 du plan.
+2. **Décisions ouvertes.** Relire d'abord les décisions consignées : pour le robot London et les composants
+   partagés, plateforme, langage et répertoire des sources sont arrêtés (D-01 et D-02 de
+   `docs/architecture/robot_london_v3/README.md` : Python 3.13 et MT5, `src/xpbots/`). Pour un artefact sans
+   décision consignée (le robot EMA, par exemple), demander à l'humain la plateforme, le langage et le
+   répertoire des sources avant toute écriture de `carte.json` ; consigner la réponse dans la section 2 du plan.
 3. **Applicabilité.** Passer le test en trois questions au niveau de l'artefact : implémenter une spécification
    déterministe figée est applicable ; chercher une variante plus rentable est exploratoire et hors de ce plan.
 4. **Initialiser** (mode écriture seulement) :

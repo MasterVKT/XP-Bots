@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 
 from robot.outils import RACINE, SRC
+from robot.outils.lignees import LONDON, appartient
 
 # Valeurs autorisées malgré une égalité fortuite avec une valeur de config/, avec leur justification.
 NOMBRES_AUTORISES = {
@@ -62,7 +63,9 @@ def valeurs_normatives():
 
 
 def fichiers_source():
-    return sorted(p for p in (SRC / 'xpbots').rglob('*.py') if '__pycache__' not in p.parts)
+    """Sources du robot 1 : les fichiers propres au robot London (registre `robot.outils.lignees`) sont ignorés."""
+    return sorted(p for p in (SRC / 'xpbots').rglob('*.py')
+                  if '__pycache__' not in p.parts and not appartient(p.relative_to(RACINE).as_posix(), LONDON))
 
 
 class TestReglesTransverses(unittest.TestCase):

@@ -22,7 +22,7 @@ ticks rejoués (fixture) -> bougie M15 -> stratégie neutre (NO_SETUP) -> coordi
 
 ## 2. Artefacts, unités candidates et frontières
 
-### A. `donnees-temps` — temps, bougies et indicateurs (C03)
+### A. `london-donnees-temps` — temps, bougies et indicateurs (C03)
 
 | Unité | Responsabilité | Dépend de | Couche proposée |
 |---|---|---|---|

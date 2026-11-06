@@ -1,14 +1,14 @@
-"""Aides communes des tests du robot : chemins, lecture de la spécification, fabriques de valeurs valides."""
+"""Aides des tests du robot 1 (EMA_V3), réexportées par `robot.outils` : chemins, lecture de la spécification, fabriques de valeurs valides."""
 from __future__ import annotations
 
 import re
 from decimal import Decimal
 from pathlib import Path
 
-RACINE = Path(__file__).resolve().parents[2]
+RACINE = Path(__file__).resolve().parents[3]
 SRC = RACINE / 'src'
 SPECIFICATION_EMA = RACINE / 'livrables' / 'strategies_m15' / '01_Triple_EMA_RSI_Repli_M15_Specification_IA.md'
-FIXTURES = Path(__file__).resolve().parent / 'fixtures'
+FIXTURES = Path(__file__).resolve().parents[1] / 'fixtures'
 FIXTURE_TICKS = FIXTURES / 'squelette_ticks.csv'
 FIXTURE_MANIFESTE = FIXTURES / 'squelette_manifeste.json'
 

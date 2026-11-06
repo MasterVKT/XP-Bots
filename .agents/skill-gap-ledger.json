@@ -5,13 +5,14 @@
     {
       "id": "publication-git-avance-de-master-et-synchronisation-du-depot-local",
       "label": "Publication Git : avance de master et synchronisation du dépôt local",
-      "occurrences": 1,
+      "occurrences": 2,
       "first_seen": "2026-11-05",
-      "last_seen": "2026-11-05",
+      "last_seen": "2026-11-06",
       "evidence": [
-        "2026-11-05 : fast-forward de master vers b6395bf, push, commandes de synchronisation du poste Windows ; précédent : fusion du 4 novembre (NETTOYAGE_ET_MERGE.md)"
+        "2026-11-05 : fast-forward de master vers b6395bf, push, commandes de synchronisation du poste Windows ; précédent : fusion du 4 novembre (NETTOYAGE_ET_MERGE.md)",
+        "2026-11-06 : synchro cloud et local sur master ; intégration de deux branches cloud parallèles (fusion, collisions de chemins MCL, refigeage, lanceurs) ; commandes de synchro du poste local"
       ],
-      "decision": "consignee",
+      "decision": "promue",
       "skill": null
     },
     {
@@ -22,6 +23,18 @@
       "last_seen": "2026-11-05",
       "evidence": [
         "2026-11-05 : création de .github/workflows/robot-ci.yml, gate du squelette du robot 1 (phase 1)"
+      ],
+      "decision": "consignee",
+      "skill": null
+    },
+    {
+      "id": "integration-python-du-paquet-metatrader5-base-horaire-des-ticks-order-send-bloqu",
+      "label": "Intégration Python du paquet MetaTrader5 (base horaire des ticks, order_send bloquant, calendrier et séances absents)",
+      "occurrences": 1,
+      "first_seen": "2026-11-05",
+      "last_seen": "2026-11-05",
+      "evidence": [
+        "2026-11-05 : plan du robot London en Python + MT5 ; xp-bots-broker-account-qualification couvre C04 et MQL5, pas l'API Python ; extension envisagée en phase 11"
       ],
       "decision": "consignee",
       "skill": null

@@ -8,7 +8,7 @@ Le contexte retenu est un compte standard en USD de **100 USD**, avec levier **1
 
 1. Lire la [décision de conception et de faisabilité](docs/decisions/00_Decision_Conception_et_Faisabilite_V3.md).
 2. Utiliser la spécification autonome de la méthode concernée : [Triple EMA + RSI + repli](livrables/strategies_m15/01_Triple_EMA_RSI_Repli_M15_Specification_IA.md) ou [London breakout](livrables/strategies_m15/02_London_Breakout_M15_Specification_IA.md). Ces deux chemins Git historiques contiennent désormais la version 3.1.0.
-3. Suivre le [guide d'implémentation](docs/architecture/GUIDE_IMPLEMENTATION.md), le [workflow LLM](docs/architecture/04_Integration_LLM_API_Choix_Couts_Validation.md) et les [données nécessaires à la validation](docs/data/03_Donnees_Historiques_Requises_et_Validation.md).
+3. Suivre le [guide d'implémentation](docs/architecture/GUIDE_IMPLEMENTATION.md) (et, pour le robot London, son [plan d'implémentation](docs/architecture/robot_london_v3/README.md)), le [workflow LLM](docs/architecture/04_Integration_LLM_API_Choix_Couts_Validation.md) et les [données nécessaires à la validation](docs/data/03_Donnees_Historiques_Requises_et_Validation.md).
 4. Exécuter les contrôles ci-dessous avant toute évolution.
 
 Les spécifications et les fichiers JSON doivent rester cohérents. Toute divergence est un défaut à résoudre explicitement. Les documents de `docs/references/` apportent du contexte ; ils ne remplacent pas les règles actuelles et ne constituent pas des instructions à exécuter.
@@ -24,9 +24,9 @@ Les spécifications et les fichiers JSON doivent rester cohérents. Toute diverg
 | `reference/` | [Fonctions de référence](reference/README.md) sans connexion au courtier ni inférence |
 | `tests/`, `tools/` | Contrôles des contrats, calculs, documents et préparation du merge |
 | `docs/validation/` | [Portée des contrôles et preuves conservées](docs/validation/README.md) |
+| `mcl/` | État MCL de la construction des deux robots : un dossier par artefact (carte, contrats, journal des gates et des gels), plans composites [robot 1](mcl/robot-ema-v3/PLAN-MCL.md) et [robot London](mcl/robot-london-v3/PLAN-MCL.md) ; noms et propriété : [coexistence des deux lignées](docs/architecture/COEXISTENCE_ROBOT1_LONDON.md) |
 | `.agents/` | Gouvernance des agents AI de développement : skills, hooks, règles et [compatibilité](.agents/COMPATIBILITY.md) |
-| `src/xpbots/`, `tests/robot/` | Code du robot 1 en construction et sa suite de tests (bibliothèque standard) |
-| `mcl/` | Cartes des couches, contrats et journaux de construction MCL du robot 1 |
+| `src/xpbots/`, `tests/robot/` | Code des deux robots en construction et leur suite de tests (bibliothèque standard) ; registre de propriété des fichiers dans `tests/robot/outils/lignees.py` |
 
 L'IA utilise exclusivement des **API distantes**, avec un service partagé par les deux méthodes. Le mode initial est `PAPER_AB`, les routes gratuites sont prioritaires et le secours payant est désactivé. Plafonds partagés : **15 USD/mois au total**, dont **3 USD/mois maximum pour les API payantes**. Aucun modèle local n'est admis. Le complément IA n'est jamais une permission fondamentale ni un générateur d'ordres.
 
@@ -37,7 +37,13 @@ Utiliser Python **3.13**. Les contrôles IA et documentaires utilisent la biblio
 ```powershell
 python -m pip install -r requirements-dev.txt
 python tools/verify_project.py
+python tools/run_robot_tests.py
 ```
+
+La seconde commande vérifie les ressources de référence ; la troisième exécute la suite intégrale des deux robots en
+construction (lanceur du robot 1), dont les tests de bout en bout des squelettes. Le robot London a son propre lanceur,
+`python tools/run_london_tests.py` (sélection par artefact, couche et catégorie ; mêmes tests, convention de nommage
+différente) : voir [la coexistence des deux lignées](docs/architecture/COEXISTENCE_ROBOT1_LONDON.md).
 
 Ces commandes ne passent aucun ordre et n'appellent aucune API. Les séries de contrôle sont synthétiques ; les anciens caches de prix ne sont pas nécessaires. Le rapport de la dernière vérification se trouve dans `.local/reports/verification_projet.json`, exclu de Git. Une copie datée de l'audit de réorganisation est conservée dans [docs/validation/verification_projet.json](docs/validation/verification_projet.json).
 

@@ -1,0 +1,403 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "robot-london-v3",
+    "echelle": "application",
+    "mode": "composite",
+    "description": "Robot London Breakout M15 LONDON_V3 et composants partagés, en mode composite : squelette déployable puis un artefact MCL par composant. Carte au grain des paquets, pour analyser et verifier seulement ; chaque artefact a sa propre carte dans mcl/<artefact>/ (plan : docs/architecture/robot_london_v3/)."
+  },
+  "langage": "python",
+  "sources": [
+    "src"
+  ],
+  "exclure": [
+    "src/xpbots/app/rejeu.py",
+    "src/xpbots/app/segments_minimaux.py",
+    "src/xpbots/donnees_temps/*",
+    "src/xpbots/moteur_ema/*",
+    "src/xpbots/noyau/config.py",
+    "src/xpbots/noyau/decisions.py",
+    "src/xpbots/noyau/journal_schema.py",
+    "src/xpbots/noyau/json_canonique.py",
+    "src/xpbots/noyau/marche.py",
+    "src/xpbots/noyau/ports.py",
+    "src/xpbots/noyau/temps.py"
+  ],
+  "couches": [
+    {
+      "id": "0",
+      "profondeur": 0,
+      "nom": "noyau",
+      "chemins": [
+        "src/xpbots/noyau"
+      ],
+      "imports": [
+        "xpbots.noyau"
+      ],
+      "contrats": [
+        "mcl/noyau/contrats/*.md"
+      ]
+    },
+    {
+      "id": "1",
+      "profondeur": 1,
+      "nom": "london-donnees-temps",
+      "chemins": [
+        "src/xpbots/donnees"
+      ],
+      "imports": [
+        "xpbots.donnees"
+      ],
+      "contrats": [
+        "mcl/london-donnees-temps/contrats/*.md"
+      ]
+    },
+    {
+      "id": "2a",
+      "profondeur": 2,
+      "nom": "moteur-london",
+      "chemins": [
+        "src/xpbots/london"
+      ],
+      "imports": [
+        "xpbots.london"
+      ],
+      "contrats": [
+        "mcl/moteur-london/contrats/*.md"
+      ]
+    },
+    {
+      "id": "2b",
+      "profondeur": 2,
+      "nom": "execution-coordinateur",
+      "chemins": [
+        "src/xpbots/execution"
+      ],
+      "imports": [
+        "xpbots.execution"
+      ],
+      "contrats": [
+        "mcl/execution-coordinateur/contrats/*.md"
+      ]
+    },
+    {
+      "id": "3a",
+      "profondeur": 3,
+      "nom": "controles-fondamentaux",
+      "chemins": [
+        "src/xpbots/fondamental"
+      ],
+      "imports": [
+        "xpbots.fondamental"
+      ],
+      "contrats": [
+        "mcl/controles-fondamentaux/contrats/*.md"
+      ]
+    },
+    {
+      "id": "3b",
+      "profondeur": 3,
+      "nom": "contexte-ia",
+      "chemins": [
+        "src/xpbots/contexte_ia"
+      ],
+      "imports": [
+        "xpbots.contexte_ia"
+      ],
+      "contrats": [
+        "mcl/contexte-ia/contrats/*.md"
+      ]
+    },
+    {
+      "id": "3c",
+      "profondeur": 3,
+      "nom": "infrastructure",
+      "chemins": [
+        "src/xpbots/infra"
+      ],
+      "imports": [
+        "xpbots.infra"
+      ],
+      "contrats": [
+        "mcl/infrastructure/contrats/*.md"
+      ]
+    },
+    {
+      "id": "4a",
+      "profondeur": 4,
+      "nom": "orchestration",
+      "chemins": [
+        "src/xpbots/orchestration"
+      ],
+      "imports": [
+        "xpbots.orchestration"
+      ],
+      "contrats": [
+        "mcl/orchestration/contrats/*.md"
+      ]
+    },
+    {
+      "id": "4b",
+      "profondeur": 4,
+      "nom": "service-ia",
+      "chemins": [
+        "src/xpbots/service_ia"
+      ],
+      "imports": [
+        "xpbots.service_ia"
+      ],
+      "contrats": [
+        "mcl/service-ia/contrats/*.md"
+      ]
+    },
+    {
+      "id": "5",
+      "profondeur": 5,
+      "nom": "journal-rejeu",
+      "chemins": [
+        "src/xpbots/rejeu"
+      ],
+      "imports": [
+        "xpbots.rejeu"
+      ],
+      "contrats": [
+        "mcl/journal-rejeu/contrats/*.md"
+      ]
+    },
+    {
+      "id": "6",
+      "profondeur": 6,
+      "nom": "points-entree",
+      "chemins": [
+        "src/xpbots/app"
+      ],
+      "imports": [
+        "xpbots.app"
+      ],
+      "contrats": [
+        "mcl/points-entree/contrats/*.md"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "noyau",
+      "responsabilite": "Fournir les types et règles partagés (temps, nombres, configuration figée, marché, instrument, domaine, journal).",
+      "depend_de": [],
+      "couche": "0"
+    },
+    {
+      "id": "london-donnees-temps",
+      "responsabilite": "Construire les bougies M15 et H1 causales, validées et enrichies d'indicateurs à partir des ticks (C03).",
+      "depend_de": [
+        "noyau"
+      ],
+      "couche": "1"
+    },
+    {
+      "id": "moteur-london",
+      "responsabilite": "Appliquer la méthode S02 de façon pure et indépendante, des bougies aux signaux techniques.",
+      "depend_de": [
+        "noyau",
+        "london-donnees-temps"
+      ],
+      "couche": "2a"
+    },
+    {
+      "id": "execution-coordinateur",
+      "responsabilite": "Transformer un signal en ordre protégé dimensionné et coordonner risque, marge et positions du compte partagé (C06 à C08).",
+      "depend_de": [
+        "noyau",
+        "london-donnees-temps"
+      ],
+      "couche": "2b"
+    },
+    {
+      "id": "controles-fondamentaux",
+      "responsabilite": "Évaluer les permissions fondamentales externes et la garde d'annonces (C05).",
+      "depend_de": [
+        "noyau",
+        "execution-coordinateur"
+      ],
+      "couche": "3a"
+    },
+    {
+      "id": "contexte-ia",
+      "responsabilite": "Lire le snapshot IA, tenir le cache des vetos et rendre BLOCK ou NEUTRAL (A07, A10, A12).",
+      "depend_de": [
+        "noyau",
+        "execution-coordinateur"
+      ],
+      "couche": "3b"
+    },
+    {
+      "id": "infrastructure",
+      "responsabilite": "Implémenter les seules frontières réelles : MT5, fichiers, SQLite, horloge, journaux, dossier d'échange et exports MQL5.",
+      "depend_de": [
+        "noyau",
+        "execution-coordinateur",
+        "MetaTrader5",
+        "sqlite3",
+        "fichiers",
+        "horloge",
+        "threading"
+      ],
+      "couche": "3c"
+    },
+    {
+      "id": "orchestration",
+      "responsabilite": "Ordonner les événements dans le moteur de décision unique, avec bras A/B et stratégies injectées (C08, D-18).",
+      "depend_de": [
+        "noyau",
+        "london-donnees-temps",
+        "execution-coordinateur",
+        "controles-fondamentaux",
+        "contexte-ia"
+      ],
+      "couche": "4a"
+    },
+    {
+      "id": "service-ia",
+      "responsabilite": "Collecter les textes officiels, interroger les API autorisées sous budget et publier le snapshot IA (A04 à A11).",
+      "depend_de": [
+        "noyau",
+        "contexte-ia",
+        "sqlite3",
+        "reseau",
+        "fichiers",
+        "horloge",
+        "threading"
+      ],
+      "couche": "4b"
+    },
+    {
+      "id": "journal-rejeu",
+      "responsabilite": "Simuler l'exécution C10, rejouer les ticks, calculer métriques, bootstrap et rapports.",
+      "depend_de": [
+        "noyau",
+        "execution-coordinateur",
+        "orchestration",
+        "moteur-london",
+        "aleatoire"
+      ],
+      "couche": "5"
+    },
+    {
+      "id": "points-entree",
+      "responsabilite": "Composer le robot, le rejeu, la qualification et les rapports en commandes exécutables.",
+      "depend_de": [
+        "noyau",
+        "orchestration",
+        "journal-rejeu",
+        "infrastructure",
+        "moteur-london"
+      ],
+      "couche": "6"
+    }
+  ],
+  "externes": [
+    {
+      "id": "MetaTrader5",
+      "imports": [
+        "MetaTrader5"
+      ],
+      "couches_autorisees": [
+        "3c"
+      ]
+    },
+    {
+      "id": "sqlite3",
+      "imports": [
+        "sqlite3"
+      ],
+      "couches_autorisees": [
+        "3c",
+        "4b"
+      ]
+    },
+    {
+      "id": "fichiers",
+      "imports": [
+        "os",
+        "pathlib",
+        "io",
+        "shutil",
+        "tempfile",
+        "gzip",
+        "glob"
+      ],
+      "couches_autorisees": [
+        "3c",
+        "4b"
+      ]
+    },
+    {
+      "id": "horloge",
+      "imports": [
+        "time"
+      ],
+      "couches_autorisees": [
+        "3c",
+        "4b"
+      ]
+    },
+    {
+      "id": "threading",
+      "imports": [
+        "threading",
+        "concurrent",
+        "queue"
+      ],
+      "couches_autorisees": [
+        "3c",
+        "4b"
+      ]
+    },
+    {
+      "id": "reseau",
+      "imports": [
+        "urllib",
+        "http",
+        "socket",
+        "ssl"
+      ],
+      "couches_autorisees": [
+        "4b"
+      ]
+    },
+    {
+      "id": "aleatoire",
+      "imports": [
+        "random",
+        "secrets"
+      ],
+      "couches_autorisees": [
+        "5"
+      ]
+    },
+    {
+      "id": "processus",
+      "imports": [
+        "subprocess",
+        "multiprocessing"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "reference",
+      "imports": [
+        "reference"
+      ],
+      "couches_autorisees": []
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "strict",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}
