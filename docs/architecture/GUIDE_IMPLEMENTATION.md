@@ -1,8 +1,8 @@
 # Guide d'implémentation des deux robots
 
-État du dépôt au 6 novembre 2026 : spécifications 3.1.0, paramètres figés, contrats et fonctions de référence disponibles ; plan d'implémentation du robot London arrêté, structure MCL composite dans `mcl/robot-london-v3/`, squelette composite déployable, noyau et données de marché de la lignée London figés dans `src/xpbots/` (types, configuration figée, journal C09, bougies M15 et H1 causales enrichies de TR, ATR et repères de Londres), moteur London S02 pur figé dans `mcl/moteur-london/` et branché en S3. Ses vrais signaux sont refusés sans ordre par le coordinateur minimal ; la taille de tick est une hypothèse explicite du squelette. Le risque et l'exécution de compte, le robot de plateforme, le service HTTP LLM, le registre de budget transactionnel et l'adaptateur courtier restent à construire. Ce guide oriente la construction ; les deux spécifications autonomes fixent le comportement détaillé.
+État du dépôt au 7 novembre 2026 : spécifications 3.1.0, paramètres figés, contrats et fonctions de référence disponibles ; plan d'implémentation du robot London arrêté, structure MCL composite dans `mcl/robot-london-v3/`, squelette composite déployable, noyau et données de marché de la lignée London figés dans `src/xpbots/` (types, configuration figée, journal C09, bougies M15 et H1 causales enrichies de TR, ATR et repères de Londres), moteur London S02 pur figé dans `mcl/moteur-london/` et branché en S3. Ses vrais signaux sont refusés sans ordre par le coordinateur minimal ; la taille de tick est une hypothèse explicite du squelette. Les onze couches pures de risque et de dimensionnement du coordinateur commun sont figées dans `mcl/london-execution-coordinateur/` ; elles adaptent explicitement les types EMA. Le cycle d’ordre et la couture S4, le robot de plateforme, le service HTTP LLM, le registre de budget transactionnel et l'adaptateur courtier restent à construire. Ce guide oriente la construction ; les deux spécifications autonomes fixent le comportement détaillé.
 
-Mise à jour du 5 novembre 2026 : la construction du robot 1 (Python 3.13, MT5) suit le [plan d'implémentation du robot 1](PLAN_IMPLEMENTATION_ROBOT_EMA_V3.md) ; son squelette composite existe dans `src/xpbots/`, sans adaptateur courtier réel. Le robot 2 reste à planifier.
+Mise à jour du 5 novembre 2026 : la construction du robot 1 (Python 3.13, MT5) suit le [plan d'implémentation du robot 1](PLAN_IMPLEMENTATION_ROBOT_EMA_V3.md) ; son squelette composite existe dans `src/xpbots/`, sans adaptateur courtier réel. Le plan London et son suivi de phases figurent ci-dessous.
 
 ## Autorité des ressources
 
@@ -12,14 +12,14 @@ Une contradiction entre texte, JSON et implémentation doit être signalée et r
 
 La [référence utilisateur](../references/README.md), les anciennes simulations et les outils de travail d'autres projets ne sont pas des instructions normatives. Le registre de nettoyage permet de récupérer les anciens essais si une vérification historique les nécessite.
 
-## Composants à construire
+## Composants et travail restant
 
 | Composant | Contrat à respecter | Point d'attention |
 |---|---|---|
 | Adaptateur de marché et d'exécution | C03, C06–C09 | Bid/Ask, taille minimale, pas, marge, frais, rejets et réconciliation réels |
-| Moteur EMA indépendant | S01 | Tendance, armement, repli, reprise, consommation du signal et cooldown |
-| Moteur London indépendant | S02 | Range 02:00–07:00 Londres, cassure, quotas par sens et fermeture horaire |
-| Coordonnateur de compte partagé | C06–C09 | Un seul budget de risque et de marge pour les deux robots, sans double réservation |
+| Moteur EMA indépendant | S01 | Moteur pur construit dans sa lignée ; intégration complète au compte restant à réaliser |
+| Moteur London indépendant | S02 | Moteur pur figé et couture S3 réalisée ; sorties effectives à construire dans le coordinateur |
+| Coordonnateur de compte partagé | C06–C09 | Calculs purs construits en phase 5 ; cycle, sorties, rapprochement et persistance physique restant à construire |
 | Contrôles fondamentaux obligatoires | C05 | Flux externe horodaté, permissions et calendrier ; absence ou péremption bloquante |
 | Service d'IA distant partagé | A01–A11 | Collecte officielle, preuve textuelle, qualification des API, budgets transactionnels et cache |
 | Interface du complément IA | A08–A12 | Snapshot asynchrone, séquence, intégrité, cache persistant et expiration propre des vetos |
@@ -39,7 +39,7 @@ L'analyse fondamentale externe et le complément LLM ont des rôles distincts. U
 
 Les dates et champs de collecte sont décrits dans les [données historiques requises](../data/03_Donnees_Historiques_Requises_et_Validation.md). Un calendrier de collecte ne prouve pas à lui seul que l'effectif de validation sera atteint.
 
-Le [plan d'implémentation intégrale du robot London](robot_london_v3/README.md) (`LONDON_V3`, version 1.4.5 du 6 novembre 2026, validé par l'utilisateur) décline cet ordre en phases MCL avec points d'arrêt ; ses décisions et arbitrages de spécification sont arrêtés. Ses phases 0 à 12 se construisent dans le conteneur de développement contre des contrats de frontière finalisés tôt ; les actions réservées à l'humain (poste, compte de démonstration, données, autorisation des API, annotation, mises en service) sont regroupées dans sa phase 13 de qualification.
+Le [plan d'implémentation intégrale du robot London](robot_london_v3/README.md) (`LONDON_V3`, version 1.4.6 du 7 novembre 2026, validé par l'utilisateur) décline cet ordre en phases MCL avec points d'arrêt ; ses décisions et arbitrages de spécification sont arrêtés. Ses phases 0 à 12 se construisent dans le conteneur de développement contre des contrats de frontière finalisés tôt ; les actions réservées à l'humain (poste, compte de démonstration, données, autorisation des API, annotation, mises en service) sont regroupées dans sa phase 13 de qualification.
 
 ## Emploi des fonctions de référence
 

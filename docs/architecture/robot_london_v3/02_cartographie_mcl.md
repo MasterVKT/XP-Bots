@@ -325,9 +325,9 @@ segment S4. Les profondeurs ci-dessous sont celles que donnent les dépendances 
 | `port_calcul` | 1a | Déclarer le port synchrone de calcul du courtier | — | `types_execution` | noyau | C04, C07 |
 | `gardes_compte` | 1b | Tenir base UTC, pic, garde quotidienne et arrêt global persistant | fonds propres, instant → état, déclenchements | `types_execution` | noyau | C07, P-12 |
 | `registre_reservations` | 1c | Réserver et libérer risque et places de façon atomique et idempotente | intention, état du compte → réservation ou refus | `types_execution` | noyau | C07, C08 |
-| `risque_all_in` | 2a | Calculer la perte pessimiste et les frais d'un volume | niveaux, volume, profil → risque décimal | `prix_executables`, `port_calcul` | noyau | C07 |
-| `arbitrage` | 2b | Ordonner les signaux simultanés et réévaluer après chaque réservation | signaux d'une clôture → séquence d'admission | `registre_reservations` | noyau | C08 |
-| `dimensionnement` | 3 | Retenir le plus grand volume admissible sous les cinq contraintes | signal, niveaux, état → volume ou refus | `risque_all_in`, `registre_reservations`, `gardes_compte` | noyau | C07, P-06 |
+| `risque_all_in` | 2a | Calculer la perte pessimiste et les frais d'un volume | niveaux, volume, profil → risque décimal | `types_execution`, `prix_executables`, `port_calcul` | noyau | C07 |
+| `arbitrage` | 2b | Ordonner les signaux simultanés et réévaluer après chaque réservation | signaux d'une clôture → séquence d'admission | `types_execution`, `registre_reservations` | noyau | C08 |
+| `dimensionnement` | 3 | Retenir le plus grand volume admissible sous les cinq contraintes | signal, niveaux, état → volume ou refus | `types_execution`, `prix_executables`, `port_calcul`, `gardes_compte`, `registre_reservations`, `risque_all_in` | noyau | C07, P-06 |
 | `cycle_ordre` | 4 | Machine à états d'une intention, de l'envoi à la clôture | réponses, minuteries → transitions, commandes | `dimensionnement`, `prix_executables`, `port_calcul` | noyau | C08 |
 | `sorties_obligatoires` | 5a | Déclencher les clôtures prioritaires et les réessais sans cotation | état, instant, contrôles → commandes de clôture | `cycle_ordre`, `echeances_sortie`, `gardes_compte`, `ports_controles` | noyau | C05, C07, C08 |
 | `reprise_rapprochement` | 5b | Reconstituer positions, réservations et verrous au redémarrage et après réponse inconnue | état restauré, rapprochement → état cohérent | `cycle_ordre`, `registre_reservations`, `gardes_compte` | noyau | C08 |
@@ -394,6 +394,26 @@ Esquisses de contrat :
   mémoire du contexte IA juste avant l'envoi (C05, A03) ; un veto IA
   refuse la seule bougie courante (issue « refus définitif » avec `AI_CONTEXT_VETO`, aucun quota consommé) ;
   enregistrements C09 complets ; issues rendues aux stratégies.
+
+Réalisation de phase 5 : le nom logique `execution-coordinateur` désigne un seul composant partagé.
+Son dossier actif est [london-execution-coordinateur](../../../mcl/london-execution-coordinateur/PLAN-MCL.md),
+selon l’arbitrage R4/R5 du registre de coexistence ; le dossier EMA homonyme historique reste une esquisse.
+Les onze couches 0a à 3 sont figées ; 4, 5a, 5b et 6 restent des esquisses à finaliser en phase 6.
+La carte active donne toutes les dépendances directes réelles, y compris celles vers 0a.
+
+Le domaine canonique est celui du noyau London ; 0a adapte les vrais types de signal, tick et clé EMA,
+sans réécrire les noyaux ni les journaux historiques. Le registre associe positions et réservations par clé,
+conserve le risque initial et propose un contrôle de version sous propriétaire unique. L’atomicité physique
+entre processus relève du stockage ultérieur. Un risque nul confirmé reste une place occupée.
+
+Le port 1a distingue frais aller-retour et frais de sortie, marge isolée et marge totale native après ordre.
+La couche 3 additionne à cette dernière les seules marges réservées non matérialisées. Après remplissage,
+prix moyen et frais d’entrée réels sont obligatoires, budget et fonds propres de référence restent gelés,
+le SL reste fixe et seule la réserve de sortie demeure. Le balayage décroissant teste chaque volume natif
+sans hypothèse de linéarité des frais. Il produit une proposition versionnée, sans réserver ni envoyer.
+P-12 exige une couverture complète du livre des mouvements, une preuve d’absence de position à minuit,
+et la neutralisation des flux identifiés, y compris sur le pic conservé avant un arrêt. Les droits internes
+normalisés `FULL`, `BUY_ONLY`, `SELL_ONLY` seront traduits par l’adaptateur ; ils ne sont pas des constantes MT5.
 
 ### 6.5 Artefact `controles-fondamentaux` (paquet `xpbots.fondamental`, phase 7)
 

@@ -1,5 +1,4 @@
-"""Artefact `execution-coordinateur` : C06 à C08 (construit en phases 5 et 6).
+"""Coordinateur de compte unique des deux méthodes, arbitré par R4/R5 le 06/11/2026.
 
-En phase 1, il ne contient que le segment minimal S4 du squelette (coordinateur qui refuse tout signal et
-types minimaux de commande), module `squelette`.
+Construction : mcl/london-execution-coordinateur. Le segment S4 minimal reste dans squelette jusqu'à la phase 6.
 """

@@ -2,6 +2,8 @@
 
 > Artefact de chair du composite `robot-ema-v3`. Plan maître : `docs/architecture/PLAN_IMPLEMENTATION_ROBOT_EMA_V3.md`, section 7.D ; registre d'interprétation : `mcl/robot-ema-v3/INTERPRETATIONS.md`. Aucun code avant la section 9.
 
+> Arbitrage R4/R5 du 06/11/2026 : cette esquisse EMA est conservée, sans code ni gel. Le coordinateur unique se construit dans [london-execution-coordinateur](../london-execution-coordinateur/PLAN-MCL.md), consommable par les deux méthodes via ses adaptateurs. Ne pas construire une seconde version des modules ci-dessous. Voir le [registre de coexistence](../../docs/architecture/COEXISTENCE_ROBOT1_LONDON.md).
+
 ## 0. Périmètre de l'artefact
 
 - **Artefact** : `execution-coordinateur` (paquet `src/xpbots/execution/`) — Contrats C06–C09 : cotation, prix exécutables, risque all-in, réservations, dimensionnement, arbitrage, cycle d'ordre, sorties obligatoires, coordinateur.

@@ -6,8 +6,11 @@ Le dépôt XP-Bots contient la spécification autonome 3.1.0 du robot 1
 (`livrables/strategies_m15/01_Triple_EMA_RSI_Repli_M15_Specification_IA.md`, sections C01–C11, S01, A01–A15),
 ses exports figés (`config/parametres_figes_v3.json` blocs `common` + `ema`, `config/parametres_IA_integration_v1.json`,
 `schemas/`, `prompts/`) et des fonctions de référence (`reference/technical.py`, `reference/llm_contracts.py`).
-**Aucun code de robot n'existe** : ni moteur, ni coordinateur, ni adaptateur courtier, ni journal, ni rejeu, ni
-service IA. Ce plan organise la construction complète et vérifiable du robot 1, sans modifier aucune règle,
+Ce contexte décrit l’état initial de planification. Depuis, les deux lignées possèdent leur moteur pur
+et leurs socles. Au 06/11/2026, les calculs du coordinateur commun sont figés dans
+[london-execution-coordinateur](../../mcl/london-execution-coordinateur/PLAN-MCL.md), avec adaptation typée EMA.
+Ce plan doit consommer cette unique implémentation ; l’ancienne esquisse `mcl/execution-coordinateur/`
+n’autorise pas de doublon. Le cycle d’ordre et l’adaptateur courtier restent à construire. Ce plan organise la construction complète et vérifiable du robot 1, sans modifier aucune règle,
 aucun seuil, aucun export, aucune référence, aucune preuve (`.agents/PROJECT_RULES.md` §4).
 
 Résultat visé : un robot Python qui, sur les mêmes ticks, prend les mêmes décisions en rejeu et en direct

@@ -10,7 +10,7 @@ from pathlib import Path
 import unittest
 
 from robot.outils.chemins import RACINE_DEPOT, SOURCES
-from robot.outils.lignees import LONDON, ROBOT1, appartient
+from robot.outils.lignees import COMMUN, LONDON, ROBOT1, appartient
 
 # Modules (préfixes de noms pointés) propres à chaque lignée, miroir des registres de `robot.outils.lignees`.
 MODULES_ROBOT1 = ('xpbots.donnees_temps', 'xpbots.moteur_ema', 'xpbots.noyau.config', 'xpbots.noyau.decisions',
@@ -53,7 +53,20 @@ def fichiers(registre) -> list[Path]:
 class TestLignees(unittest.TestCase):
     def test_aucun_fichier_dans_les_deux_registres(self):
         communs = [p.relative_to(RACINE_DEPOT).as_posix() for p in fichiers(ROBOT1) if p in set(fichiers(LONDON))]
+        communs += [p.relative_to(RACINE_DEPOT).as_posix() for p in fichiers(COMMUN)
+                    if p in set(fichiers(ROBOT1)) | set(fichiers(LONDON))]
         self.assertEqual(communs, [])
+
+    def test_coordinateur_commun_adaptateurs_bornes(self):
+        partages = fichiers(COMMUN)
+        self.assertTrue(partages)
+        trouves=[]
+        for p in partages:
+            # R4/R5 : les importations de types EMA sont limitées à la frontière commune 0a.
+            if p.parent.name == 'c0a_types':
+                continue
+            trouves += importe_la_lignee(p.read_text(encoding='utf-8'),'robot1')
+        self.assertEqual(trouves,[])
 
     def test_les_deux_registres_ne_sont_pas_vides(self):
         self.assertTrue(fichiers(ROBOT1))

@@ -152,6 +152,21 @@ L'horloge système (UTC en millisecondes) date la réception des événements et
 mesure les durées. Son écart à l'heure des ticks est mesuré en 13.1 et consigné ; il ne corrige jamais l'heure des
 ticks, qui suit la table du §5.
 
+### 2.10 Port interne de calcul construit en phase 5
+
+Le port `CalculCourtier` de `xpbots.execution.c1a_calcul` est un contrat Python interne,
+distinct des fonctions MT5. Il expose `profit`, `frais_aller_retour`, `frais_sortie`, `marge`,
+`controler`, `specifications` et `etat_compte`. Les frais sont en USD et leur absence doit être
+qualifiée ; après remplissage, les frais d’entrée réels sont fournis, seuls ceux de sortie sont estimés.
+`ControleNatif` donne la marge totale après ordre, les fonds libres après ordre et le résultat du
+contrôle de stop-out. Le dimensionnement ajoute les marges réservées non encore matérialisées.
+Le mode `remplacement` contrôle une réduction de position déjà comptée, sans doubler sa marge.
+
+L’adaptateur futur traduira les droits natifs vers `FULL`, `BUY_ONLY` ou `SELL_ONLY`, et les erreurs
+ou résultats incomplets vers `ENVIRONMENT_NOT_READY`. Les calculs synthétiques de test ne qualifient
+aucun instrument ni compte réel. Les [contrats MCL](../../../mcl/london-execution-coordinateur/PLAN-MCL.md)
+fixent les signatures ; la vérification réelle reste en phase 13.
+
 ## 3. Dossier d'échange des permissions (D-11)
 
 Emplacement, écriture et lecture : [document 01](01_architecture.md), §2.1. Un fichier contient exactement un

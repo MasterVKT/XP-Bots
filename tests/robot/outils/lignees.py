@@ -20,6 +20,9 @@ LONDON = (
     'src/xpbots/rejeu/*', 'src/xpbots/infra/*', 'src/xpbots/execution/squelette.py', 'src/xpbots/app/rejeu_squelette.py',
 )
 
+# Le coordinateur est construit une fois pour les deux méthodes (R4/R5, 06/11/2026).
+COMMUN = ('src/xpbots/execution/c[0-9]*',)
+
 
 def appartient(chemin_relatif_au_depot: str, registre: tuple[str, ...]) -> bool:
     """Vrai si le chemin (séparateur `/`) correspond à un motif du registre."""

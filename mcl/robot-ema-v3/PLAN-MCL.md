@@ -4,6 +4,12 @@
 > dans le plan maître `docs/architecture/PLAN_IMPLEMENTATION_ROBOT_EMA_V3.md` ; ce fichier n'en garde que ce qui
 > pilote le composite. Coutures : `COUTURES.md`. Points à valider : `INTERPRETATIONS.md`.
 
+Au 06/11/2026, les couches pures du coordinateur de compte sont construites une seule fois dans
+[london-execution-coordinateur](../london-execution-coordinateur/PLAN-MCL.md). La carte composite pointe
+vers ses contrats ; les adaptateurs 0a conservent les types EMA existants. Cette disponibilité commune
+ne déclare aucune nouvelle phase EMA achevée. L’esquisse historique `execution-coordinateur` ne doit
+pas être implémentée en parallèle.
+
 ## 0. Périmètre
 
 - **Artefact** : système du robot 1 (squelette `noyau` + `app`, et huit artefacts de chair).

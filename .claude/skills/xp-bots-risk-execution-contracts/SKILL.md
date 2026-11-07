@@ -11,10 +11,12 @@ description: "Contrats communs d'exécution et de risque de XP-Bots (C06–C09, 
 
 - Autorité : sections C06, C07, C08 et C09, identiques dans les deux spécifications de
   `livrables/strategies_m15/` ; valeurs dans le bloc `common` de `config/parametres_figes_v3.json`.
-- Composants à construire (aucun n'existe encore) : adaptateur de marché et d'exécution, coordonnateur de
-  compte partagé, journal (`docs/architecture/GUIDE_IMPLEMENTATION.md`, tableau « Composants à construire »).
-- Référence partielle : `rounded_levels` de `reference/technical.py` (niveaux arrondis et réserve) ; il n'existe
-  ni portefeuille, ni modèle de fills, ni dimensionnement complet dans le dépôt.
+- État réel : journal du noyau et onze couches pures du coordinateur partagées sous `xpbots.execution.c*`,
+  suivies dans `mcl/london-execution-coordinateur/` (bilan et contrats). Le cycle d'ordre, les sorties et le
+  rapprochement restent à construire, ainsi que l'adaptateur réel et la persistance physique.
+- Référence partielle : `rounded_levels` de `reference/technical.py` (niveaux arrondis et réserve), oracle
+  des seuls tests. Le dimensionnement de phase 5 utilise un port courtier synthétique ; il ne constitue
+  ni un portefeuille validé financièrement ni un modèle de remplissages réels.
 
 ## Workflow
 

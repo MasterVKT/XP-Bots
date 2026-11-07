@@ -27,7 +27,7 @@ Décision du 06/11/2026, prise sur délégation de l'utilisateur : **coexistence
 
 Les `__init__.py` de `src/xpbots/`, `src/xpbots/app/` et `src/xpbots/noyau/` sont partagés : ils ne portent que des docstrings et la version du paquet, aucune logique.
 
-Le registre exécutable de cette propriété est `tests/robot/outils/lignees.py`. Il est lu par les gardes des deux lignées, et ses motifs sont recopiés dans le champ `exclure` des deux cartes composites.
+Le registre exécutable de cette propriété est `tests/robot/outils/lignees.py`. Il est lu par les gardes des deux lignées. Les motifs propres à une lignée sont exclus de la carte de l’autre ; les motifs `COMMUN` restent contrôlés dans les deux cartes.
 
 ## 3. Ce que l'intégration a changé
 
@@ -43,9 +43,9 @@ Le registre exécutable de cette propriété est `tests/robot/outils/lignees.py`
 
 **R1. Noms.** Avant de créer un dossier `mcl/<nom>`, `tests/robot/<nom>` ou un paquet `src/xpbots/<nom>`, vérifier qu'il n'existe pas déjà dans l'autre lignée (liste des fichiers suivis par Git). Pour un nom déjà pris, le London utilise le préfixe `london-` (MCL) ou `london_` (tests et paquets), comme pour `london-donnees-temps`.
 
-**R2. Registre.** Tout fichier ajouté dans un paquet partagé (`noyau`, `app`, `execution`) et tout nouveau paquet doivent être déclarés dans `tests/robot/outils/lignees.py` pour leur lignée, puis exclus dans la carte composite de l'autre. Un fichier non déclaré est contrôlé par les deux gardes : l'échec qui en résulte est voulu, il force la déclaration.
+**R2. Registre.** Tout fichier ajouté dans un paquet partagé (`noyau`, `app`, `execution`) et tout nouveau paquet doivent être déclarés dans `tests/robot/outils/lignees.py`. Les fichiers propres à une lignée sont exclus de la carte de l’autre. Depuis l’arbitrage du 06/11/2026, `COMMUN` déclare les calculs du coordinateur : ils sont contrôlés par les deux cartes, sans exclusion croisée. Un fichier non déclaré est contrôlé par les deux gardes : l'échec qui en résulte est voulu, il force la déclaration.
 
-**R3. Aucun import croisé.** Le code d'une lignée n'importe jamais un module de l'autre. Le test `test_lignees.py` le vérifie.
+**R3. Aucun import croisé.** Le code propre à une lignée n’importe jamais un module de l’autre. Le test `test_lignees.py` le vérifie. La frontière commune 0a adapte les types des deux noyaux, selon l’arbitrage §6 ; le reste du coordinateur consomme la forme canonique sans importer les moteurs.
 
 **R4. Composants planifiés par les deux lignées.** Les deux plans prévoient chacun les composants suivants, sous les mêmes noms de paquet ou presque :
 
@@ -75,3 +75,15 @@ Au 06/11/2026 : suite intégrale verte avec les deux lanceurs, vérification str
 | Date | Décision | Décideur |
 |---|---|---|
 | 06/11/2026 | Coexistence structurée des deux lignées, sans unification immédiate des socles ; unification renvoyée aux règles R4 et R5 | session de construction, sur délégation de l'utilisateur |
+
+### Arbitrage R4/R5 du 06/11/2026 — phase 5 London
+
+Le coordinateur EMA est encore un plan sans code et sans contrat figé. La phase 5 construit une seule implémentation partagée sous `xpbots.execution.c*`, suivie dans `mcl/london-execution-coordinateur/`. Le préfixe du dossier de traçabilité distingue le plan exécuté de l'ancienne esquisse ; il ne désigne pas un second coordinateur de compte. Les deux plans consommeront ce même paquet. L'ancienne esquisse `mcl/execution-coordinateur` reste conservée comme historique de planification et ne doit pas être implémentée en parallèle.
+
+Comparaison des socles : EMA exprime le sens par ±1, la clôture Bid en Decimal et le stop/ATR en flottant ; London utilise un sens nommé et des prix techniques flottants. Les deux représentent le temps en millisecondes UTC ; EMA conserve la séquence dans `Instant`, London distingue heure fournisseur et réception. EMA expose des ticks décimaux, London une cotation décimale dédiée. Leurs clés d'intention ont les mêmes composantes sémantiques mais des sérialisations différentes. Les journaux C09 ont des enveloppes, noms de types et schémas distincts : ils ne sont pas interchangeables.
+
+L'option A de R5 est retenue : adaptateurs typés en 0a, des valeurs EMA existantes vers le domaine canonique London. La conversion vérifie les prix, le sens, la clé et la conservation du temps ; aucune heure de réception ne se devine. Les objets techniques restent flottants selon C03, les cotations et montants restent décimaux. Les anciens journaux ne sont ni convertis ni réécrits ; le futur producteur du coordinateur emploiera l'enveloppe canonique du noyau London, avec la provenance explicite des valeurs adaptées. Les détails de l'ancienne méthode restent conservés dans le contexte adapté. Aucun fichier des deux noyaux n'est défigé, car aucun contrat amont ne change.
+
+Le registre `COMMUN` couvre les nouveaux sous-paquets du seul coordinateur. Les deux cartes composites le contrôlent, sans l'exclure comme code de l'autre lignée. La règle R3 reste stricte pour les fichiers propres aux méthodes ; seule la frontière d'adaptation commune 0a peut importer les types EMA et London. Les imports des moteurs de méthodes demeurent interdits au coordinateur. Les tests emploient de vrais objets des deux noyaux et un même registre de réservations, afin que la priorité et les plafonds ne puissent pas être appliqués séparément par robot.
+
+Décision prise par la session de construction sur délégation de la demande explicite d'achever la phase 5. Aucune règle de risque, aucun coût et aucun seuil ne sont modifiés.

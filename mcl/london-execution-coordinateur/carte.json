@@ -1,0 +1,531 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "london-execution-coordinateur",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": "Calculs C06/C07 partagés des deux méthodes, puis coordinateur C08 en phase 6."
+  },
+  "langage": "python",
+  "sources": [
+    "src"
+  ],
+  "exclure": [],
+  "couches": [
+    {
+      "id": "0a",
+      "profondeur": 0,
+      "nom": "types_execution",
+      "chemins": [
+        "src/xpbots/execution/c0a_types"
+      ],
+      "imports": [
+        "xpbots.execution.c0a_types"
+      ],
+      "contrats": [
+        "mcl/london-execution-coordinateur/contrats/couche-0a.md",
+        "src/xpbots/execution/c0a_types/__init__.py",
+        "tests/robot/london_execution_coordinateur/test_cat1_c0a_types_execution.py"
+      ]
+    },
+    {
+      "id": "0b",
+      "profondeur": 0,
+      "nom": "ports_controles",
+      "chemins": [
+        "src/xpbots/execution/c0b_controles"
+      ],
+      "imports": [
+        "xpbots.execution.c0b_controles"
+      ],
+      "contrats": [
+        "mcl/london-execution-coordinateur/contrats/couche-0b.md",
+        "src/xpbots/execution/c0b_controles/__init__.py",
+        "tests/robot/london_execution_coordinateur/test_cat1_c0b_ports_controles.py"
+      ]
+    },
+    {
+      "id": "0c",
+      "profondeur": 0,
+      "nom": "garde_cotation",
+      "chemins": [
+        "src/xpbots/execution/c0c_cotation"
+      ],
+      "imports": [
+        "xpbots.execution.c0c_cotation"
+      ],
+      "contrats": [
+        "mcl/london-execution-coordinateur/contrats/couche-0c.md",
+        "src/xpbots/execution/c0c_cotation/__init__.py",
+        "tests/robot/london_execution_coordinateur/test_cat1_c0c_garde_cotation.py"
+      ]
+    },
+    {
+      "id": "0d",
+      "profondeur": 0,
+      "nom": "prix_executables",
+      "chemins": [
+        "src/xpbots/execution/c0d_prix"
+      ],
+      "imports": [
+        "xpbots.execution.c0d_prix"
+      ],
+      "contrats": [
+        "mcl/london-execution-coordinateur/contrats/couche-0d.md",
+        "src/xpbots/execution/c0d_prix/__init__.py",
+        "tests/robot/london_execution_coordinateur/test_cat1_c0d_prix_executables.py"
+      ]
+    },
+    {
+      "id": "0e",
+      "profondeur": 0,
+      "nom": "echeances_sortie",
+      "chemins": [
+        "src/xpbots/execution/c0e_echeances"
+      ],
+      "imports": [
+        "xpbots.execution.c0e_echeances"
+      ],
+      "contrats": [
+        "mcl/london-execution-coordinateur/contrats/couche-0e.md",
+        "src/xpbots/execution/c0e_echeances/__init__.py",
+        "tests/robot/london_execution_coordinateur/test_cat1_c0e_echeances_sortie.py"
+      ]
+    },
+    {
+      "id": "1a",
+      "profondeur": 1,
+      "nom": "port_calcul",
+      "chemins": [
+        "src/xpbots/execution/c1a_calcul"
+      ],
+      "imports": [
+        "xpbots.execution.c1a_calcul"
+      ],
+      "contrats": [
+        "mcl/london-execution-coordinateur/contrats/couche-1a.md",
+        "src/xpbots/execution/c1a_calcul/__init__.py",
+        "tests/robot/london_execution_coordinateur/test_cat1_c1a_port_calcul.py",
+        "tests/robot/london_execution_coordinateur/test_cat2_c1a_port_calcul.py"
+      ]
+    },
+    {
+      "id": "1b",
+      "profondeur": 1,
+      "nom": "gardes_compte",
+      "chemins": [
+        "src/xpbots/execution/c1b_gardes"
+      ],
+      "imports": [
+        "xpbots.execution.c1b_gardes"
+      ],
+      "contrats": [
+        "mcl/london-execution-coordinateur/contrats/couche-1b.md",
+        "src/xpbots/execution/c1b_gardes/__init__.py",
+        "tests/robot/london_execution_coordinateur/test_cat1_c1b_gardes_compte.py",
+        "tests/robot/london_execution_coordinateur/test_cat2_c1b_gardes_compte.py"
+      ]
+    },
+    {
+      "id": "1c",
+      "profondeur": 1,
+      "nom": "registre_reservations",
+      "chemins": [
+        "src/xpbots/execution/c1c_reservations"
+      ],
+      "imports": [
+        "xpbots.execution.c1c_reservations"
+      ],
+      "contrats": [
+        "mcl/london-execution-coordinateur/contrats/couche-1c.md",
+        "src/xpbots/execution/c1c_reservations/__init__.py",
+        "tests/robot/london_execution_coordinateur/test_cat1_c1c_registre_reservations.py",
+        "tests/robot/london_execution_coordinateur/test_cat2_c1c_registre_reservations.py"
+      ]
+    },
+    {
+      "id": "2a",
+      "profondeur": 2,
+      "nom": "risque_all_in",
+      "chemins": [
+        "src/xpbots/execution/c2a_risque"
+      ],
+      "imports": [
+        "xpbots.execution.c2a_risque"
+      ],
+      "contrats": [
+        "mcl/london-execution-coordinateur/contrats/couche-2a.md",
+        "src/xpbots/execution/c2a_risque/__init__.py",
+        "tests/robot/london_execution_coordinateur/test_cat1_c2a_risque_all_in.py",
+        "tests/robot/london_execution_coordinateur/test_cat2_c2a_risque_all_in.py"
+      ]
+    },
+    {
+      "id": "2b",
+      "profondeur": 2,
+      "nom": "arbitrage",
+      "chemins": [
+        "src/xpbots/execution/c2b_arbitrage"
+      ],
+      "imports": [
+        "xpbots.execution.c2b_arbitrage"
+      ],
+      "contrats": [
+        "mcl/london-execution-coordinateur/contrats/couche-2b.md",
+        "src/xpbots/execution/c2b_arbitrage/__init__.py",
+        "tests/robot/london_execution_coordinateur/test_cat1_c2b_arbitrage.py",
+        "tests/robot/london_execution_coordinateur/test_cat2_c2b_arbitrage.py"
+      ]
+    },
+    {
+      "id": "3",
+      "profondeur": 3,
+      "nom": "dimensionnement",
+      "chemins": [
+        "src/xpbots/execution/c3_dimensionnement"
+      ],
+      "imports": [
+        "xpbots.execution.c3_dimensionnement"
+      ],
+      "contrats": [
+        "mcl/london-execution-coordinateur/contrats/couche-3.md",
+        "src/xpbots/execution/c3_dimensionnement/__init__.py",
+        "tests/robot/london_execution_coordinateur/test_cat1_c3_dimensionnement.py",
+        "tests/robot/london_execution_coordinateur/test_cat2_c3_dimensionnement.py"
+      ]
+    },
+    {
+      "id": "4",
+      "profondeur": 4,
+      "nom": "cycle_ordre",
+      "chemins": [
+        "src/xpbots/execution/c4_cycle"
+      ],
+      "imports": [
+        "xpbots.execution.c4_cycle"
+      ],
+      "contrats": [
+        "mcl/london-execution-coordinateur/contrats/couche-4.md",
+        "src/xpbots/execution/c4_cycle/__init__.py",
+        "tests/robot/london_execution_coordinateur/test_cat1_c4_cycle_ordre.py",
+        "tests/robot/london_execution_coordinateur/test_cat2_c4_cycle_ordre.py"
+      ]
+    },
+    {
+      "id": "5a",
+      "profondeur": 5,
+      "nom": "sorties_obligatoires",
+      "chemins": [
+        "src/xpbots/execution/c5a_sorties"
+      ],
+      "imports": [
+        "xpbots.execution.c5a_sorties"
+      ],
+      "contrats": [
+        "mcl/london-execution-coordinateur/contrats/couche-5a.md",
+        "src/xpbots/execution/c5a_sorties/__init__.py",
+        "tests/robot/london_execution_coordinateur/test_cat1_c5a_sorties_obligatoires.py",
+        "tests/robot/london_execution_coordinateur/test_cat2_c5a_sorties_obligatoires.py"
+      ]
+    },
+    {
+      "id": "5b",
+      "profondeur": 5,
+      "nom": "reprise_rapprochement",
+      "chemins": [
+        "src/xpbots/execution/c5b_reprise"
+      ],
+      "imports": [
+        "xpbots.execution.c5b_reprise"
+      ],
+      "contrats": [
+        "mcl/london-execution-coordinateur/contrats/couche-5b.md",
+        "src/xpbots/execution/c5b_reprise/__init__.py",
+        "tests/robot/london_execution_coordinateur/test_cat1_c5b_reprise_rapprochement.py",
+        "tests/robot/london_execution_coordinateur/test_cat2_c5b_reprise_rapprochement.py"
+      ]
+    },
+    {
+      "id": "6",
+      "profondeur": 6,
+      "nom": "coordinateur",
+      "chemins": [
+        "src/xpbots/execution/c6_coordinateur"
+      ],
+      "imports": [
+        "xpbots.execution.c6_coordinateur"
+      ],
+      "contrats": [
+        "mcl/london-execution-coordinateur/contrats/couche-6.md",
+        "src/xpbots/execution/c6_coordinateur/__init__.py",
+        "tests/robot/london_execution_coordinateur/test_cat1_c6_coordinateur.py",
+        "tests/robot/london_execution_coordinateur/test_cat2_c6_coordinateur.py"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "types_execution",
+      "couche": "0a",
+      "responsabilite": "types execution",
+      "depend_de": []
+    },
+    {
+      "id": "ports_controles",
+      "couche": "0b",
+      "responsabilite": "ports controles",
+      "depend_de": []
+    },
+    {
+      "id": "garde_cotation",
+      "couche": "0c",
+      "responsabilite": "garde cotation",
+      "depend_de": []
+    },
+    {
+      "id": "prix_executables",
+      "couche": "0d",
+      "responsabilite": "prix executables",
+      "depend_de": []
+    },
+    {
+      "id": "echeances_sortie",
+      "couche": "0e",
+      "responsabilite": "echeances sortie",
+      "depend_de": []
+    },
+    {
+      "id": "port_calcul",
+      "couche": "1a",
+      "responsabilite": "port calcul",
+      "depend_de": [
+        "types_execution"
+      ]
+    },
+    {
+      "id": "gardes_compte",
+      "couche": "1b",
+      "responsabilite": "gardes compte",
+      "depend_de": [
+        "types_execution"
+      ]
+    },
+    {
+      "id": "registre_reservations",
+      "couche": "1c",
+      "responsabilite": "registre reservations",
+      "depend_de": [
+        "types_execution"
+      ]
+    },
+    {
+      "id": "risque_all_in",
+      "couche": "2a",
+      "responsabilite": "risque all in",
+      "depend_de": [
+        "types_execution",
+        "prix_executables",
+        "port_calcul"
+      ]
+    },
+    {
+      "id": "arbitrage",
+      "couche": "2b",
+      "responsabilite": "arbitrage",
+      "depend_de": [
+        "types_execution",
+        "registre_reservations"
+      ]
+    },
+    {
+      "id": "dimensionnement",
+      "couche": "3",
+      "responsabilite": "dimensionnement",
+      "depend_de": [
+        "types_execution",
+        "prix_executables",
+        "port_calcul",
+        "gardes_compte",
+        "registre_reservations",
+        "risque_all_in"
+      ]
+    },
+    {
+      "id": "cycle_ordre",
+      "couche": "4",
+      "responsabilite": "cycle ordre",
+      "depend_de": [
+        "types_execution",
+        "prix_executables",
+        "port_calcul",
+        "dimensionnement"
+      ]
+    },
+    {
+      "id": "sorties_obligatoires",
+      "couche": "5a",
+      "responsabilite": "sorties obligatoires",
+      "depend_de": [
+        "types_execution",
+        "ports_controles",
+        "echeances_sortie",
+        "gardes_compte",
+        "cycle_ordre"
+      ]
+    },
+    {
+      "id": "reprise_rapprochement",
+      "couche": "5b",
+      "responsabilite": "reprise rapprochement",
+      "depend_de": [
+        "types_execution",
+        "gardes_compte",
+        "registre_reservations",
+        "cycle_ordre"
+      ]
+    },
+    {
+      "id": "coordinateur",
+      "couche": "6",
+      "responsabilite": "coordinateur",
+      "depend_de": [
+        "types_execution",
+        "ports_controles",
+        "garde_cotation",
+        "prix_executables",
+        "echeances_sortie",
+        "port_calcul",
+        "gardes_compte",
+        "registre_reservations",
+        "risque_all_in",
+        "arbitrage",
+        "dimensionnement",
+        "cycle_ordre",
+        "sorties_obligatoires",
+        "reprise_rapprochement"
+      ]
+    }
+  ],
+  "externes": [
+    {
+      "id": "amont-ema",
+      "imports": [
+        "xpbots.noyau.decisions",
+        "xpbots.noyau.marche",
+        "xpbots.noyau.temps"
+      ],
+      "couches_autorisees": [
+        "0a"
+      ]
+    },
+    {
+      "id": "fichiers",
+      "imports": [
+        "os",
+        "pathlib",
+        "io",
+        "shutil",
+        "tempfile",
+        "glob",
+        "gzip"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "reseau",
+      "imports": [
+        "socket",
+        "ssl",
+        "http",
+        "urllib"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "horloge",
+      "imports": [
+        "time"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "sqlite3",
+      "imports": [
+        "sqlite3"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "threading",
+      "imports": [
+        "threading",
+        "concurrent",
+        "queue"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "processus",
+      "imports": [
+        "subprocess",
+        "multiprocessing"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "aleatoire",
+      "imports": [
+        "random",
+        "secrets"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "chargement_dynamique",
+      "imports": [
+        "importlib"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "MetaTrader5",
+      "imports": [
+        "MetaTrader5"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "reference",
+      "imports": [
+        "reference"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "paquets_aval",
+      "imports": [
+        "xpbots.london",
+        "xpbots.moteur_ema",
+        "xpbots.donnees_temps",
+        "xpbots.orchestration",
+        "xpbots.execution.squelette",
+        "xpbots.app",
+        "xpbots.infra",
+        "xpbots.infrastructure",
+        "xpbots.rejeu",
+        "xpbots.journal_rejeu",
+        "xpbots.service_ia"
+      ],
+      "couches_autorisees": []
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "strict",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}

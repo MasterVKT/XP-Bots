@@ -77,7 +77,7 @@
         "xpbots.execution"
       ],
       "contrats": [
-        "mcl/execution-coordinateur/contrats/*.md"
+        "mcl/london-execution-coordinateur/contrats/*.md"
       ]
     },
     {

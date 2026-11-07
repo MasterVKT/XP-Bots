@@ -151,6 +151,11 @@ regroupées dans la phase 13.
 
 ## Phase 5 — Artefact `execution-coordinateur`, couches 0 à 3
 
+Réalisation au 07/11/2026 : onze couches figées dans `mcl/london-execution-coordinateur/`.
+Ce dossier suit le coordinateur commun, selon l’arbitrage R4/R5 ; l’ancienne esquisse EMA
+`mcl/execution-coordinateur/` ne doit pas produire une seconde implémentation. La phase 6 poursuit
+la même carte avec 4, 5a, 5b et 6 ; aucune couture n’a lieu en phase 5.
+
 - **Objectif** : calculs purs de C06 et C07 : cotation, niveaux exécutables, échéances, gardes, réservations,
   risque all-in, arbitrage, dimensionnement (document 02, §6.4).
 - **Skills** : `xp-bots-risk-execution-contracts`, `xp-bots-broker-account-qualification` (frais, micro, marge),

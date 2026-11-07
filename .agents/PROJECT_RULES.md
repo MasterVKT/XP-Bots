@@ -29,7 +29,7 @@ selon son propre plan et sa méthode MCL, dans `src/xpbots/` :
 - robot London (`LONDON_V3`) : plan [robot_london_v3](../docs/architecture/robot_london_v3/README.md) (décisions D-01 et D-02 :
   paquet officiel `MetaTrader5`) ; état MCL dans `mcl/robot-london-v3/`, `mcl/noyau/` et `mcl/london-donnees-temps/`.
 
-Les deux lignées coexistent sans module commun : `src/xpbots/noyau/` réunit deux familles de modules distinctes, et les dossiers
+Les deux lignées conservent leurs socles distincts ; depuis la phase 5 London, les calculs du coordinateur de compte sont communs (`xpbots.execution.c*`, dossier `mcl/london-execution-coordinateur/`, arbitrage R4/R5 dans le registre de coexistence). `src/xpbots/noyau/` réunit deux familles de modules distinctes, et les dossiers
 MCL et de tests propres au London portent le préfixe `london-` ou `london_` lorsque le robot 1 occupait déjà le nom
 (`donnees-temps`). Ne jamais présenter un composant comme existant sans l'avoir vu dans le code.
 
