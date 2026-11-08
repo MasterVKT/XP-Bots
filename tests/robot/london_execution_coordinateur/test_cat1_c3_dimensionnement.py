@@ -26,6 +26,31 @@ def preparer(p=None,c=None,*,param=None,port_=None,registre=None):
 def calculer(args,**kwargs):return dimensionner(*args,'synthetique',**kwargs)
 
 class TestDimensionnement(unittest.TestCase):
+    def test_revalidation_avant_envoi_volume_exact_budget_gele_et_pas_de_double_reserve(self):
+        args=preparer();plan=calculer(args);s,n,p,c,r,g,port,param=args
+        r.reserver(plan.reservation,c,r.etat.version);initial=r.etat
+        nouveau=replace(c,fonds_propres=D(1000),solde=D(1000))
+        valide=revalider_avant_envoi(plan,s,p,nouveau,r,g,port,param)
+        self.assertIsInstance(valide,PlanDimensionnement)
+        self.assertEqual((valide.volume,valide.budget_gele,valide.fonds_propres_reference),(plan.volume,D('.5'),D(100)))
+        self.assertEqual(r.etat,initial)
+        port.autres_frais=D('.03')
+        refus=revalider_avant_envoi(plan,s,p,nouveau,r,g,port,param)
+        self.assertEqual(refus.motif,Motif.MIN_VOLUME_OR_RISK_REJECT)
+        port.autres_frais=D('.01')
+        self.assertEqual(revalider_avant_envoi(plan,s,p,nouveau,r,g,port,param).detail,'couts_avant_ordre')
+        self.assertEqual(revalider_avant_envoi(plan,s,replace(p,volume_limite=D('.5')),nouveau,r,g,port,param).detail,'specifications_modifiees')
+
+    def test_revalidation_controle_version_reelle_et_reservation_non_remplie(self):
+        args=preparer();plan=calculer(args);s,n,p,c,r,g,port,param=args
+        r.reserver(plan.reservation,c,r.etat.version)
+        class Port(CalculSynthetique):
+            def controler(self,*a,**kw):
+                r.verrouiller('GBPUSD');return super().controler(*a,**kw)
+        self.assertEqual(revalider_avant_envoi(plan,s,p,c,r,g,Port(),param).detail,'version_reservations')
+        r.sur_issue(Issue(plan.reservation.cle,NatureIssue.REMPLIE,T))
+        self.assertEqual(revalider_avant_envoi(plan,s,p,c,r,g,port,param).detail,'reservation_avant_ordre')
+
     def test_L01_minimum_standard_refuse_micro_admis(self):
         standard=profil(taille_contrat=D(100000),volume_min=D('.01'),volume_pas=D('.01'),volume_max=D('.01'))
         self.assertIs(calculer(preparer(standard)).motif,Motif.MIN_VOLUME_OR_RISK_REJECT)

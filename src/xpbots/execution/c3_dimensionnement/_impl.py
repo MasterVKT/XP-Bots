@@ -37,6 +37,10 @@ class PlanDimensionnement:
     def risque(self): return self.mesure_risque.total
 
 def dimensionner(signal,niveaux,profil,compte,registre,gardes,port,commun,deploiement,*,plan_initial=None,volume_rempli=None,prix_reel=None,frais_entree_reels=None):
+    return _dimensionner(signal,niveaux,profil,compte,registre,gardes,port,commun,deploiement,
+        plan_initial=plan_initial,volume_rempli=volume_rempli,prix_reel=prix_reel,frais_entree_reels=frais_entree_reels)
+
+def _dimensionner(signal,niveaux,profil,compte,registre,gardes,port,commun,deploiement,*,plan_initial=None,volume_rempli=None,prix_reel=None,frais_entree_reels=None,plan_prepare=None):
     if (not isinstance(signal,SignalTechnique) or not isinstance(niveaux,NiveauxExecutables) or not isinstance(compte,EtatCompte)
             or not isinstance(registre,RegistreReservations) or not isinstance(gardes,GardesCompte) or not isinstance(commun,ParametresCommuns)):
         raise ErreurExecution('signal, niveaux et composants réels attendus')
@@ -72,18 +76,30 @@ def dimensionner(signal,niveaux,profil,compte,registre,gardes,port,commun,deploi
             n=niveaux;eqt=compte.fonds_propres
             budget=decimal_depuis(commun.risk_fraction_per_entry)*eqt
             plafond=profil.volume_max
+            if plan_prepare is not None:
+                if plan_prepare.reservation.cle!=cle or plan_prepare.niveaux!=niveaux:
+                    raise ErreurExecution('plan préparé de cette intention attendu')
+                budget=plan_prepare.budget_gele;eqt=plan_prepare.fonds_propres_reference
+                plafond=plan_prepare.volume
+                if (plafond<profil.volume_min or plafond>profil.volume_max or plafond%profil.volume_pas
+                        or profil.volume_limite>0 and plafond>profil.volume_limite):
+                    return RefusExecution(Motif.ENVIRONMENT_NOT_READY,'specifications_modifiees')
         compte_limites=replace(compte,fonds_propres=eqt)
         refus=registre.verifier_admission(cle,profil.sous_jacent,Decimal(0),compte_limites,remplacement=remplacement)
         if refus is not None: return refus
         if profil.volume_limite>0: plafond=min(plafond,profil.volume_limite)
         premier=int((plafond/profil.volume_pas).to_integral_value(rounding=ROUND_FLOOR))
         dernier=int(profil.volume_min/profil.volume_pas)
+        if plan_prepare is not None:
+            dernier=premier
         echec=RefusExecution(Motif.MIN_VOLUME_OR_RISK_REJECT)
         for nombre in range(premier,dernier-1,-1):
             volume=nombre*profil.volume_pas
             risque=calculer_risque(signal,n,volume,profil,commun,port,apres_remplissage=remplacement,frais_entree_reels=frais_entree_reels)
             if isinstance(risque,RefusExecution): return risque
             if risque.total>budget: continue
+            if plan_prepare is not None and risque.total>plan_prepare.risque:
+                return RefusExecution(Motif.ENVIRONMENT_NOT_READY,'couts_avant_ordre')
             refus=registre.verifier_admission(cle,profil.sous_jacent,risque.total,compte_limites,remplacement=remplacement)
             if refus is not None:
                 echec=refus;continue
@@ -102,3 +118,18 @@ def dimensionner(signal,niveaux,profil,compte,registre,gardes,port,commun,deploi
             reservation=Reservation(cle,profil.sous_jacent,risque.total,marge,volume)
             return PlanDimensionnement(reservation,n,risque,budget,eqt,version,compte.instant_ms,controle,totale,remplacement)
         return echec
+
+def revalider_avant_envoi(plan,signal,profil,compte,registre,gardes,port,commun):
+    """Rejouer les mêmes contraintes sur le seul volume préparé ; ne modifie aucun risque réservé."""
+    if not isinstance(plan,PlanDimensionnement) or plan.remplacement or not isinstance(registre,RegistreReservations):
+        raise ErreurExecution('plan avant remplissage et registre réel attendus')
+    etat=registre.etat
+    propre=next((r for r in etat.reservations if r.cle==plan.reservation.cle),None)
+    if propre!=plan.reservation:
+        return RefusExecution(Motif.ENVIRONMENT_NOT_READY,'reservation_avant_ordre')
+    sans_propre=RegistreReservations(commun,replace(etat,reservations=tuple(r for r in etat.reservations if r.cle!=propre.cle)))
+    resultat=_dimensionner(signal,plan.niveaux,profil,compte,sans_propre,gardes,port,commun,
+        propre.cle.deploiement,plan_prepare=plan)
+    if registre.etat.version!=etat.version:
+        return RefusExecution(Motif.ENVIRONMENT_NOT_READY,'version_reservations')
+    return resultat

@@ -4,7 +4,7 @@
     "nom": "london-execution-coordinateur",
     "echelle": "composant",
     "mode": "pur",
-    "description": "Calculs C06/C07 partagés des deux méthodes, puis coordinateur C08 en phase 6."
+    "description": "Compte partagé : calculs C06/C07, cycle d'ordre, sorties, reprise et coordinateur C08."
   },
   "langage": "python",
   "sources": [

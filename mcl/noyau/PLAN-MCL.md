@@ -115,3 +115,10 @@ changement de contrat figé passe par `mcl.py defiger` avec nature et motif.
   désormais la configuration par le chargeur de production, empreintes contrôlées.
 - **Garantie** : le bloc {0 → 2} du noyau est testé, intégré et stable. Garantie non donnée : l'usage correct de
   ces types par les artefacts suivants, vérifié par leurs propres gates.
+
+## Maintenance additive pendant la phase 6 London — 07/11/2026
+
+Le domaine 1c ajoute `CauseCloture.PROTECTION` et `RISQUE_APRES_REMPLISSAGE`, exigées par les
+sorties C08 du coordinateur commun. Défigeage `extension`, contrat et test additifs, gate intégral
+et regel sont tracés dans `journal.jsonl`. Aucun motif, détail, seuil, schéma ou paramètre figé
+ne change ; les anciens appels et le noyau EMA demeurent inchangés.

@@ -21,6 +21,10 @@ NOMBRES_AUTORISES_PAR_FICHIER = {
     ('donnees_temps/c1c_indicateurs.py', 50): 'RSI neutre de la définition (C03 point 9)',
     ('donnees_temps/c1c_indicateurs.py', 100): 'bornes de la définition du RSI (C03 point 9)',
 }
+NOMBRES_AUTORISES_PAR_FONCTION = {
+    ('execution/c4_cycle/_impl.py', '_ms', 1000): 'conversion exacte des secondes en millisecondes',
+    ('execution/c4_cycle/_impl.py', 'identifier_courtier', 8): 'huit octets du SHA-256 pour un magic entier sur 63 bits (D-08)',
+}
 TEXTES_AUTORISES = {
     'PAPER': 'nom du mode (code) ; la valeur par défaut reste lue dans common.default_mode',
     'UTC': 'fuseau déclaré par un manifeste de fixture ; variante d\'alignement implémentée',
@@ -68,23 +72,50 @@ def fichiers_source():
                   if '__pycache__' not in p.parts and not appartient(p.relative_to(RACINE).as_posix(), LONDON))
 
 
+def litteraux_interdits(source, relatif, nombres, textes):
+    arbre = ast.parse(source)
+    parents = {enfant: parent for parent in ast.walk(arbre) for enfant in ast.iter_child_nodes(parent)}
+    violations = []
+    for noeud in ast.walk(arbre):
+        if not isinstance(noeud, ast.Constant) or type(noeud.value) is bool:
+            continue
+        parent = noeud
+        fonction = None
+        while parent in parents:
+            parent = parents[parent]
+            if isinstance(parent, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                fonction = parent.name
+                break
+        v = noeud.value
+        if type(v) in (int, float) and v in nombres and v not in NOMBRES_AUTORISES \
+                and (relatif, v) not in NOMBRES_AUTORISES_PAR_FICHIER \
+                and (relatif, fonction, v) not in NOMBRES_AUTORISES_PAR_FONCTION:
+            violations.append(f'{relatif}:{noeud.lineno} nombre {v!r}')
+        if type(v) is str and v in textes and v not in TEXTES_AUTORISES \
+                and (relatif, v) not in TEXTES_AUTORISES_PAR_FICHIER:
+            violations.append(f'{relatif}:{noeud.lineno} texte {v!r}')
+    return violations
+
+
 class TestReglesTransverses(unittest.TestCase):
     def test_aucune_valeur_normative_recopiee(self):
         nombres, textes = valeurs_normatives()
         violations = []
         for chemin in fichiers_source():
             relatif = chemin.relative_to(SRC / 'xpbots').as_posix()
-            for noeud in ast.walk(ast.parse(chemin.read_text(encoding='utf-8'))):
-                if not isinstance(noeud, ast.Constant) or type(noeud.value) is bool:
-                    continue
-                v = noeud.value
-                if type(v) in (int, float) and v in nombres and v not in NOMBRES_AUTORISES \
-                        and (relatif, v) not in NOMBRES_AUTORISES_PAR_FICHIER:
-                    violations.append(f'{relatif}:{noeud.lineno} nombre {v!r}')
-                if type(v) is str and v in textes and v not in TEXTES_AUTORISES \
-                        and (relatif, v) not in TEXTES_AUTORISES_PAR_FICHIER:
-                    violations.append(f'{relatif}:{noeud.lineno} texte {v!r}')
+            violations.extend(litteraux_interdits(chemin.read_text(encoding='utf-8'), relatif, nombres, textes))
         self.assertEqual(violations, [], 'valeurs de config/ recopiées dans le code')
+
+    def test_exceptions_techniques_limitees_au_fichier_et_a_la_fonction(self):
+        source = ('def _ms(secondes):\n    return secondes * 1000\n'
+                  'def identifier_courtier(octets):\n    return octets[:8]\n'
+                  'def calculer_risque(volume):\n    return volume * 1000 + 8\n')
+        chemin = 'execution/c4_cycle/_impl.py'
+        violations = litteraux_interdits(source, chemin, {1000, 8}, set())
+        self.assertEqual(len(violations), 2)
+        self.assertEqual({v.rsplit(' ', 1)[-1] for v in violations}, {'1000', '8'})
+        self.assertTrue(all(':6 ' in v for v in violations))
+        self.assertEqual(len(litteraux_interdits(source, 'autre_module.py', {1000, 8}, set())), 4)
 
     def test_aucune_horloge_hors_infrastructure(self):
         violations = []

@@ -1,8 +1,8 @@
-# Rapport de passation — robot London (`LONDON_V3`), reprise à la phase 6
+# Rapport de passation — robot London (`LONDON_V3`), reprise à la phase 7
 
-> Mis à jour le 07/11/2026 à la fin de la phase 5, à l'intention de l'agent qui reprend l'exécution du plan dans une
+> Mis à jour le 08/11/2026 à la fin de la phase 6, à l'intention de l'agent qui reprend l'exécution du plan dans une
 > autre session, éventuellement avec un autre modèle ou un autre outil. Son but : que la suite soit construite
-> exactement selon la logique, la rigueur et les conventions des phases 0 à 5. Ce rapport est un **contexte de
+> exactement selon la logique, la rigueur et les conventions des phases 0 à 6. Ce rapport est un **contexte de
 > reprise**, pas une source normative : en cas d'écart avec les spécifications, les exports figés, le plan ou le
 > code réel, ce sont eux qui prévalent, et l'écart se signale (plan directeur, §0).
 
@@ -11,12 +11,12 @@
 | Élément | Valeur |
 |---|---|
 | Dépôt | `MasterVKT/XP-Bots` |
-| Branche de travail | `master`, après intégration en coexistence structurée (`5e5e288`) ; les commits `9c39d23` et `70c60d9` sont présents ; phase 4 `85069c0` ; le commit de phase 5 porte cette mise à jour |
-| Plan suivi | [Plan directeur 1.4.6](../../docs/architecture/robot_london_v3/README.md), documents 01 à 08 du même dossier |
-| Phases terminées | 0, 1, 2, 3, 4 et 5 ; état et publication vérifiables dans le journal Git |
-| Prochaine action | **Phase 6 — cycle d’ordre, sorties, reprise, couches 4 à 6**, seulement sur demande explicite ; poursuivre le dossier actif `london-execution-coordinateur`, arbitrage R4/R5 déjà consigné |
-| Suite du robot | 613 tests verts des deux lignées ; 80 propres au coordinateur (71 catégorie 1, 9 catégorie 2), 79 au moteur London, 35 au squelette |
-| Contrôles | Régression intégrale, ressources métier, plan London, gouvernance et cartes strictes : preuves de phase 5 dans [le bilan](../london-execution-coordinateur/PLAN-MCL.md) et le journal MCL |
+| Branche de travail | `master`, après intégration en coexistence structurée (`5e5e288`) ; les commits `9c39d23` et `70c60d9` sont présents ; phase 4 `85069c0` ; phase 5 `4213a07` ; le commit de phase 6 porte cette mise à jour |
+| Plan suivi | [Plan directeur 1.4.7](../../docs/architecture/robot_london_v3/README.md), documents 01 à 08 du même dossier |
+| Phases terminées | 0, 1, 2, 3, 4, 5 et 6 ; état et publication vérifiables dans le journal Git |
+| Prochaine action | **Phase 7 — contrôles fondamentaux C05**, seulement sur demande explicite ; le coordinateur commun est achevé, le producteur fondamental reste à construire |
+| Suite du robot | 707 tests verts des deux lignées ; 170 propres au coordinateur (151 catégorie 1, 19 catégorie 2), 79 au moteur London, 37 au squelette |
+| Contrôles | Régression intégrale, ressources métier, plan London, gouvernance et cartes strictes : preuves de phase 6 dans [le bilan](../london-execution-coordinateur/PLAN-MCL.md) et le journal MCL |
 | Environnement vérifié | Python 3.13 ; `numpy` 2.4.1, `pandas` 3.0.0, `tzdata` 2025.3 (`requirements-dev.txt`, tests seulement) ; aucun accès réseau requis |
 
 ## 1. Résumé exécutif
@@ -29,7 +29,7 @@ de bout en bout déployable, le noyau partagé figé (types, configuration figé
 `london-donnees-temps` figé (bougies M15 et H1 causales, validées, enrichies de TR, ATR, A_t, du rang de préchargement et
 des repères de Londres, avec reprise exacte). La phase 4 a ajouté `moteur-london`, huit couches figées, et
 remplacé S3 : de vraies cassures sont journalisées puis refusées sans ordre par le coordinateur minimal. La
-phase 5 a figé les onze couches pures du coordinateur commun, après arbitrage R4/R5. La phase 6 construira le cycle d’ordre, les sorties et la reprise, puis remplacera S4.
+phase 5 a figé les onze couches pures du coordinateur commun, après arbitrage R4/R5. La phase 6 a figé le cycle C08, les sorties, la reprise et le coordinateur, puis remplacé S4. Les journées synthétiques passent avec ordres, remplissages et sorties. La phase 7 construira les contrôles fondamentaux ; seul leur port et le scénario neutre explicite existent ici.
 
 ## 2. Mission et règle d'exécution
 
@@ -124,7 +124,9 @@ Lecture obligatoire avant de toucher au code, dans cet ordre :
 | 2 | `7d22b6f` | Artefact `noyau` figé (7 couches) ; couture S1, S6 ; défigeages `correction` de la couche 2 |
 | 3 | `70c60d9` | Artefact `london-donnees-temps` figé (8 couches) ; couture S2 ; défigeage `extension` de 1a et `correction` de 2b ; 24 mutations détectées |
 | 4 | `85069c0` | Artefact `moteur-london` figé (8 couches), checkpoint après le niveau 1 et couture S3 ; protocole `sur_issue` et taille de tick explicite ; mutations et défigeages éventuels au bilan de l’artefact |
-| 5 | Commit portant ce rapport | Onze couches pures communes figées, checkpoints 1 et 3 ; adaptation EMA, gardes, risque, arbitrage et dimensionnement ; aucune couture S4 ; bilan et mutations dans le dossier actif |
+| 5 | `4213a07` | Onze couches pures communes figées, checkpoints 1 et 3 ; adaptation EMA, gardes, risque, arbitrage et dimensionnement ; aucune couture S4 ; bilan et mutations dans le dossier actif |
+
+| 6 | Commit portant ce rapport | Quatre couches C08 figées dans le coordinateur unique, checkpoint 6 ; extensions et corrections tracées ; couture S4, profils papier explicites et vrais ordres ; bilan et mutations dans le dossier actif |
 
 ### 6.2 Carte composite (`mcl/robot-london-v3/carte.json`, divergence stricte)
 
@@ -182,18 +184,23 @@ Données (`xpbots.donnees.*`) :
 
 ### 6.4 Squelette actuel (registre des coutures à jour)
 
-- S1 : `xpbots.rejeu.squelette.analyser_lignes_ticks` et `hypotheses_marche_squelette` (marché réputé coté et
-  couvert sur l'étendue du fichier, alignée sur H1) ; lecture par `xpbots.infra.squelette`.
-- S2 : **remplacé** par `FluxBougies` (un flux par symbole dans le moteur minimal).
-- S3 : **remplacé** par `xpbots.london.c2_moteur` (`MoteurLondon`, `StrategieLondon`,
-  `fabriquer_strategie(configuration, tailles_tick)`) ; un moteur par symbole, taille `Decimal` explicite,
-  vrai signal S02 ou motif à chaque nouvelle M15 ; rien pour H1 ou issue ; aucune réévaluation d’une M15 ancienne.
-- S4 : `xpbots.orchestration.squelette.MoteurMinimal` et `fabriquer_moteur_minimal(strategie, configuration, mode,
-  deploiement='squelette', *, horaires, periodes_couvertes)` ; protocole structurel `Strategie` (attribut
-  `identifiant`, méthodes `sur_bougie` et `sur_issue`, contrôlées structurellement) ; `CoordinateurMinimal` refuse tout signal (`ENVIRONMENT_NOT_READY`,
-  `SEGMENT_MINIMAL_S4`, issue transmise à la stratégie) ; `CLOTURE` par M15 avec indicateurs, `INTENTION` par signal, `ALERTE` par trou ou anomalie.
-- S5 : exécution papier minimale ; S6 : journal canonique écrit par `ecrire_journal` ; S7 :
-  `python -m xpbots.app.rejeu_squelette --ticks <csv> --sortie <dossier> --tick-size EURUSD=0.00001 [--racine-depot .]` ; répéter `--tick-size` pour chaque symbole synthétique présent.
+- S1 : lecteur CSV canonique et hypothèse de couverture H1 ; validité du relevé d'horaires prolongée
+  d'une H1 pour connaître la fermeture. Cette hypothèse ne représente aucun horaire réel.
+- S2 et S3 remplacés : vrais `FluxBougies` et `MoteurLondon`, tailles de tick explicites, H1 avant M15,
+  aucun signal rétroactif et quotas au seul premier volume non nul confirmé.
+- S4 remplacé par `CoordinateurCompte` ; `MoteurMinimal` injecte le coordinateur et les profils.
+  `traiter_ticks` groupe un même instant : réponses natives et issues, sorties, bougies puis admission
+  simultanée. `traiter_evenement` traite les minuteries sans nouvelle cotation ; `confirmer_persistance`
+  autorise la transmission après revalidation. Aucun moteur importé par l'orchestration (D-18).
+- S5 adapté aux vraies commandes C08 : ACK, fill au prochain tick, SL/TP natifs, clôture et réduction,
+  historique et observation native avec SL/TP actuels. Compte et calculs synthétiques USD, contrats et
+  grille fournis, point=tick, frais et swaps nuls connus. `StockageMemoirePapier` prouve une transaction
+  mémoire ; aucune durabilité physique ni simulation C10. Une panne de stockage interdit les entrées.
+- S6 : journal canonique du noyau ; une clé persistante par intention et ses mises à jour, traces C08,
+  profils et compte, issues seulement lorsqu'un fait les justifie. L'écriture reste minimale.
+- S7 : `python -m xpbots.app.rejeu_squelette --ticks <csv> --sortie <dossier> --tick-size EURUSD=0.00001 --contrat-papier EURUSD=1000,0.1,1,0.1 --scenario TECHNICAL_CONTROL_NEUTRAL`.
+  Répéter les deux paramètres d'instrument exactement par symbole. Les valeurs ci-dessus décrivent la
+  fixture synthétique ; elles ne qualifient aucun courtier. Le résumé donne fills, clôtures et positions.
 
 ### 6.5 Interfaces London disponibles (figées)
 
@@ -205,7 +212,7 @@ Les signatures, refus et garanties exacts sont dans les [contrats de moteur-lond
 Une issue `REMPLIE` suppose un premier volume effectivement non nul ; aucun volume n'existe dans `Issue`.
 La propriété d'une position persiste au changement de jour jusqu'à sa clôture explicite.
 
-### 6.6 Coordinateur commun : interfaces de phase 5 disponibles
+### 6.6 Calculs communs disponibles depuis la phase 5
 
 Les onze paquets `xpbots.execution.c0a_types` à `c3_dimensionnement` sont suivis dans
 [le dossier actif](../london-execution-coordinateur/PLAN-MCL.md), avec leurs contrats figés.
@@ -218,9 +225,31 @@ un propriétaire de compte ; le stockage transactionnel physique n’est pas enc
 `dimensionner` reçoit explicitement la configuration commune et produit un `PlanDimensionnement`
 versionné, sans réserver ni envoyer. Après remplissage, fournir le plan initial, le volume confirmé,
 le prix réel et les frais d’entrée réels ; budget et fonds propres de référence restent gelés,
-SL inchangé, TP recalculé, seule réserve de sortie. Une impossibilité de réduction doit conduire
-à la clôture dans la phase 6. Aucun accès privé entre couches : utiliser les interfaces publiques.
+SL inchangé, TP recalculé, seule réserve de sortie. Une impossibilité de réduction conduit
+à la clôture par le cycle C08 construit en phase 6. Aucun accès privé entre couches : utiliser les interfaces publiques.
 Les adaptateurs EMA sont limités à 0a ; le coordinateur ne doit importer aucun moteur de stratégie.
+
+### 6.7 Cycle et coordinateur communs disponibles depuis la phase 6
+
+Quinze couches figées dans `mcl/london-execution-coordinateur`. `CycleOrdre` émet des commandes,
+issues et traces pures ; `evaluer_sorties` ordonne les sorties ; `restaurer` et `rapprocher` vérifient
+les preuves natives ; `CoordinateurCompte` sérialise le compte et l'admission. Les contrats exacts
+se lisent dans ce dossier. Seules les frontières externes sont doublées dans les tests MCL.
+
+`LotCoordinateur` sépare les préparations des commandes autorisées. `PreuvePersistance` doit viser
+la même révision et les références exactes ; avant envoi, le compte, les cotations, C05, l'IA et le
+risque au volume initial sont recontrôlés. Aucune retransmission aveugle après panne ou ACK ambigu.
+Les gardes, quotas et réservations sont exportables, mais leur persistance physique reste future.
+
+`PositionNative(..., *, sl, tp)` exige les protections actuelles : `None` signifie absence constatée,
+jamais une valeur devinée dans le journal. Un ordre natif porte sa nature ENTREE ou CLOTURE.
+Une position externe n'est ni adoptée ni fermée ; le netting exige la preuve d'exclusivité. Un SL
+absent bloque toute nouvelle entrée jusqu'à protection ou clôture confirmée. Les corrections tracées
+de 4 incluent les accusés tardifs après clôture : ils ne réactivent aucune minuterie.
+
+L'extension additive du noyau 1c ajoute deux causes de clôture, sans motif ou seuil nouveau.
+Les extensions de registre et de dimensionnement sont tracées ; l'arbitrage R4/R5 reste applicable.
+L'adaptateur EMA de 0a demeure l'unique frontière des deux domaines ; aucun second coordinateur.
 
 ## 7. Méthode MCL telle qu'appliquée
 
@@ -329,7 +358,7 @@ nouveau gel, puis nouvelle passe de mutations jusqu'à détection totale. Phase 
    artefact).
 2. Documents : `mcl/<artefact>/PLAN-MCL.md` §5 (bilan : couches, défigeages et leurs motifs, choix de conception
    arrêtés, contrôles dérivés des sources, mutations, couture) ; ligne de la phase dans
-   `mcl/robot-london-v3/PLAN-MCL.md` §7 ; plan directeur : version d'un cran (phase 6 → **1.4.7**), date, phrase
+   `mcl/robot-london-v3/PLAN-MCL.md` §7 ; plan directeur : version d'un cran (phase 7 → **1.4.8**), date, phrase
    d'état de l'en-tête, ligne du journal des révisions (§7) ; [guide](../../docs/architecture/GUIDE_IMPLEMENTATION.md) :
    phrase « État du dépôt au … » et numéro de version du plan ; document 02 seulement si une dépendance ou une
    sortie réelle diffère de l'esquisse ; ce rapport de passation : §0 et §6.1 (état), §9 (briefing de la phase
@@ -359,64 +388,34 @@ Le marqueur `[XP-BOTS-AUDIT:BLOQUE]` ne sert qu'à un blocage prouvé et expliqu
 l'humain). Les sous-agents n'émettent jamais de marqueur. Sous Claude Code, le hook de fin refuse une réponse sans
 pied complet ; ailleurs, la règle s'applique sans hook.
 
-## 9. Briefing de la phase 6 — cycle d’ordre, sorties et reprise
+## 9. Briefing de la phase 7 — contrôles fondamentaux
 
-### 9.1 Préparation et coexistence
+La phase 6 est terminée et publiée par le commit portant ce rapport. Ne commencer la phase 7 que
+sur demande explicite. Lire le document 04 (phase 7), le document 02 §6.5, le document 01 §2.1 et
+§2.2, C05 et les exports normatifs avant d'arrêter les contrats. Appliquer orchestrateur, MCL,
+planification, permissions fondamentales, causalité des données et audit ; ajouter les skills utiles.
 
-La phase 5 est terminée. Lire le document 04, phase 6, le document 02 §6.4, le document 01
-§4 et §7, C06–C09 et les cas C11.11 à C11.13. Utiliser MCL, risque/exécution et les skills
-fondamentales ou de déploiement si leurs contrats de contrôle et d’arrêt sont travaillés.
-Aucune connexion réelle, aucun réseau ni terminal n’est nécessaire.
+Construire l'artefact `controles-fondamentaux` sous `xpbots.fondamental`, couches 0, 1a et 1b, 2, 3 ;
+checkpoint après 2. Finaliser la carte et les contrats avant le code, aux dépendances réelles. Les
+ports de contrôle existent dans `xpbots.execution.c0b_controles` : les consommer, sans recréer les
+types ou introduire une permission implicite. L'IA facultative ne produit jamais C05.
 
-Le choix R4/R5 est déjà tranché : un seul coordinateur pour les deux méthodes, code commun sous
-`xpbots.execution.c*`, domaine canonique du noyau London et adaptation typée EMA en 0a.
-Poursuivre **`mcl/london-execution-coordinateur/`** ; ne pas initialiser une seconde carte
-à partir de l’esquisse historique `mcl/execution-coordinateur/`.
+Le producteur doit respecter le schéma `fundamental-permission-v1`, séquence, `known_at`, validité,
+heartbeat et directions/états de risque exacts ; les fenêtres d'annonces HIGH sont causales et
+semi-ouvertes. Vérifier C11.8 et C11.9, A14-6 et A14-8 côté socle, L-14, heartbeat manqué, expiration,
+FLATTEN, annonce apprise tardivement et calendrier périmé sans liquidation arbitraire. Les fixtures
+suivent exactement le dossier d'échange D-11 et l'export MQL5 D-12 ; aucune lecture réelle de fichier,
+aucun accès réseau ou terminal avant les phases correspondantes.
 
-### 9.2 Carte et ordre
+Le scénario `TECHNICAL_CONTROL_NEUTRAL` reste réservé aux essais explicitement nommés ; aucune
+permission historique n'est fabriquée. Les limites de calendrier et heures de connaissance sont
+journalisées. Ne pas anticiper le lecteur IA, l'orchestration complète, le simulateur C10 ni le disque.
 
-Les onze couches 0a à 3 sont figées. La même carte contient quatre contrats seulement esquissés :
-4 `cycle_ordre`, 5a `sorties_obligatoires`, 5b `reprise_rapprochement`, 6 `coordinateur`.
-Finaliser leurs signatures avant leur code et déclarer toutes les dépendances directes réelles.
-La couche 4 est cyclique : construire les transitions successivement, chacune avec gate catégorie 1,
-puis gate intégral et gel de la couche. Construire 5a et 5b, puis 6 ; checkpoint après le niveau 6.
-Ne défiger un contrat de phase 5 que pour une cause exacte et tracée, avec test et nouveau gel.
+Sortie : toutes les couches gelées, cas d'acceptation vérifiés sur le vrai bloc, gate des deux robots,
+mutations par couche et couture éventuelle selon le plan, documents et passation à jour, directeur
+1.4.8, audit, commit français et push. Rapport invitant ensuite à « passe à la phase 8 ».
 
-### 9.3 Garanties à construire
-
-Appliquer C08 dans l’ordre : réponses et rapprochements, sorties prioritaires, maintenance des protections,
-puis nouvelles intentions. Identifier propriétaire et intention par magic/commentaire (D-08).
-Un accusé inconnu verrouille le symbole et déclenche les rapprochements aux cadences configurées,
-puis l’alerte ; aucune retransmission aveugle. Un remplissage partiel annule le reliquat sans complément
-automatique ; le premier volume confirmé non nul consomme seul le quota, de façon idempotente.
-Un accusé ou volume nul ne doit jamais produire une issue `REMPLIE`.
-
-Vérifier les protections : SL absent → clôture d’urgence immédiate ; TP recalculé depuis le prix moyen
-réel avec SL fixe, réessais bornés par les délais et l’échéance ; TP déjà dépassé → clôture au prix
-disponible. Recalculer le risque avec les frais d’entrée réels et la seule réserve de sortie, budget
-et fonds propres de référence gelés ; réduire au plus grand volume admissible, sinon clôturer.
-Les réservations ne se libèrent ni par un profit flottant ni par une réponse ambiguë.
-
-Sans cotation ou en marché fermé, les sorties restent prioritaires et se réessaient ; aucune entrée
-rétroactive. Arrêts quotidien et global survivent au redémarrage ; seul le quotidien se réarme au
-jour UTC suivant, le global exige une décision tracée. Consommer les preuves P-12 et les flux
-identifiés sans neutraliser deux fois le même mouvement. La persistance physique sera construite
-dans l’infrastructure ; définir ici le port et les états purs de reprise, sans simuler un disque interne.
-
-Recontrôler juste avant l’envoi la permission fondamentale et la copie mémoire IA. Le contrôle neutre
-est un scénario **explicitement** `TECHNICAL_CONTROL_NEUTRAL`, jamais une permission implicite en production.
-Le complément absent vaut `NEUTRAL` et ne crée aucune permission fondamentale. Journal C09 et issues
-des stratégies doivent refléter chaque transition. P-08 : causes intermédiaires conservées et motif final
-`SIGNAL_EXPIRED` avec dernière cause bloquante. Cas C11.11–13, L-12–14 et L-17–19 sur les vrais composants.
-
-### 9.4 Sortie attendue
-
-Couture S4 avec de vrais ordres synthétiques exécutés par S5 ; conserver les vrais signaux et les tests
-de bout en bout causaux. Ne pas anticiper l’orchestration complète de phase 9. Gate global des deux
-lignées, cartes strictes, mutations sur copies extérieures, bilan, suivi composite, registre des coutures,
-plan directeur 1.4.7, guide et passation à jour, commit et push. Rapport d’arrêt invitant à la phase 7.
-
-## 10. Leçons et pièges des phases 0 à 5
+## 10. Leçons et pièges des phases 0 à 6
 
 1. **Divergence stricte** : une dépendance réelle oubliée dans la carte fait échouer le gate ; déclarer aussi les
    dépendances vers les couches de types.
@@ -444,10 +443,8 @@ plan directeur 1.4.7, guide et passation à jour, commit et push. Rapport d’ar
     explicite ; celui de 1a a aussi ajouté le test exact des extrêmes hétérogènes révélé par mutation.
 13. **Liens Markdown** : la porte `markdown-links` vérifie les liens relatifs des fichiers modifiés.
 
-## 11. Aperçu des phases 6 à 13 (points d'attention)
+## 11. Aperçu des phases 7 à 13 (points d'attention)
 
-- **6** (`execution-coordinateur` 4 à 6) : couche 4 cyclique construite par transitions successives, un gate de
-  catégorie 1 par transition ; D-08 ; P-08 ; couture S4 avec de vrais ordres exécutés par S5.
 - **7** (`controles-fondamentaux`) : fixtures au format exact du dossier d'échange (D-11) et de l'export MQL5 (D-12,
   document 01, §2.1 et §2.2) ; aucune lecture de fichier réel avant la phase 11.
 - **8** (`contexte-ia`) : égalité avec `overlay_decision` ; persistance du cache par export et import.
@@ -473,18 +470,18 @@ plan directeur 1.4.7, guide et passation à jour, commit et push. Rapport d’ar
   (sans `--integration` en profondeur 0), puis `... figer --couche <id> --par agent`.
 - Gate global : `... gate --global --regression "python tools/run_london_tests.py" --regression "python tools/verify_project.py"`.
 - Vérification des cartes : `... --dossier mcl/robot-london-v3 verifier`, idem pour chaque artefact ; `statut`.
-- Démonstration du squelette : `PYTHONPATH=src python -m xpbots.app.rejeu_squelette --ticks <fichier.csv> --sortie <dossier> --tick-size EURUSD=0.00001` (répéter pour chaque symbole synthétique).
+- Démonstration du squelette : `PYTHONPATH=src python -m xpbots.app.rejeu_squelette --ticks <fichier.csv> --sortie <dossier> --tick-size EURUSD=0.00001 --contrat-papier EURUSD=1000,0.1,1,0.1 --scenario TECHNICAL_CONTROL_NEUTRAL` (répéter les paramètres d’instrument).
 
 ## 13. Contrôle de reprise (à faire avant tout changement)
 
 1. La branche contient `9c39d23`, l’intégration `5e5e288`, ce rapport et le moteur `c2_moteur` ; vérifier
-   le commit de phase 5 dans `git log` (après `85069c0`) et le récupérer depuis la branche publiée si nécessaire. Ne pas repartir
+   le commit de phase 6 dans `git log` (après `4213a07`) et le récupérer depuis la branche publiée si nécessaire. Ne pas repartir
    de la seule ancienne branche de phase 3, qui ne contient ni coexistence ni moteur S02.
 2. `mcl.py statut` indique « Toutes les couches sont figées » pour `mcl/noyau`,
-   `mcl/london-donnees-temps` et `mcl/moteur-london`. Dans `mcl/london-execution-coordinateur`, seules les onze couches 0a à 3 sont figées ; 4, 5a, 5b et 6 sont à construire.
-3. `python tools/run_london_tests.py` donne au moins 613 tests verts des deux lignées ; `python tools/verify_project.py` PASS ;
-   `mcl.py --dossier mcl/robot-london-v3 verifier` VERT ; `git status --short` comparé à la fin de phase 5 : deux modifications préexistantes de
-   `.gitattributes` et `tests/robot/fixtures/squelette_ticks.csv` ont été préservées hors des commits des phases 4 et 5 ;
+   `mcl/london-donnees-temps` et `mcl/moteur-london`. Les quinze couches du coordinateur commun dans `mcl/london-execution-coordinateur` sont aussi figées.
+3. `python tools/run_london_tests.py` donne au moins 707 tests verts des deux lignées ; `python tools/verify_project.py` PASS ;
+   `mcl.py --dossier mcl/robot-london-v3 verifier` VERT ; `git status --short` comparé à la fin de phase 6 : deux modifications préexistantes de
+   `.gitattributes` et `tests/robot/fixtures/squelette_ticks.csv` ont été préservées hors des commits des phases 4 à 6 ;
    tout autre écart doit être identifié et expliqué.
 4. Sous Windows, conserver les octets LF de la fixture CSV lors d'un export pour les tests : employer
    `git -c core.autocrlf=false archive` pour obtenir les blobs exacts. Le réglage `core.autocrlf=true` avec
@@ -492,6 +489,16 @@ plan directeur 1.4.7, guide et passation à jour, commit et push. Rapport d’ar
    reproduit sur le commit initial et ne vient pas du moteur London. La règle CSV ajoutée initialement dans
    le répertoire de travail reste une modification non commitée de l'utilisateur.
 5. Tout écart est signalé dans la réponse avant de commencer, avec sa preuve ; il n'est jamais masqué.
+
+### 13.1 Limite Windows observée lors de la clôture de phase 6
+
+La gouvernance complète est à 7/8 : seul le test du lanceur PowerShell dépasse 120 s. L'échec
+identique est reproduit sur le commit de départ `4213a07`, sans code de phase 6 ; les hooks et
+leurs tests n'ont pas été modifiés. Les cinq portes applicables aux fichiers modifiés passent,
+y compris le contrat de gouvernance. Les suites des robots et du projet passent sur les blobs
+publiés. Voir le bilan du coordinateur §6.11 pour les preuves de travail. Ne pas annoncer 8/8,
+ne pas retirer ce test et ne pas étendre ce constat à la qualification de plateforme de phase 13.
+Réessayer le test dans un environnement PowerShell fonctionnel lors de la reprise.
 
 ## 14. Glossaire minimal
 

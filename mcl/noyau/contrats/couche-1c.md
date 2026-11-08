@@ -1,6 +1,6 @@
 # Contrat de la couche 1c — domaine
 
-- **Statut** : finalisé le 05/11/2026 (figé par `mcl.py figer` après gate vert)
+- **Statut** : finalisé le 05/11/2026 ; étendu le 07/11/2026 par défigeage `extension` pour les clôtures de sécurité C08 de la phase 6.
 - **Consommateurs cartographiés** : couche 2 (`journal`) ; plus tard `moteur-london` (signaux et absences de
   signal), `execution-coordinateur` (intentions, issues, motifs), `controles-fondamentaux` et `contexte-ia`
   (décisions des contrôles)
@@ -20,7 +20,7 @@ C09, `ENVIRONMENT_NOT_READY` de C04, `AI_CONTEXT_VETO` de A07) ; `VERSION_DETAIL
 `AbsenceDeSignal(strategie, symbole, cloture_ms, motif, detail, contexte)` ; `ResultatTechnique` (l'un ou
 l'autre) ; `NatureIssue` (`REMPLIE`, `REFUSEE`, `EXPIREE`, `CLOTUREE`) ; `CauseCloture` (`STOP_LOSS`,
 `TAKE_PROFIT`, `GARDE_QUOTIDIENNE`, `ARRET_GLOBAL`, `FLATTEN`, `ANNONCE`, `HEURE_SORTIE`, `DUREE_MAXIMALE`,
-`FERMETURE_NATIVE`, `BLACKOUT`) ; `Issue(cle, nature, instant_ms, motif=None, detail=None, cause=None)` ;
+`FERMETURE_NATIVE`, `BLACKOUT`, `PROTECTION`, `RISQUE_APRES_REMPLISSAGE`) ; `Issue(cle, nature, instant_ms, motif=None, detail=None, cause=None)` ;
 `DecisionFondamentale(admise, motif=None, detail=None, cloture_obligatoire=False)` ; `ContexteIA` (`BLOCK`,
 `NEUTRAL`) ; `DecisionContexteIA(etat, evenement=None)` avec `motif_et_detail()` ; `ErreurDomaine(ValueError)`.
 Entrée : textes et instants entiers (0a) ; prix et ATR en flottants 64 bits ; contexte : correspondance de
@@ -38,6 +38,8 @@ de contexte IA : `BLOCK` avec un identifiant d'événement, `NEUTRAL` sans ; jam
 Effets de bord : aucun.
 Erreurs, exceptions : `ErreurDomaine` pour toute valeur hors de ces ensembles, tout texte vide, tout instant
 refusé par 0a, tout nombre non fini, toute combinaison incohérente.
+
+Extension C08 de phase 6 : `PROTECTION` identifie la clôture pour SL absent ou plan de TP non rétabli ou dépassé ; `RISQUE_APRES_REMPLISSAGE` identifie une clôture de sécurité faute de volume restant admissible. Ces causes ne créent aucun motif C09, aucun seuil et aucun arrêt global. Le motif et son détail restent ceux du contrôle réellement déclenché. Les causes précédentes et toutes les signatures restent admises à comportement constant.
 
 ---
 

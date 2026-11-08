@@ -398,7 +398,7 @@ Esquisses de contrat :
 Réalisation de phase 5 : le nom logique `execution-coordinateur` désigne un seul composant partagé.
 Son dossier actif est [london-execution-coordinateur](../../../mcl/london-execution-coordinateur/PLAN-MCL.md),
 selon l’arbitrage R4/R5 du registre de coexistence ; le dossier EMA homonyme historique reste une esquisse.
-Les onze couches 0a à 3 sont figées ; 4, 5a, 5b et 6 restent des esquisses à finaliser en phase 6.
+Les quinze couches 0a à 6 sont figées après la phase 6. Les signatures et dépendances réelles sont celles du dossier actif ; S4 est remplacé et le rejeu utilise de vrais ordres C08.
 La carte active donne toutes les dépendances directes réelles, y compris celles vers 0a.
 
 Le domaine canonique est celui du noyau London ; 0a adapte les vrais types de signal, tick et clé EMA,

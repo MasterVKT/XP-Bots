@@ -58,3 +58,18 @@ class TestReservations(unittest.TestCase):
         r.reserver(a,compte(),0);r.reserver(b,compte(),1);r.sur_issue(Issue(a.cle,NatureIssue.REMPLIE,T))
         self.assertIsNone(r.verifier_admission(a.cle,'EURUSD',D('.6'),compte(),remplacement=True))
         self.assertEqual(r.verifier_admission(a.cle,'EURUSD',D('.60001'),compte(),remplacement=True).detail,'RESERVE_TOTALE')
+    def test_deverrouillage_idempotent_apres_restauration_sans_liberer_le_risque(self):
+        r=RegistreReservations(commun());a=reservation();r.reserver(a,compte(),0)
+        r.verrouiller('EURUSD');r.verrouiller('GBPUSD')
+        r=RegistreReservations(commun(),r.etat);avant=r.etat
+        apres=r.deverrouiller('EURUSD')
+        self.assertEqual(apres.version,avant.version+1)
+        self.assertEqual(apres.verrous,('GBPUSD',))
+        self.assertEqual(apres.reservations,avant.reservations)
+        self.assertEqual(apres.terminees,avant.terminees)
+        self.assertEqual(r.risque_total(compte()),D('.5'))
+        self.assertIs(r.deverrouiller('EURUSD'),apres)
+        for invalide in ('',None,True):
+            with self.subTest(invalide=invalide),self.assertRaises(ValueError):
+                r.deverrouiller(invalide)
+        self.assertIs(r.etat,apres)

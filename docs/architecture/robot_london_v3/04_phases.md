@@ -172,6 +172,12 @@ la même carte avec 4, 5a, 5b et 6 ; aucune couture n’a lieu en phase 5.
 
 ## Phase 6 — Artefact `execution-coordinateur`, couches 4 à 6
 
+Réalisation achevée le 08/11/2026 : quatre nouvelles couches figées dans le dossier actif commun,
+checkpoint 6, couture S4 achevée. Le [bilan](../../../mcl/london-execution-coordinateur/PLAN-MCL.md)
+décrit les contrats, corrections, preuves de reprise et mutations. Les journées synthétiques d'été
+et d'hiver passent par le vrai moteur London, le coordinateur et les commandes C08 du modèle papier.
+Le scénario neutre, le contrat et la grille synthétiques sont explicites ; la persistance est mémoire.
+
 - **Objectif** : cycle de vie des intentions, sorties obligatoires, reprise et enveloppe du coordinateur.
 - **Skills** : `xp-bots-risk-execution-contracts`, `xp-bots-deployment-readiness` (arrêts persistants,
   alertes), MCL.

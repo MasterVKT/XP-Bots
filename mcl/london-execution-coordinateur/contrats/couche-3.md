@@ -24,6 +24,10 @@ Si aucun volume ne respecte le budget de risque : MIN_VOLUME_OR_RISK_REJECT. Si 
 
 ## Spécification exécutable
 
+### Extension additive du 07/11/2026, phase 6
+
+`revalider_avant_envoi(plan, signal, profil, compte, registre, gardes, port, commun)` réutilise le même calcul C07 sur le seul volume préparé, après confirmation de persistance et juste avant transmission. La réservation initiale non remplie doit encore correspondre exactement ; seule cette réservation est exclue d'un registre local pour éviter un double comptage. Les autres positions, réserves et verrous restent présents. Budget et équité de référence restent gelés ; les spécifications, frais et contrôles natifs sont courants. Aucun volume de remplacement n'est proposé, aucun budget ou risque réservé n'augmente, aucun état du registre réel ne change. Risque nouveau supérieur à la réserve initiale → environnement non prêt ; dépassement du budget ou contrainte native → refus C09 existant. La version réelle est recontrôlée après tous les appels externes. Le coordinateur consomme un refus sans retransmettre. Le comportement de `dimensionner` est conservé.
+
 `test_cat1_c3_dimensionnement.py` : C11.6/C11.7, L-01, cinq contraintes, P-06, frais non linéaires et réduction ; `test_cat2_c3_dimensionnement.py` : arbitrage réel et réservation atomique entre les deux méthodes, compte partagé.
 
 ## Comportements documentés (loi de Hyrum)

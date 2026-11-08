@@ -167,6 +167,16 @@ ou résultats incomplets vers `ENVIRONMENT_NOT_READY`. Les calculs synthétiques
 aucun instrument ni compte réel. Les [contrats MCL](../../../mcl/london-execution-coordinateur/PLAN-MCL.md)
 fixent les signatures ; la vérification réelle reste en phase 13.
 
+### 2.11 Contrats internes C08 construits en phase 6
+
+Le cycle, les sorties, la reprise et l'enveloppe du coordinateur sont figés dans le même dossier MCL.
+Ils reçoivent des valeurs et rendent états, commandes et traces ; aucun accès au terminal ou au disque.
+La preuve de persistance distingue préparation et transmission. Un accusé natif ne prouve pas un fill.
+Le producteur d'observation devra fournir les SL/TP actuels (`PositionNative`, champs obligatoires
+`sl` et `tp`, absence représentée par `None`) et distinguer un `OrdreNatif` ENTREE d'un ordre CLOTURE.
+Les protections du journal ne remplacent jamais le relevé courant. Une disparition sans preuve native
+de clôture ou d'absence positive ne libère ni risque ni verrou. La qualification réelle reste future.
+
 ## 3. Dossier d'échange des permissions (D-11)
 
 Emplacement, écriture et lecture : [document 01](01_architecture.md), §2.1. Un fichier contient exactement un

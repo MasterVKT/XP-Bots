@@ -1,10 +1,24 @@
-# Esquisse de couche 5b — reprise_rapprochement
+# Contrat de couche 5b — reprise et rapprochement
 
-Statut : esquisse, à finaliser immédiatement avant la construction ; phase 6, hors demande courante.
-Unité : reprise_rapprochement
-Responsabilité : document 02, §6.4, reprise_rapprochement.
-Signature : à finaliser dans le besoin cartographié.
-Entrée : types du noyau et dépendances 0a, 1b, 1c, 4.
-Sortie : valeurs et refus C09 du contrat C04–C08 correspondant.
-Effets de bord : aucun accès réel à une frontière externe.
-Erreurs, exceptions : refus déterministe ; aucune règle métier ajoutée.
+Statut : finalisé le 07/11/2026 avant construction ; dépendances 0a, 1b, 1c et 4 figées.
+Unité : reprise_rapprochement ; consommateur cartographié : 6.
+Responsabilité : restaurer les risques et arrêts, rapprocher des faits natifs, vérifier la propriété et lever seulement les verrous positivement résolus.
+Signature : `CyclePersiste(signal, plan, profil, etat)` ; `EtatReprise(cycles=(), reservations=EtatReservations(), gardes=None)` ; `PositionNative(ticket, symbole_courtier, volume, magic, commentaire, origine_exclusive=False, *, sl, tp)` ; `OrdreNatif(ticket, symbole_courtier, volume_restant, magic, commentaire, nature=NatureCommande.ENTREE)` ; `ObservationNative(compte, depuis_ms, historique_complet, positions=(), ordres=(), reponses=(), absences=(), exclusivites=())` ; `BilanReprise(etat, compte, commandes, issues, traces, prete, refus=None)` ; `restaurer(commun, etat, longueur_empreinte, instant_ms)` ; `rapprocher(commun, etat, longueur_empreinte, observation, *, netting=False, reconstitution=None)`.
+Entrée : instantanés purs du journal externe, compte natif sans positions attribuées, ordres/positions et transactions natifs, preuves d'absence 4, couverture historique et preuve de propriété exclusive en netting.
+Sortie : nouvel instantané pur, compte avec propriété qualifiée, commandes de rapprochement/sécurité, issues et traces ; indicateur de rapprochement complet, refus conservateur.
+Effets : aucun fichier, courtier ou horloge ; gardes et réservations sont reconstruites dans des objets réels locaux. La persistance physique reste externe.
+Erreurs : `ErreurExecution` pour instantané incohérent, doublons ou données futures ; fait natif non attribuable → position externe et refus, jamais adoption ou clôture étrangère.
+
+La restauration vérifie la concordance exacte de chaque réservation non terminale avec son plan initial, ainsi que le drapeau de premier remplissage ; une réservation orpheline interdit la reprise. Elle conserve les arrêts, risques initiaux, compteurs, instants natifs et tentatives de protection. Tout cycle non terminal est verrouillé et rapproché, sans entrée retransmise.
+
+La propriété exige un cycle connu, le symbole courtier exact, le magic et le commentaire D-08 exacts, puis le ticket et le volume de position confirmés. Un magic seul ou un commentaire tronqué n'est pas une preuve. En netting il faut en plus le verrou de compte/symbole déclaré dans `exclusivites` et une origine intégralement exclusive ; une agrégation inconnue reste externe. Les frais, volume cumulé et premier instant ne se déduisent jamais d'une position seule : les transactions natives alimentent le vrai cycle 4.
+
+Les réceptions d'historique deviennent connues à l'instant de l'observation, sans déplacer `execution_ms`. Les références déjà connues et de contenu identique sont ignorées ; un contenu contradictoire est refusé. Les issues réelles mettent à jour le registre ; aucune clôture supposée d'après une simple disparition. Une absence exige toutes les preuves 4. Une exécution positive contredisant une intention terminale libérée bloque le rapprochement, sans adopter ou envoyer automatiquement quoi que ce soit.
+
+Une position possédée avec volume confirmé, reliquat annulé et couverture historique complète lève seulement son verrou. Une intention encore en attente conserve son risque et son verrou ; un ordre natif identifié ne libère rien. Les positions et ordres externes bloquent l'admission, mais ne produisent aucune commande de clôture ou d'annulation. Les gardes sont observées avec le vrai compte et, au besoin, la reconstitution C07/P-12 fournie ; absence de base → environnement non prêt, sans remettre un arrêt à zéro.
+
+Extension additive du 07/11/2026 : la nature d'un ordre natif distingue entrée et clôture. Une clôture porte souvent un autre ticket que l'entrée : elle est identifiée seulement pour un cycle rempli avec une sortie effectivement en cours et la preuve D-08 exacte. Son ticket ne remplace jamais celui du reliquat d'entrée. Une entrée encore active alors que son reliquat est déjà confirmé annulé est contradictoire et bloque le rapprochement. Tout autre type d'ordre est refusé.
+
+Modification du 07/11/2026, [arbitrage tracé](../decisions/2026-11-07-protections-natives.md) : les niveaux `sl` et `tp` courants de la position native sont obligatoires dans le snapshot ; `None` signifie absence native confirmée. Une donnée indisponible ne se convertit pas en zéro ou en valeur du journal. Après preuve de propriété, leur changement alimente la vraie transition de protection de 4 ; SL supprimé → clôture urgente. Les protections courantes sont tracées même si elles concordent avec le journal. Aucune telle action ne vise une position externe.
+
+Tests catégorie 1 : redémarrage après envoi, preuve d'absence complète/incomplète, propriété D-08, netting, historique retardé, risque absent, ordre externe, arrêt persistant. Catégorie 2 : vrais cycles, registres et gardes, arrêt pendant partiel puis clôture native et annulation ; aucune doublure interne.

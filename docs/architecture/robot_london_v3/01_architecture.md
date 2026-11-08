@@ -252,7 +252,7 @@ src/xpbots/
   execution/                        artefact execution-coordinateur
     c0a_types/ c0b_ports_controles/ c0c_garde_cotation/ c0d_prix/ c0e_echeances/
     c1a_port_calcul/ c1b_gardes_compte/ c1c_reservations/ c2a_risque/ c2b_arbitrage/
-    c3_dimensionnement/ c4_cycle_ordre/ c5a_sorties/ c5b_reprise/ c6_coordinateur/
+    c3_dimensionnement/ c4_cycle/ c5a_sorties/ c5b_reprise/ c6_coordinateur/
   fondamental/                      artefact controles-fondamentaux
   contexte_ia/                      artefact contexte-ia
   orchestration/                    artefact orchestration

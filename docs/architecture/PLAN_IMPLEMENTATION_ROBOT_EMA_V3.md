@@ -10,7 +10,7 @@ Ce contexte décrit l’état initial de planification. Depuis, les deux lignée
 et leurs socles. Au 06/11/2026, les calculs du coordinateur commun sont figés dans
 [london-execution-coordinateur](../../mcl/london-execution-coordinateur/PLAN-MCL.md), avec adaptation typée EMA.
 Ce plan doit consommer cette unique implémentation ; l’ancienne esquisse `mcl/execution-coordinateur/`
-n’autorise pas de doublon. Le cycle d’ordre et l’adaptateur courtier restent à construire. Ce plan organise la construction complète et vérifiable du robot 1, sans modifier aucune règle,
+n’autorise pas de doublon. Depuis la phase 6 London, le cycle C08, les sorties, la reprise et l’enveloppe communes sont aussi figés. Leur intégration au robot EMA et l’adaptateur courtier restent à construire. Ce plan organise la construction complète et vérifiable du robot 1, sans modifier aucune règle,
 aucun seuil, aucun export, aucune référence, aucune preuve (`.agents/PROJECT_RULES.md` §4).
 
 Résultat visé : un robot Python qui, sur les mêmes ticks, prend les mêmes décisions en rejeu et en direct

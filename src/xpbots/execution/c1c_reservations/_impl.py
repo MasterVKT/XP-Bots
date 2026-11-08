@@ -92,3 +92,9 @@ class RegistreReservations:
         if sous_jacent not in self._etat.verrous:
             self._etat=replace(self._etat,version=self._etat.version+1,verrous=self._etat.verrous+(sous_jacent,))
         return self._etat
+    def deverrouiller(self,sous_jacent):
+        texte(sous_jacent)
+        if sous_jacent in self._etat.verrous:
+            self._etat=replace(self._etat,version=self._etat.version+1,
+                               verrous=tuple(v for v in self._etat.verrous if v!=sous_jacent))
+        return self._etat

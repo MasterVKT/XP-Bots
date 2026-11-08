@@ -87,3 +87,12 @@ L'option A de R5 est retenue : adaptateurs typés en 0a, des valeurs EMA existan
 Le registre `COMMUN` couvre les nouveaux sous-paquets du seul coordinateur. Les deux cartes composites le contrôlent, sans l'exclure comme code de l'autre lignée. La règle R3 reste stricte pour les fichiers propres aux méthodes ; seule la frontière d'adaptation commune 0a peut importer les types EMA et London. Les imports des moteurs de méthodes demeurent interdits au coordinateur. Les tests emploient de vrais objets des deux noyaux et un même registre de réservations, afin que la priorité et les plafonds ne puissent pas être appliqués séparément par robot.
 
 Décision prise par la session de construction sur délégation de la demande explicite d'achever la phase 5. Aucune règle de risque, aucun coût et aucun seuil ne sont modifiés.
+
+### Prolongement R4/R5 du 08/11/2026 — phase 6 London
+
+Les quinze couches du coordinateur unique sont construites et gelées dans le même dossier actif.
+Le cycle C08, les sorties, la reprise et l'enveloppe consomment les adaptateurs 0a existants ; aucun
+moteur n'est importé par le coordinateur. London remplace S4 et utilise les commandes communes dans
+son rejeu papier. Cette disponibilité n'intègre pas le robot EMA de plateforme et ne remplace pas
+son squelette. L'extension additive du domaine London ajoute seulement deux causes de clôture ;
+elle est tracée dans le journal MCL du noyau. Les noyaux EMA et journaux historiques restent intacts.

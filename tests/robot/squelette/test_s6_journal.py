@@ -14,6 +14,8 @@ from xpbots.orchestration.squelette import fabriquer_moteur_minimal
 from xpbots.rejeu.squelette import hypotheses_marche_squelette
 from robot.outils.chemins import RACINE_DEPOT
 from robot.outils.configuration import octets_exports
+from robot.outils.couture_execution import composer
+from xpbots.rejeu.squelette import rejouer
 
 
 class TestJournalDuSquelette(unittest.TestCase):
@@ -21,14 +23,13 @@ class TestJournalDuSquelette(unittest.TestCase):
         configuration = configuration_figee()
         duree = configuration.technique.commun.timeframe_seconds * 1000
         ticks = [Tick('EURUSD', 'EURUSD', i * duree, i * duree, i, 1.1, 1.1001) for i in range(3)]
-        horaires, periodes = hypotheses_marche_squelette(ticks, configuration)
-        moteur = fabriquer_moteur_minimal(fabriquer_strategie(configuration), configuration, 'REJEU',
-                                          horaires=horaires, periodes_couvertes=periodes)
-        enregistrements = [e for t in ticks for e in moteur.traiter_tick(t).enregistrements]
+        moteur,execution,stockage = composer(ticks)
+        enregistrements = rejouer(ticks,moteur,execution,stockage).enregistrements
         with tempfile.TemporaryDirectory() as dossier:
             chemin = ecrire_journal(dossier, (serialiser(e) for e in enregistrements))
             lignes = Path(chemin).read_text(encoding='utf-8').splitlines()
-        self.assertEqual(len(lignes), 2)
+        self.assertEqual(len(lignes), 3)
+        self.assertEqual(json.loads(lignes[0])['type'],'RAPPROCHEMENT')
         for ligne in lignes:
             self.assertEqual(json.dumps(json.loads(ligne), ensure_ascii=False, sort_keys=True, separators=(',', ':')), ligne)
 

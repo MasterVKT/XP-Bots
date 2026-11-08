@@ -9,6 +9,7 @@ from xpbots.noyau.c1b_instrument import Intervalle
 from xpbots.noyau.c2_journal import TypeEnregistrement
 from xpbots.orchestration.squelette import fabriquer_moteur_minimal
 from xpbots.rejeu.squelette import hypotheses_marche_squelette
+from robot.outils.couture_execution import composer,enregistrements
 
 CONFIGURATION = configuration_figee()
 M15 = CONFIGURATION.technique.commun.timeframe_seconds * 1000
@@ -37,10 +38,7 @@ class StrategieEspionne:
 
 
 def rejouer_moteur(ticks, strategie=None, horaires=None, periodes=None):
-    hypothese = hypotheses_marche_squelette(ticks, CONFIGURATION)
-    moteur = fabriquer_moteur_minimal(strategie or fabriquer_strategie(CONFIGURATION), CONFIGURATION, 'REJEU',
-                                      horaires=horaires or hypothese[0], periodes_couvertes=periodes or hypothese[1])
-    return [e.vers_dict() for t in ticks for e in moteur.traiter_tick(t).enregistrements]
+    return enregistrements(ticks,strategie or fabriquer_strategie(CONFIGURATION),CONFIGURATION,horaires,periodes)
 
 
 class TestCoutureS2(unittest.TestCase):
@@ -48,12 +46,13 @@ class TestCoutureS2(unittest.TestCase):
         horaires, periodes = hypotheses_marche_squelette(
             [tick(H1 + 5), tick(3 * H1 + 7, numero=1), tick(10, symbole='GBPUSD', numero=2)], CONFIGURATION)
         self.assertEqual(periodes, {'EURUSD': (Intervalle(H1, 4 * H1),), 'GBPUSD': (Intervalle(0, H1),)})
-        self.assertEqual((horaires['EURUSD'].debut_validite_ms, horaires['EURUSD'].fin_validite_ms), (H1, 4 * H1))
+        self.assertEqual((horaires['EURUSD'].debut_validite_ms, horaires['EURUSD'].fin_validite_ms), (H1, 5 * H1))
         self.assertEqual(hypotheses_marche_squelette([], CONFIGURATION), ({}, {}))
 
     def test_m15_journalisees_avec_indicateurs_h1_transmises_a_la_strategie(self):
         espion = StrategieEspionne()
         enregistrements = rejouer_moteur([tick(i * M15, 1.1 + 0.001 * i, i) for i in range(5)], espion)
+        enregistrements=[e for e in enregistrements if e['type'] is TypeEnregistrement.CLOTURE]
         self.assertEqual([e['type'] for e in enregistrements], [TypeEnregistrement.CLOTURE] * 4)
         self.assertEqual({e['bougie']['duree_ms'] for e in enregistrements}, {M15})
         self.assertEqual([e['indicateurs']['rang'] for e in enregistrements], [0, 1, 2, 3])
@@ -62,6 +61,7 @@ class TestCoutureS2(unittest.TestCase):
 
     def test_bougie_sans_tick_journalisee_invalide_p02(self):
         enregistrements = rejouer_moteur([tick(0), tick(2 * M15 + 3, numero=1), tick(3 * M15, numero=2)])
+        enregistrements=[e for e in enregistrements if e['type'] is TypeEnregistrement.CLOTURE]
         self.assertEqual([(e['bougie']['debut_utc_ms'], e['bougie']['valide'], e['bougie']['motif_invalidite'],
                            e['indicateurs']) for e in enregistrements][1], (M15, False, 'AUCUN_BID', {}))
         self.assertEqual(len(enregistrements), 3)
@@ -81,10 +81,8 @@ class TestCoutureS2(unittest.TestCase):
         ticks = [tick(0), tick(M15, numero=1)]
         horaires, periodes = hypotheses_marche_squelette(ticks, CONFIGURATION)
         with self.assertRaises(ValueError):
-            fabriquer_moteur_minimal(fabriquer_strategie(CONFIGURATION), CONFIGURATION, 'REJEU', horaires=horaires,
-                                     periodes_couvertes={})
-        moteur = fabriquer_moteur_minimal(fabriquer_strategie(CONFIGURATION), CONFIGURATION, 'REJEU',
-                                          horaires=horaires, periodes_couvertes=periodes)
+            composer(ticks,fabriquer_strategie(CONFIGURATION),horaires=horaires,periodes={})
+        moteur,_,_ = composer(ticks)
         with self.assertRaises(ValueError):
             moteur.traiter_tick(tick(5, symbole='GBPUSD'))
 

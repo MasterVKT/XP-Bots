@@ -78,3 +78,9 @@ l'utilisateur. Bilan par `mcl.py rapport` à la clôture de chaque artefact.
 | 1 — Squelette | 2026-11-05 | Noyau (types, ports, motifs, journal C09, configuration), segments minimaux, rejeu `xpbots.app.rejeu`, lanceur `tools/run_robot_tests.py`, CI ; coutures finalisées ; gate global tracé |
 | 2 — Données et temps | 2026-11-05 | Artefact `donnees-temps` construit et figé (couches 0, 1a, 1b, 1c, 2, 3 ; 6 gates verts, 2 checkpoints, aucun défigeage) ; branché à la place de l'agrégateur minimal ; coutures étendues (section 5 de `COUTURES.md`) ; R4–R6 appliqués |
 | 3 — Moteur EMA | 2026-11-05 | Décisions R1–R18 prises par délégation (registre) ; R6′ : défigeage tracé de `donnees-temps` 3 (recalcul sur les bougies valides), re-figé ; artefact `moteur-ema` construit et figé (couches 0, 1a, 1b, 1c, 1d, 2, 3 ; 7 gates verts, 2 checkpoints) ; signaux identiques à `reference.technical.ema_setups` ; `MoteurEMA` branché à la place de la stratégie neutre (manifeste v3 avec `tick_size`, stockage mémoire) ; rejeu de bout en bout de 2 600 bougies : signaux refusés (`FUNDAMENTAL_INVALID` ou `ENVIRONMENT_NOT_READY`), `STOP_TOO_WIDE`, cooldown, point d'entrée en ligne de commande ; coutures étendues (section 5 de `COUTURES.md`) |
+
+### Disponibilité commune après la phase 6 London
+
+Le dossier actif `london-execution-coordinateur` contient désormais quinze couches figées, incluant
+cycle C08, sorties et reprise. Le robot EMA doit consommer ces mêmes interfaces via 0a ; aucune
+nouvelle phase EMA n'est déclarée réalisée et son squelette historique n'est pas modifié.

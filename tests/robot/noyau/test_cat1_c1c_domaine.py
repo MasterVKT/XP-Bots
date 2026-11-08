@@ -81,6 +81,20 @@ class TestResultatsTechniques(unittest.TestCase):
 
 
 class TestIssuesEtDecisions(unittest.TestCase):
+    def test_clotures_de_securite_distinctes_des_arrets_du_compte(self):
+        cas = (
+            ('PROTECTION', Motif.PROTECTION_ERROR, 'SL_ABSENT'),
+            ('RISQUE_APRES_REMPLISSAGE', Motif.MARGIN_REJECT, 'CONTROLE_NATIF'),
+        )
+        for cause, motif, detail in cas:
+            with self.subTest(cause=cause):
+                issue = Issue(CLE, NatureIssue.CLOTUREE, 10, motif, detail, cause)
+                self.assertIs(issue.cause, CauseCloture(cause))
+                self.assertEqual((issue.motif, issue.detail), (motif, detail))
+                self.assertNotEqual(issue.cause, CauseCloture.ARRET_GLOBAL)
+                with self.assertRaises(ErreurDomaine):
+                    Issue(CLE, NatureIssue.REMPLIE, 10, cause=cause)
+
     def test_issues(self):
         self.assertIs(Issue(CLE, 'REMPLIE', 10).nature, NatureIssue.REMPLIE)
         self.assertIs(Issue(CLE, 'REFUSEE', 10, 'MARGIN_REJECT', 'MARGE_TIERS').motif, Motif.MARGIN_REJECT)

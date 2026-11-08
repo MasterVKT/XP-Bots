@@ -11,7 +11,15 @@ from robot.outils.fabrique_ticks import BougieVoulue, ecrire_csv, ticks_de_bougi
 from xpbots.app.rejeu_squelette import main
 
 
-def executer(arguments):
+def executer(arguments,explicite=True):
+    arguments=list(arguments)
+    if explicite:
+        arguments+=['--scenario','TECHNICAL_CONTROL_NEUTRAL']
+        for i,a in enumerate(list(arguments)):
+            if a=='--tick-size' and '=' in arguments[i+1]:
+                symbole=arguments[i+1].split('=')[0]
+                if not any(v==symbole+'=1000,0.1,1,0.1' for v in arguments):
+                    arguments+=['--contrat-papier',symbole+'=1000,0.1,1,0.1']
     sortie, erreurs = io.StringIO(), io.StringIO()
     with contextlib.redirect_stdout(sortie), contextlib.redirect_stderr(erreurs):
         try:
@@ -110,6 +118,14 @@ class TestPointEntree(unittest.TestCase):
                                      '--sortie', str(self.racine / 'sortie')])
         self.assertEqual(code, 1)
         self.assertIn('rejeu_squelette :', erreurs)
+
+    def test_scenario_et_contrat_explicitement_requis(self):
+        args=['--racine-depot',str(RACINE_DEPOT),'--ticks',str(self.ticks()),
+              '--sortie',str(self.racine/'sortie'),'--tick-size','EURUSD=0.00001']
+        self.assertEqual(executer(args,False)[0],2)
+        self.assertEqual(executer(args+['--scenario','TECHNICAL_CONTROL_NEUTRAL'],False)[0],1)
+        for contrat in ('EURUSD=1000,0.1,1','EURUSD=1000,0,1,0.1','GBPUSD=1000,0.1,1,0.1'):
+            self.assertEqual(executer(args+['--scenario','TECHNICAL_CONTROL_NEUTRAL','--contrat-papier',contrat],False)[0],1)
 
 
 if __name__ == '__main__':
