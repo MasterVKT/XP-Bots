@@ -1,0 +1,206 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "orchestration",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": "Moteur événementiel commun, stratégies injectées, comptes indépendants et état rejouable."
+  },
+  "langage": "python",
+  "sources": [
+    "src/xpbots/orchestration"
+  ],
+  "exclure": [
+    "src/xpbots/orchestration/squelette.py"
+  ],
+  "couches": [
+    {
+      "id": "0",
+      "profondeur": 0,
+      "nom": "contrats",
+      "chemins": [
+        "src/xpbots/orchestration/c0_contrats"
+      ],
+      "imports": [
+        "xpbots.orchestration.c0_contrats"
+      ],
+      "contrats": [
+        "mcl/orchestration/contrats/couche-0.md",
+        "src/xpbots/orchestration/c0_contrats/__init__.py",
+        "tests/robot/orchestration/test_cat*_c0_*.py"
+      ]
+    },
+    {
+      "id": "1",
+      "profondeur": 1,
+      "nom": "bras",
+      "chemins": [
+        "src/xpbots/orchestration/c1_bras"
+      ],
+      "imports": [
+        "xpbots.orchestration.c1_bras"
+      ],
+      "contrats": [
+        "mcl/orchestration/contrats/couche-1.md",
+        "src/xpbots/orchestration/c1_bras/__init__.py",
+        "tests/robot/orchestration/test_cat*_c1_*.py"
+      ]
+    },
+    {
+      "id": "2",
+      "profondeur": 2,
+      "nom": "moteur",
+      "chemins": [
+        "src/xpbots/orchestration/c2_moteur"
+      ],
+      "imports": [
+        "xpbots.orchestration.c2_moteur"
+      ],
+      "contrats": [
+        "mcl/orchestration/contrats/couche-2.md",
+        "src/xpbots/orchestration/c2_moteur/__init__.py",
+        "tests/robot/orchestration/test_cat*_c2_*.py"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "contrats",
+      "responsabilite": "contrats",
+      "depend_de": [
+        "noyau",
+        "execution",
+        "fondamental"
+      ],
+      "couche": "0"
+    },
+    {
+      "id": "bras",
+      "responsabilite": "bras",
+      "depend_de": [
+        "contrats",
+        "noyau",
+        "execution",
+        "contexte",
+        "donnees"
+      ],
+      "couche": "1"
+    },
+    {
+      "id": "moteur",
+      "responsabilite": "moteur",
+      "depend_de": [
+        "contrats",
+        "bras",
+        "noyau",
+        "execution",
+        "contexte",
+        "donnees",
+        "fondamental"
+      ],
+      "couche": "2"
+    }
+  ],
+  "externes": [
+    {
+      "id": "noyau",
+      "imports": [
+        "xpbots.noyau.c0a_temps",
+        "xpbots.noyau.c0c_configuration",
+        "xpbots.noyau.c1a_marche",
+        "xpbots.noyau.c1b_instrument",
+        "xpbots.noyau.c1c_domaine",
+        "xpbots.noyau.c2_journal"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1",
+        "2"
+      ]
+    },
+    {
+      "id": "execution",
+      "imports": [
+        "xpbots.execution"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1",
+        "2"
+      ]
+    },
+    {
+      "id": "contexte",
+      "imports": [
+        "xpbots.contexte_ia"
+      ],
+      "couches_autorisees": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "id": "donnees",
+      "imports": [
+        "xpbots.donnees"
+      ],
+      "couches_autorisees": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "id": "fondamental",
+      "imports": [
+        "xpbots.fondamental"
+      ],
+      "couches_autorisees": [
+        "0",
+        "2"
+      ]
+    },
+    {
+      "id": "frontieres",
+      "imports": [
+        "os",
+        "pathlib",
+        "io",
+        "time",
+        "sqlite3",
+        "threading",
+        "random",
+        "subprocess",
+        "http",
+        "urllib",
+        "socket",
+        "MetaTrader5",
+        "reference"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "aval-et-methodes",
+      "imports": [
+        "xpbots.app",
+        "xpbots.rejeu",
+        "xpbots.infra",
+        "xpbots.infrastructure",
+        "xpbots.service_ia",
+        "xpbots.london",
+        "xpbots.london_v1",
+        "xpbots.moteur_ema",
+        "xpbots.orchestration.squelette"
+      ],
+      "couches_autorisees": []
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "strict",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}

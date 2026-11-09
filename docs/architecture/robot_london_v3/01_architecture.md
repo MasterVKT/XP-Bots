@@ -376,6 +376,14 @@ courtier, appels au port de calcul et leurs résultats, messages de permission, 
 des snapshots. Rejouer ce journal dans le même cœur doit reproduire à l'identique commandes et enregistrements
 (C11.14) ; c'est aussi la base du rejeu d'incident.
 
+La phase 9 réalise ce journal en mémoire avec `EntreeJournalisee` et `AppelCalcul`
+dans `xpbots.orchestration`. Les paramètres initiaux et les états de calcul à
+l’initialisation sont fournis identiquement. Le même MoteurDecision consomme les
+entrées reçues et rejouées ; le port journalisé vérifie chaque appel et restitue
+son résultat sans backend. Le scellement de reprise détecte une corruption
+accidentelle ; il n’authentifie pas un stockage. L’infrastructure durable reste
+en phase 11, le simulateur C10 en phase 10.
+
 ### 9.3 Correspondance des motifs (arrêtée par P-07 et P-08 le 05/11/2026)
 
 | Situation | `motif` | `detail` proposé | Source |

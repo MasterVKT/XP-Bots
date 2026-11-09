@@ -22,9 +22,17 @@ from xpbots.infra.squelette import ecrire_journal, lire_configuration, lire_lign
 from xpbots.london.c2_moteur import fabriquer_strategie
 from xpbots.noyau.c0c_configuration import charger_configuration_figee
 from xpbots.noyau.c2_journal import serialiser
-from xpbots.orchestration.squelette import fabriquer_moteur_minimal, composer_coordinateur, SCENARIO_TECHNIQUE
+from xpbots.orchestration.squelette import (fabriquer_moteur_minimal,composer_coordinateur,
+    SCENARIO_TECHNIQUE,LONGUEUR_EMPREINTE_SQUELETTE)
+from xpbots.orchestration.c0_contrats import Deploiement,FabriqueStrategie
+from xpbots.orchestration.c1_bras import construire_bras
+from xpbots.orchestration.c2_moteur import MoteurDecision
+from xpbots.execution.c0b_controles import ControleTechniqueNeutre
+from xpbots.fondamental.c3_permissions import PermissionsFondamentales
+from xpbots.contexte_ia.c0_types import charger_parametres,PolitiqueVeto
+from xpbots.contexte_ia.c3_contexte import LecteurContexte
 from xpbots.rejeu.squelette import (ContratPapier, ExecutionPapierMinimale, StockageMemoirePapier,
-    analyser_lignes_ticks, hypotheses_marche_squelette, profils_papier, rejouer)
+    analyser_lignes_ticks, hypotheses_marche_squelette, profils_papier, rejouer,rejouer_ab)
 
 MODE_REJEU = 'REJEU'
 
@@ -82,12 +90,41 @@ def composer_rejeu_papier(configuration,ticks,tailles,contrats,*,strategie=None,
     coordinateur=composer_coordinateur(configuration,deploiement,profils,execution,premier,
         observation=execution.observation(),base_utc=execution.base_utc(),
         controle_fondamental=controle_fondamental,scenario=scenario,lecteur_ia=lecteur_ia)
-    strategie=strategie if strategie is not None else fabriquer_strategie(configuration,tailles)
+    fabriques=None if strategie is not None else (FabriqueStrategie(configuration.technique.london['strategy_id'],fabriquer_strategie),)
     moteur=fabriquer_moteur_minimal(strategie,configuration,MODE_REJEU,deploiement,
         horaires=horaires,periodes_couvertes=periodes,coordinateur=coordinateur,profils=profils,
         profil_compte=execution.profil_compte,scenario_fondamental=scenario,
-        controle_fondamental=controle_fondamental,source_fondamentale=source_fondamentale,lecteur_ia=lecteur_ia,source_ia=source_ia)
+        controle_fondamental=controle_fondamental,source_fondamentale=source_fondamentale,lecteur_ia=lecteur_ia,source_ia=source_ia,
+        fabriques=fabriques)
     return moteur,execution,StockageMemoirePapier()
+
+
+def composer_rejeu_papier_ab(configuration,ticks,tailles,contrats,*,deploiement='squelette',
+        controle_fondamental=None,source_fondamentale=None,scenario=None,lecteur_ia=None,source_ia=None,
+        fabriques=None):
+    """Mode A/B initial : mêmes données, stratégies et comptes propres à chaque bras."""
+    if not ticks:raise ValueError('aucun tick dans le fichier')
+    h,c=hypotheses_marche_squelette(ticks,configuration)
+    profils=profils_papier(ticks,tailles,contrats,h,configuration)
+    premier=ticks[0].instant_reception_ms
+    if scenario==SCENARIO_TECHNIQUE and controle_fondamental is None:f=ControleTechniqueNeutre()
+    elif scenario is None and isinstance(controle_fondamental,PermissionsFondamentales):f=controle_fondamental
+    else:raise ValueError('C05 réel ou scénario technique explicite requis')
+    ia=lecteur_ia if lecteur_ia is not None else LecteurContexte(charger_parametres(configuration),PolitiqueVeto(True))
+    if not ia.politique.bras_ia:raise ValueError('politique du bras IA requise')
+    for s in (source_fondamentale,source_ia):
+        if s is not None and s.prochaine_reception_ms is not None and s.prochaine_reception_ms<premier:raise ValueError('réception antérieure au rejeu')
+    d=Deploiement(deploiement,configuration.ia.parametres['default_evaluation_mode'],
+        tuple(fabriques) if fabriques is not None else (FabriqueStrategie(configuration.technique.london['strategy_id'],fabriquer_strategie),),tailles,LONGUEUR_EMPREINTE_SQUELETTE)
+    bras=[];executions={};stockages={}
+    for nom in ('REFERENCE','IA'):
+        p=ExecutionPapierMinimale(configuration,profils,premier//86400000*86400000);p.avancer_au(premier)
+        executions[nom]=p;stockages[nom]=StockageMemoirePapier()
+        bras.append(construire_bras(configuration,d,nom,profils,p,f,premier,observation=p.observation(),
+            base_utc=p.base_utc(),lecteur_ia=ia if nom=='IA' else None))
+    moteur=MoteurDecision(configuration,bras,h,c,controle_fondamental=controle_fondamental,lecteur_ia=ia,
+        source_fondamentale=source_fondamentale,source_ia=source_ia,scenario_fondamental=scenario)
+    return moteur,executions,stockages
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -102,23 +139,28 @@ def main(argv: list[str] | None = None) -> int:
         help='contrat et grille de volume synthétiques explicites, une fois par symbole ; frais nuls du modèle S5')
     analyseur.add_argument('--scenario',required=True,choices=(SCENARIO_TECHNIQUE,),
         help='scénario technique neutre explicite, sans permissions fondamentales historiques')
+    analyseur.add_argument('--mode',choices=('REJEU','PAPER_AB'),default=MODE_REJEU,
+        help='mode simple ou comparaison de deux comptes papier indépendants')
     arguments = analyseur.parse_args(argv)
     try:
         configuration = charger_configuration_figee(*lire_configuration(arguments.racine_depot))
         ticks = list(analyser_lignes_ticks(lire_lignes(arguments.ticks)))
         tailles = _tailles_tick(arguments.tick_size, {tick.symbole for tick in ticks})
         contrats=_contrats_papier(arguments.contrat_papier,{t.symbole for t in ticks})
-        moteur,execution,stockage=composer_rejeu_papier(configuration,ticks,tailles,contrats,scenario=arguments.scenario)
-        resultat = rejouer(ticks,moteur,execution,stockage)
+        ab=arguments.mode==configuration.ia.parametres['default_evaluation_mode']
+        moteur,execution,stockage=(composer_rejeu_papier_ab if ab else composer_rejeu_papier)(configuration,ticks,tailles,contrats,scenario=arguments.scenario)
+        resultat = (rejouer_ab if ab else rejouer)(ticks,moteur,execution,stockage)
         chemin = ecrire_journal(arguments.sortie, (serialiser(e) for e in resultat.enregistrements))
     except (ValueError, OSError) as erreur:
         print(f'rejeu_squelette : {erreur}', file=sys.stderr)
         return 1
+    reponses=tuple(r for v in resultat.reponses.values() for r in v) if ab else resultat.reponses
+    positions=sum(len(p.positions_ouvertes) for p in execution.values()) if ab else len(execution.positions_ouvertes)
     print(json.dumps({'statut': 'OK', 'ticks': resultat.nombre_ticks,
                       'enregistrements': len(resultat.enregistrements), 'journal': chemin,
-                       'scenario':arguments.scenario,'entrees_remplies':sum(r.nature.value=='REMPLISSAGE' for r in resultat.reponses),
-                       'positions_closes':sum(r.nature.value=='CLOTURE' and r.donnees['volume_restant']==0 for r in resultat.reponses),
-                      'positions_ouvertes':len(execution.positions_ouvertes)},
+                       'scenario':arguments.scenario,'entrees_remplies':sum(r.nature.value=='REMPLISSAGE' for r in reponses),
+                       'positions_closes':sum(r.nature.value=='CLOTURE' and r.donnees['volume_restant']==0 for r in reponses),
+                      'positions_ouvertes':positions},
                      ensure_ascii=False, sort_keys=True))
     return 0
 

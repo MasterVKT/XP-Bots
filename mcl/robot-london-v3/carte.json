@@ -292,7 +292,10 @@
         "orchestration",
         "journal-rejeu",
         "infrastructure",
-        "moteur-london"
+        "moteur-london",
+        "execution-coordinateur",
+        "controles-fondamentaux",
+        "contexte-ia"
       ],
       "couche": "6"
     }

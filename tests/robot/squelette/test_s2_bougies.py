@@ -23,7 +23,7 @@ def tick(instant, bid=1.1, numero=0, symbole='EURUSD'):
 class StrategieEspionne:
     """Doublure du contrat structurel de stratégie : note les unités reçues, ne signale jamais."""
 
-    identifiant = 'ESPION'
+    identifiant = CONFIGURATION.technique.london['strategy_id']
 
     def __init__(self):
         self.unites = []

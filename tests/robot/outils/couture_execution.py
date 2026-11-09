@@ -18,12 +18,15 @@ def composer(ticks,strategie=None,configuration=None,horaires=None,periodes=None
         scenario='TECHNICAL_CONTROL_NEUTRAL')
     if horaires is not None or periodes is not None:
         from xpbots.rejeu.squelette import hypotheses_marche_squelette
+        from xpbots.london.c2_moteur import fabriquer_strategie
+        from xpbots.orchestration.c0_contrats import FabriqueStrategie
         h,p=hypotheses_marche_squelette(ticks,configuration)
         m=fabriquer_moteur_minimal(strategie,configuration,'REJEU',horaires=h if horaires is None else horaires,
             periodes_couvertes=p if periodes is None else periodes,
             coordinateur=composer_coordinateur_neutre(configuration,'squelette',e.profils,e,e.instant_ms,
                 observation=e.observation(),base_utc=e.base_utc()),profils=e.profils,
-            profil_compte=e.profil_compte,scenario_fondamental='TECHNICAL_CONTROL_NEUTRAL')
+            profil_compte=e.profil_compte,scenario_fondamental='TECHNICAL_CONTROL_NEUTRAL',
+            fabriques=None if strategie is not None else (FabriqueStrategie(configuration.technique.london['strategy_id'],fabriquer_strategie),))
     return m,e,s
 
 

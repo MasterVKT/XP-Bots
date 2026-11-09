@@ -16,7 +16,7 @@ from robot.outils.lignees import COMMUN, LONDON, ROBOT1, appartient
 MODULES_ROBOT1 = ('xpbots.donnees_temps', 'xpbots.moteur_ema', 'xpbots.noyau.config', 'xpbots.noyau.decisions',
                   'xpbots.noyau.journal_schema', 'xpbots.noyau.json_canonique', 'xpbots.noyau.marche',
                   'xpbots.noyau.ports', 'xpbots.noyau.temps', 'xpbots.app.rejeu', 'xpbots.app.segments_minimaux')
-MODULES_LONDON = ('xpbots.donnees', 'xpbots.london', 'xpbots.orchestration', 'xpbots.rejeu', 'xpbots.infra',
+MODULES_LONDON = ('xpbots.donnees', 'xpbots.london', 'xpbots.orchestration.squelette', 'xpbots.rejeu', 'xpbots.infra',
                   'xpbots.execution.squelette', 'xpbots.app.rejeu_squelette')
 SOUS_PAQUETS_NOYAU_LONDON = ('c0a_temps', 'c0b_nombres', 'c0c_configuration', 'c1a_marche', 'c1b_instrument',
                              'c1c_domaine', 'c2_journal')

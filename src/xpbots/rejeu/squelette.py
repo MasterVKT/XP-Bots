@@ -9,6 +9,7 @@ from dataclasses import dataclass, field, replace
 from decimal import Context, Decimal, localcontext
 from itertools import groupby
 import math
+from types import MappingProxyType
 from typing import Iterable, Iterator, Protocol, Sequence
 
 from xpbots.contexte_ia.c0_types import instant as instant_ia
@@ -28,7 +29,7 @@ from xpbots.noyau.c1b_instrument import (HorairesCotation, Intervalle, ProfilCom
     construire_profil_instrument)
 from xpbots.noyau.c1c_domaine import Sens, CauseCloture
 from xpbots.noyau.c2_journal import Enregistrement
-from xpbots.orchestration.squelette import SortieMoteur
+from xpbots.orchestration.c0_contrats import SortieMoteur,ReceptionExterne,MiseAJourBras
 
 COLONNES_TICKS = ('canonical_symbol', 'broker_symbol', 'time_utc_ms', 'sequence', 'bid', 'ask')
 
@@ -68,6 +69,14 @@ class SourceFondamentaleScenario:
     @property
     def prochaine_reception_ms(self):
         return self._paquets[self._index].instant_ms if self._index<len(self._paquets) else None
+
+    def extraire(self,t):
+        instant(t);receptions=[]
+        if self.prochaine_reception_ms is not None and self.prochaine_reception_ms<t:
+            raise ValueError('réception externe sautée par le pilote')
+        while self.prochaine_reception_ms==t:
+            p=self._paquets[self._index];receptions.append(ReceptionExterne(p.nature,p.octets,p.symbole,p.table));self._index+=1
+        return tuple(receptions)
 
     def recevoir(self,t):
         instant(t);traces=[]
@@ -114,6 +123,14 @@ class SourceSnapshotScenario:
     @property
     def prochaine_reception_ms(self):
         return self._paquets[self._index].instant_ms if self._index<len(self._paquets) else None
+
+    def extraire(self,t):
+        instant_ia(t);receptions=[]
+        if self.prochaine_reception_ms is not None and self.prochaine_reception_ms<t:
+            raise ValueError('réception externe sautée par le pilote')
+        while self.prochaine_reception_ms==t:
+            p=self._paquets[self._index];receptions.append(ReceptionExterne('SNAPSHOT',p.octets));self._index+=1
+        return tuple(receptions)
 
     def recevoir(self,t):
         instant_ia(t);traces=[]
@@ -473,6 +490,69 @@ class ResultatRejeu:
     nombre_ticks: int
     enregistrements: tuple[Enregistrement, ...]
     reponses: tuple[ReponseCourtier, ...] = field(default=())
+
+
+@dataclass(frozen=True)
+class ResultatRejeuAB:
+    nombre_ticks:int
+    enregistrements:tuple
+    reponses:object
+
+    def __post_init__(self):
+        object.__setattr__(self,'reponses',MappingProxyType({n:tuple(r) for n,r in self.reponses.items()}))
+
+
+def rejouer_ab(ticks,moteur,executions,stockages=None):
+    """Coquille S5 : deux comptes, une réception commune, preuves séparées."""
+    executions=dict(executions)
+    stockages=dict(stockages) if stockages is not None else {n:StockageMemoirePapier() for n in executions}
+    if (set(executions)!=set(moteur.bras) or set(stockages)!=set(executions)
+            or len({id(e) for e in executions.values()})!=len(executions)
+            or len({id(s) for s in stockages.values()})!=len(stockages)):
+        raise ValueError('transports et stockages propres à chaque bras requis')
+    nombre=0;lignes=[];reponses={n:[] for n in executions}
+    def transmettre(sortie,t):
+        file=[sortie]
+        while file:
+            s=file.pop(0);lignes.extend(s.enregistrements);evenements={n:[] for n in executions}
+            preuves={};entrees={}
+            # Toutes les sorties sont transmises avant toute admission des deux comptes.
+            for n,v in s.sorties:
+                evenements[n].extend(executions[n].soumettre(c for c in v.commandes if c.nature is not NatureCommande.ENTREE))
+            for n,v in s.sorties:
+                try:
+                    preuve=stockages[n].persister(v.lot) if v.lot is not None else None
+                except (OSError,ValueError):
+                    preuve=None;lignes.append(moteur.bras[n].alerte('STOCKAGE_PAPIER_INDISPONIBLE',t))
+                if preuve is not None:
+                    entrees[n]=tuple(c for c in v.commandes if c.nature is NatureCommande.ENTREE)
+                    if v.lot.preparations:preuves[n]=preuve
+            for n,commandes in entrees.items():evenements[n].extend(executions[n].soumettre(commandes))
+            maj={}
+            for n,ev in evenements.items():
+                if not ev:continue
+                r=tuple(x for x in ev if isinstance(x,ReponseCourtier));reponses[n].extend(r)
+                obs=next((x for x in reversed(ev) if isinstance(x,ObservationNative)),None)
+                maj[n]=MiseAJourBras(r,obs,executions[n].base_utc())
+            if maj:
+                # Toute réponse change la révision : les preuves anciennes sont abandonnées.
+                file.append(moteur.traiter_evenement(t,mises_a_jour=maj))
+            elif preuves:file.append(moteur.confirmer_persistance(preuves,t))
+    precedent=None
+    for t,g in groupby(ticks,key=lambda x:x.instant_reception_ms):
+        g=tuple(g)
+        if precedent is not None and t<precedent:raise ValueError('recul du rejeu')
+        precedent=t
+        while moteur.prochaine_echeance_ms is not None and moteur.prochaine_echeance_ms<t:
+            e=moteur.prochaine_echeance_ms
+            for p in executions.values():p.avancer_au(e)
+            transmettre(moteur.traiter_evenement(e,mises_a_jour={n:MiseAJourBras(base_utc=p.base_utc()) for n,p in executions.items()}),e)
+        maj={}
+        for n,p in executions.items():
+            natifs=tuple(r for tick in g for r in p.sur_tick(tick));reponses[n].extend(natifs)
+            maj[n]=MiseAJourBras(natifs,base_utc=p.base_utc())
+        nombre+=len(g);transmettre(moteur.traiter_ticks(g,mises_a_jour=maj),t)
+    return ResultatRejeuAB(nombre,tuple(lignes),reponses)
 
 
 def rejouer(ticks: Iterable[Tick],moteur:Moteur,execution:ExecutionPapierMinimale,stockage=None)->ResultatRejeu:

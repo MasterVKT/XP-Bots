@@ -11,7 +11,7 @@ description: "Contrats communs d'exécution et de risque de XP-Bots (C06–C09, 
   `livrables/strategies_m15/` ; valeurs dans le bloc `common` de `config/parametres_figes_v3.json`.
 - État réel : journal du noyau et quinze couches du coordinateur partagées sous `xpbots.execution.c*`,
   suivies dans `mcl/london-execution-coordinateur/` (bilan et contrats). Le cycle C08, les sorties, le rapprochement et
-  l'enveloppe sont figés ; S4 les exécute en papier synthétique explicite. L'adaptateur réel et la persistance physique restent à construire.
+  l'enveloppe sont figés ; S4 les exécute en papier synthétique explicite. Depuis la phase 9, le moteur commun `xpbots.orchestration.c*` est figé dans `mcl/orchestration/` : S4 est une façade, PAPER_AB conserve un coordinateur et un compte par bras, et le journal inclut tous les calculs normalisés pour un rejeu sans backend. L'adaptateur réel et la persistance physique restent à construire.
 - Référence partielle : `rounded_levels` de `reference/technical.py` (niveaux arrondis et réserve), oracle
   des seuls tests. Le dimensionnement de phase 5 utilise un port courtier synthétique ; il ne constitue
   ni un portefeuille validé financièrement ni un modèle de remplissages réels.

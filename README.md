@@ -69,7 +69,7 @@ La même vérification tourne en intégration continue (`.github/workflows/robot
 
 Les contrôles C05 communs sont construits depuis la phase 7 London : [bilan et contrats](mcl/london-controles-fondamentaux/PLAN-MCL.md). Le rejeu London utilise leur port réel avec des arrivées scénarisées ; son scénario technique neutre demeure explicite. Cela ne réalise ni les sources physiques, ni l’intégration du robot EMA au compte.
 
-Le [lecteur IA commun](mcl/london-contexte-ia/PLAN-MCL.md) est construit depuis la phase 8 London : quatre couches figées, validation complète du snapshot, cache causal exportable et port facultatif BLOCK/NEUTRAL. La couture London reçoit des snapshots synthétiques aux heures déclarées ; elle conserve le complément absent en référence. L’orchestration A/B et le service externe restent futurs.
+Le [lecteur IA commun](mcl/london-contexte-ia/PLAN-MCL.md) est construit depuis la phase 8 London : quatre couches figées, validation complète du snapshot, cache causal exportable et port facultatif BLOCK/NEUTRAL. La couture London reçoit des snapshots synthétiques aux heures déclarées ; elle conserve le complément absent en référence. L’[orchestration A/B commune](mcl/orchestration/PLAN-MCL.md) est figée depuis la phase 9 : moteur unique, comptes distincts et journal d’entrées avec calculs rejouables sans backend. Le squelette accepte `--mode PAPER_AB`. Le simulateur C10 et le service externe restent futurs.
 
 ## Agents AI de développement
 

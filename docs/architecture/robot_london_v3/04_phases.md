@@ -235,6 +235,13 @@ conserve le complément absent. L'orchestration A/B complète reste l'objet de l
 
 ## Phase 9 — Artefact `orchestration`
 
+Réalisée le 09/11/2026 : trois couches communes figées dans `mcl/orchestration/`,
+CP2 et moteur unique derrière S4. Les 50 tests propres (44 catégorie 1, 6 catégorie 2)
+et sept nouveaux tests de couture vérifient les critères ci-dessous : journal avec
+calculs exactement rejoué sur backend interdit, comptes et stratégies indépendants,
+C11.10, priorité native et FLATTEN, panne de stockage, L-15 été/hiver et CLI PAPER_AB.
+La suite du squelette compte 67 tests. Le simulateur C10 n’est pas commencé.
+
 - **Objectif** : moteur de décision événementiel unique, bras A/B, stratégies injectées (document 02, §6.7 ;
   D-18).
 - **Skills** : `xp-bots-london-breakout`, `xp-bots-risk-execution-contracts`, `xp-bots-llm-integration-contracts`,

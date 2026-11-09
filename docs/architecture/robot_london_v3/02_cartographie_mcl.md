@@ -487,6 +487,18 @@ démonstration ou en réel, tant que `live_veto_requires_financial_validation` n
 
 ### 6.7 Artefact `orchestration` (paquet `xpbots.orchestration`, phase 9)
 
+Réalisé le 09/11/2026 dans [`mcl/orchestration`](../../../mcl/orchestration/PLAN-MCL.md),
+après arbitrage R4/R5. Les trois couches 0, 1, 2 sont figées, avec CP2. Les sources
+c0_contrats, c1_bras et c2_moteur sont communes ; squelette.py est une façade hors gel.
+Les deux composites pointent ce bloc. Le composite EMA déclare aussi la dépendance
+préexistante du coordinateur vers les données canoniques, sans modifier son code.
+S7 compose maintenant C05 et IA directement : ces dépendances vers 2b, 3a et 3b
+sont explicites dans la carte London. Aucun import de moteur dans l’orchestration.
+Les contrats finaux exposent EntreeMoteur, EntreeJournalisee et AppelCalcul : toutes
+les réceptions et tous les calculs normalisés sont rejoués sans consulter le backend.
+La restauration des stratégies rejoue leurs API publiques ; les flux reprennent leur
+export C03 réel. La persistance physique de ces états reste future.
+
 Rôle : le moteur de décision événementiel, identique en rejeu et en direct, qui applique l'ordre de C08 à chaque
 événement pour tous les bras. Point d'insertion : remplace l'enchaînement minimal du squelette.
 

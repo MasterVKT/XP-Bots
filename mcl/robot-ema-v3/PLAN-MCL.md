@@ -100,3 +100,12 @@ configuration et de décision viennent du noyau canonique. La carte recalcule le
 des futurs consommateurs, sans renommer leurs identifiants. Le squelette EMA n'est pas recâblé
 et aucune phase EMA supplémentaire n'est déclarée terminée. L'esquisse `mcl/contexte-ia/`
 reste historique et ne doit pas être implémentée comme un second lecteur.
+
+### Disponibilité commune après la phase 9 London
+
+Les trois couches d’orchestration sont figées dans `mcl/orchestration/`, sous
+`xpbots.orchestration.c*`. La carte EMA pointe ce bloc et déclare son amont données
+canoniques ; elle déclare aussi cet amont pour le coordinateur qui l’importait déjà.
+Les socles restent distincts, sans recâblage du squelette EMA ni achèvement d’une
+phase EMA supplémentaire. La méthode est une fabrique injectée ; aucun moteur de
+méthode n’est importé par le composant commun.

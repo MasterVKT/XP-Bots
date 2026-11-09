@@ -17,7 +17,7 @@
     "src/xpbots/infra/*",
     "src/xpbots/london/*",
     "src/xpbots/noyau/c[0-9]*",
-    "src/xpbots/orchestration/*",
+    "src/xpbots/orchestration/squelette.py",
     "src/xpbots/rejeu/*"
   ],
   "couches": [
@@ -160,6 +160,20 @@
       "contrats": [
         "mcl/robot-ema-v3/COUTURES.md"
       ]
+    },
+    {
+      "id": "orchestration",
+      "profondeur": 4,
+      "nom": "orchestration",
+      "chemins": [
+        "src/xpbots/orchestration"
+      ],
+      "imports": [
+        "xpbots.orchestration"
+      ],
+      "contrats": [
+        "mcl/orchestration/contrats/couche-*.md"
+      ]
     }
   ],
   "unites": [
@@ -200,7 +214,8 @@
       "responsabilite": "Appliquer C06–C09 et coordonner le compte.",
       "depend_de": [
         "noyau",
-        "donnees_temps"
+        "donnees_temps",
+        "donnees-canoniques"
       ],
       "couche": "2b"
     },
@@ -266,6 +281,18 @@
         "horloge-os"
       ],
       "couche": "5"
+    },
+    {
+      "id": "orchestration",
+      "responsabilite": "Orchestrer les bras et stratégies injectées avec les ports canoniques.",
+      "depend_de": [
+        "noyau",
+        "execution",
+        "fondamental",
+        "contexte_ia",
+        "donnees-canoniques"
+      ],
+      "couche": "orchestration"
     }
   ],
   "externes": [
@@ -307,6 +334,16 @@
       "couches_autorisees": [
         "4",
         "5"
+      ]
+    },
+    {
+      "id": "donnees-canoniques",
+      "imports": [
+        "xpbots.donnees"
+      ],
+      "couches_autorisees": [
+        "2b",
+        "orchestration"
       ]
     }
   ],

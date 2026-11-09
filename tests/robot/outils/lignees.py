@@ -16,12 +16,12 @@ ROBOT1 = (
     'src/xpbots/app/rejeu.py', 'src/xpbots/app/segments_minimaux.py',
 )
 LONDON = (
-    'src/xpbots/noyau/c[0-9]*', 'src/xpbots/donnees/*', 'src/xpbots/london/*', 'src/xpbots/orchestration/*',
+    'src/xpbots/noyau/c[0-9]*', 'src/xpbots/donnees/*', 'src/xpbots/london/*', 'src/xpbots/orchestration/squelette.py',
     'src/xpbots/rejeu/*', 'src/xpbots/infra/*', 'src/xpbots/execution/squelette.py', 'src/xpbots/app/rejeu_squelette.py',
 )
 
 # Le coordinateur est construit une fois pour les deux méthodes (R4/R5, 06/11/2026).
-COMMUN = ('src/xpbots/execution/c[0-9]*', 'src/xpbots/fondamental/*', 'src/xpbots/contexte_ia/*')
+COMMUN = ('src/xpbots/execution/c[0-9]*', 'src/xpbots/fondamental/*', 'src/xpbots/contexte_ia/*', 'src/xpbots/orchestration/c[0-9]*')
 
 
 def appartient(chemin_relatif_au_depot: str, registre: tuple[str, ...]) -> bool:

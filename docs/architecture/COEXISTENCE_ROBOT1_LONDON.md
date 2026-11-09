@@ -136,3 +136,32 @@ La phase 8 réalise ce bloc unique : quatre couches gelées et CP2, 58 tests pro
 IA dans la couture London et contexte C09 causal. La dépendance directe du rejeu London au
 lecteur est inscrite dans sa carte composite stricte. Le squelette EMA reste distinct ; aucun
 artefact amont ni phase EMA n'est défigé ou déclaré achevé par cette disponibilité commune.
+
+### Arbitrage R4/R5 du 09/11/2026 — phase 9 London
+
+L'orchestration n'a encore que le segment minimal S4, hors gel. Aucun dossier MCL orchestration
+ni bloc EMA concurrent n'existe. La phase 9 construit le composant commun `mcl/orchestration/`,
+sources `xpbots.orchestration.c0_contrats`, `c1_bras`, `c2_moteur` et tests
+`tests/robot/orchestration/`. Le segment `squelette.py` reste une couture extérieure au protocole
+et délègue au moteur commun après son gel. Les deux cartes composites désignent le même bloc ;
+le squelette EMA reste distinct et aucune nouvelle phase EMA n'est déclarée terminée.
+
+Les types sont ceux du noyau canonique et du coordinateur partagé, dont les contrats restent
+gelés. L'orchestration ne connaît aucun moteur de méthode : les fabriques sont injectées, une
+instance par méthode, symbole et bras. Données enrichies et C05 sont communs ; comptes, transports,
+coordinateurs, quotas et journaux sont indépendants par bras. Les signaux de toutes les méthodes
+du même compte sont soumis ensemble au coordinateur. REFERENCE conserve ComplementAbsent.
+
+La reprise d'une stratégie utilise son historique public de bougies et d'issues, contrôlé par
+comparaison des résultats, sans lire ses champs privés ni modifier le moteur gelé. Les états
+de coordinateur et de flux restent exportés par leurs interfaces publiques. Le journal d'entrées
+typées permet le même rejeu déterministe en papier et en direct ; la durabilité et C10 restent
+futurs. Le coût du maintien des historiques est déclaré, sans rétention arbitraire inventée.
+
+La phase 9 réalise les trois couches communes et leur CP2, avec 50 tests propres.
+Les deux composites désignent le même dossier actif. Le premier gate a révélé la
+dépendance déjà présente du coordinateur vers le calendrier canonique C03 ; elle
+est désormais explicite dans la carte EMA, sans changement amont. Les dépendances
+directes du point de composition London vers les contrôles et le coordinateur sont
+déclarées après la couture A/B. Les gardes de lignée et toutes les cartes restent
+strictes. Le squelette EMA et son protocole historique ne sont pas recâblés.
