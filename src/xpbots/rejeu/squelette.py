@@ -11,6 +11,8 @@ from itertools import groupby
 import math
 from typing import Iterable, Iterator, Protocol, Sequence
 
+from xpbots.contexte_ia.c0_types import instant as instant_ia
+from xpbots.contexte_ia.c3_contexte import LecteurContexte
 from xpbots.execution.c0a_types import EtatCompte, PositionCompte, ControleNatif
 from xpbots.execution.c1b_gardes import MouvementCompte, reconstituer_base_utc
 from xpbots.execution.c4_cycle import (CommandeExecution, NatureCommande, ReponseCourtier, NatureReponse,
@@ -83,6 +85,45 @@ class SourceFondamentaleScenario:
                 traces.append(dict(alerte=p.nature+'_'+statut,symbole=p.symbole,instant_ms=t,
                     raison=r.raison,sequence=r.permission.message.sequence if p.nature=='PERMISSION' and r.permission else None,
                     version=r.version.version if p.nature=='CALENDRIER' and r.version else None))
+            self._index+=1
+        return tuple(traces)
+
+
+@dataclass(frozen=True)
+class PaquetSnapshot:
+    instant_ms: int
+    octets: bytes | None
+
+    def __post_init__(self):
+        instant_ia(self.instant_ms)
+        if self.octets is not None and type(self.octets) is not bytes:
+            raise ValueError('snapshot externe en octets ou absent requis')
+
+
+class SourceSnapshotScenario:
+    """Seules les arrivées externes sont scénarisées ; lecteur et cache réels."""
+    def __init__(self,lecteur,paquets):
+        if not isinstance(lecteur,LecteurContexte):raise ValueError('lecteur IA réel requis')
+        self.lecteur=lecteur;self._paquets=tuple(paquets);self._index=0
+        precedent=lecteur.etat.dernier_ms
+        for p in self._paquets:
+            if not isinstance(p,PaquetSnapshot) or p.instant_ms<precedent:
+                raise ValueError('snapshots typés et chronologiques requis')
+            precedent=p.instant_ms
+
+    @property
+    def prochaine_reception_ms(self):
+        return self._paquets[self._index].instant_ms if self._index<len(self._paquets) else None
+
+    def recevoir(self,t):
+        instant_ia(t);traces=[]
+        if self.prochaine_reception_ms is not None and self.prochaine_reception_ms<t:
+            raise ValueError('réception IA sautée par le pilote de rejeu')
+        while self.prochaine_reception_ms==t:
+            p=self._paquets[self._index];r=self.lecteur.recevoir(p.octets,t)
+            statut='ACCEPTE' if r.acceptee else 'RELU' if r.ignoree else 'REJETE'
+            traces.append(dict(alerte='SNAPSHOT_'+statut,instant_ms=t,raison=r.raison,
+                sequence=r.snapshot.snapshot.sequence if r.snapshot else None,ajoutes=r.ajoutes))
             self._index+=1
         return tuple(traces)
 

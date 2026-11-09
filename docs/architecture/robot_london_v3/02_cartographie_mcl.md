@@ -457,6 +457,15 @@ Esquisses de contrat :
 
 ### 6.6 Artefact `contexte-ia` (paquet `xpbots.contexte_ia`, phase 8)
 
+Réalisé le 09/11/2026 dans le dossier actif partagé
+[`london-contexte-ia`](../../../mcl/london-contexte-ia/PLAN-MCL.md), après arbitrage R4/R5.
+Les quatre couches sont figées, avec checkpoint après 2. Les deux cartes composites désignent
+ce bloc ; l'esquisse historique EMA reste préservée. Le lecteur utilise les types canoniques et
+le vrai port du coordinateur. La couture ajoute les arrivées et échéances IA et leur preuve C09.
+La référence overlay_decision est un oracle partiel : son retour au premier veto actif saute
+la validation des événements suivants. Le lecteur valide toute la liste, conformément à A10/A12 ;
+une liste mixte malformée n'ajoute aucun veto. Cette différence est testée et ne modifie pas la référence.
+
 Rôle : valider le snapshot IA, conserver les vetos validés et implémenter le port du contexte IA. Comparaison :
 `overlay_decision` de [llm_contracts.py](../../../reference/llm_contracts.py).
 
@@ -467,7 +476,7 @@ Rôle : valider le snapshot IA, conserver les vetos validés et implémenter le 
 | `cache_vetos` | 2 | Conserver les vetos validés jusqu'à leur échéance propre, redémarrage compris | snapshots acceptés, instant → cache | `snapshot` | noyau | A10, A12 |
 | `contexte_ia` | 3 | Enveloppe : implémenter le port du contexte IA, `BLOCK` ou `NEUTRAL`, jamais `ALLOW` | symbole, instant, politique du bras → décision | `cache_vetos` | execution-coordinateur, noyau | A06, A07, A12, A13 |
 
-Esquisses de contrat : taille contrôlée avant analyse (`snapshot_max_bytes`) ; enveloppe limitée à `payload` et
+Contrats réalisés (détail et interfaces dans le dossier actif) : taille contrôlée avant analyse (`snapshot_max_bytes`) ; enveloppe limitée à `payload` et
 `sha256` ; empreinte du JSON canonique du `payload` ; clés exactes ; schéma `xp-ai-context-v1` ; empreinte de
 la configuration IA égale ; séquence entière ≥ max(1, dernière séquence persistée) ; horodatage non futur et âge
 ≤ `snapshot_max_age_seconds` ; événements à clés exactes, motif `OFFICIAL_UNSCHEDULED_POLICY`, fournisseur de

@@ -63,7 +63,7 @@ def _contrats_papier(arguments,symboles):
 
 
 def composer_rejeu_papier(configuration,ticks,tailles,contrats,*,strategie=None,deploiement='squelette',
-                         controle_fondamental=None,source_fondamentale=None,scenario=None):
+                         controle_fondamental=None,source_fondamentale=None,scenario=None,lecteur_ia=None,source_ia=None):
     """Composition synthétique déclarée ; aucun terminal ou compte réel."""
     if not ticks: raise ValueError('aucun tick dans le fichier')
     horaires,periodes=hypotheses_marche_squelette(ticks,configuration)
@@ -76,14 +76,17 @@ def composer_rejeu_papier(configuration,ticks,tailles,contrats,*,strategie=None,
             or (source_fondamentale.prochaine_reception_ms is not None
                 and source_fondamentale.prochaine_reception_ms<premier)):
         raise ValueError('source C05 liée au contrôle et bornée au rejeu requise')
+    if source_ia is not None and (source_ia.lecteur is not lecteur_ia
+            or (source_ia.prochaine_reception_ms is not None and source_ia.prochaine_reception_ms<premier)):
+        raise ValueError('source IA liée au lecteur et bornée au rejeu requise')
     coordinateur=composer_coordinateur(configuration,deploiement,profils,execution,premier,
         observation=execution.observation(),base_utc=execution.base_utc(),
-        controle_fondamental=controle_fondamental,scenario=scenario)
+        controle_fondamental=controle_fondamental,scenario=scenario,lecteur_ia=lecteur_ia)
     strategie=strategie if strategie is not None else fabriquer_strategie(configuration,tailles)
     moteur=fabriquer_moteur_minimal(strategie,configuration,MODE_REJEU,deploiement,
         horaires=horaires,periodes_couvertes=periodes,coordinateur=coordinateur,profils=profils,
         profil_compte=execution.profil_compte,scenario_fondamental=scenario,
-        controle_fondamental=controle_fondamental,source_fondamentale=source_fondamentale)
+        controle_fondamental=controle_fondamental,source_fondamentale=source_fondamentale,lecteur_ia=lecteur_ia,source_ia=source_ia)
     return moteur,execution,StockageMemoirePapier()
 
 

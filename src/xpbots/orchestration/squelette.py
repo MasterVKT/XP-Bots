@@ -19,6 +19,7 @@ from typing import Mapping, Protocol, Sequence, runtime_checkable
 from xpbots.donnees.c0a_types import AnomalieDonnees, BougieEnrichie, ChangementTrou, UniteTemps
 from xpbots.donnees.c1c_couverture import RegistreCouverture
 from xpbots.donnees.c3_flux import FluxBougies
+from xpbots.contexte_ia.c3_contexte import LecteurContexte
 from xpbots.execution.c4_cycle import CommandeExecution
 from xpbots.execution.c0b_controles import ControleTechniqueNeutre
 from xpbots.fondamental.c3_permissions import PermissionsFondamentales
@@ -35,23 +36,23 @@ LONGUEUR_EMPREINTE_SQUELETTE = 16  # provisoire : la longueur du commentaire est
 SCENARIO_TECHNIQUE = ControleTechniqueNeutre.scenario
 
 
-def composer_coordinateur_neutre(configuration,deploiement,profils,port,instant_ms,*,observation,base_utc):
+def composer_coordinateur_neutre(configuration,deploiement,profils,port,instant_ms,*,observation,base_utc,lecteur_ia=None):
     """Composition pure du coordinateur réel pour le seul rejeu technique synthétique."""
     return CoordinateurCompte(configuration.technique,deploiement,profils,port.profil_compte,
         port,ControleTechniqueNeutre(),instant_ms,longueur_empreinte=LONGUEUR_EMPREINTE_SQUELETTE,
-        mode='REJEU',observation=observation,base_utc=base_utc)
+        mode='REJEU',observation=observation,base_utc=base_utc,contexte=lecteur_ia)
 
 
 def composer_coordinateur(configuration,deploiement,profils,port,instant_ms,*,observation,base_utc,
-                          controle_fondamental=None,scenario=None):
+                          controle_fondamental=None,scenario=None,lecteur_ia=None):
     if scenario == SCENARIO_TECHNIQUE and controle_fondamental is None:
         return composer_coordinateur_neutre(configuration,deploiement,profils,port,instant_ms,
-            observation=observation,base_utc=base_utc)
+            observation=observation,base_utc=base_utc,lecteur_ia=lecteur_ia)
     if scenario is not None or not isinstance(controle_fondamental,PermissionsFondamentales):
         raise ValueError('port C05 réel ou scénario technique explicite requis, choix exclusifs')
     return CoordinateurCompte(configuration.technique,deploiement,profils,port.profil_compte,
         port,controle_fondamental,instant_ms,longueur_empreinte=LONGUEUR_EMPREINTE_SQUELETTE,
-        mode='REJEU',observation=observation,base_utc=base_utc)
+        mode='REJEU',observation=observation,base_utc=base_utc,contexte=lecteur_ia)
 
 
 @runtime_checkable
@@ -101,7 +102,7 @@ class MoteurMinimal:
     def __init__(self, strategie: Strategie, configuration: ConfigurationFigee, mode: str, deploiement: str,
                  horaires: Mapping[str, HorairesCotation], periodes_couvertes: Mapping[str, Sequence[Intervalle]],
                  coordinateur:CoordinateurCompte,profils:Mapping,profil_compte=None,scenario_fondamental=None,
-                 controle_fondamental=None,source_fondamentale=None) -> None:
+                 controle_fondamental=None,source_fondamentale=None,lecteur_ia=None,source_ia=None) -> None:
         if not isinstance(strategie, Strategie):
             raise ValueError('stratégie injectée avec identifiant, sur_bougie et sur_issue attendue')
         if set(horaires) != set(periodes_couvertes):
@@ -121,6 +122,14 @@ class MoteurMinimal:
         self._fondamental=controle_fondamental;self._source_fondamentale=source_fondamentale
         if controle_fondamental is not None and controle_fondamental.etat.dernier_ms>coordinateur.etat.dernier_ms:
             raise ValueError('contrôle C05 futur au démarrage du moteur')
+        if lecteur_ia is not None and not isinstance(lecteur_ia,LecteurContexte):
+            raise ValueError('lecteur IA réel requis')
+        if source_ia is not None and source_ia.lecteur is not lecteur_ia:
+            raise ValueError('source et coordinateur doivent utiliser le même lecteur IA')
+        if lecteur_ia is not None and lecteur_ia.etat.dernier_ms>coordinateur.etat.dernier_ms:
+            raise ValueError('lecteur IA futur au démarrage du moteur')
+        self._ia=lecteur_ia;self._source_ia=source_ia
+        self._bras='IA' if lecteur_ia is not None and lecteur_ia.politique.bras_ia else BRAS_UNIQUE
         self._instant_fondamental=coordinateur.etat.dernier_ms
         self._intentions_journalisees={}
         self._flux = {symbole: FluxBougies(symbole, configuration.technique, horaires[symbole],
@@ -129,7 +138,7 @@ class MoteurMinimal:
 
     def _enveloppe(self, instant_ms: int) -> Enveloppe:
         self._numero += 1
-        return Enveloppe(self._deploiement, BRAS_UNIQUE, self._mode, self._numero, instant_ms, self._empreintes)
+        return Enveloppe(self._deploiement, self._bras, self._mode, self._numero, instant_ms, self._empreintes)
 
     def _alerte(self, evenement: ChangementTrou | AnomalieDonnees, instant_ms: int) -> Enregistrement:
         if isinstance(evenement, ChangementTrou):
@@ -149,6 +158,10 @@ class MoteurMinimal:
             dates.append(self._fondamental.prochaine_echeance_ms(self._instant_fondamental))
         if self._source_fondamentale is not None:
             dates.append(self._source_fondamentale.prochaine_reception_ms)
+        if self._ia is not None:
+            dates.append(self._ia.prochaine_echeance_ms(self._instant_fondamental))
+        if self._source_ia is not None:
+            dates.append(self._source_ia.prochaine_reception_ms)
         return min((t for t in dates if t is not None),default=None)
 
     def _controles(self,instant):
@@ -157,8 +170,14 @@ class MoteurMinimal:
             traces.extend(self._source_fondamentale.recevoir(instant))
         if self._fondamental is not None:
             traces.extend(dict(alerte=e.nature,**_journal(e)) for e in self._fondamental.avancer(instant))
-            self._instant_fondamental=instant
+        if self._source_ia is not None:
+            traces.extend(self._source_ia.recevoir(instant))
+        if self._ia is not None:self._ia.avancer(instant)
+        self._instant_fondamental=instant
         return [enregistrement(TypeEnregistrement.ALERTE,self._enveloppe(instant),v) for v in traces]
+
+    def _contexte_ia(self,symbole,instant):
+        return None if self._ia is None else self._ia.description(symbole,instant)
 
     def _contexte_fondamental(self,symbole,instant):
         if self._fondamental is None:return {'scenario':self._scenario},None
@@ -191,7 +210,7 @@ class MoteurMinimal:
                 etat_intention=d.statut.value,signal=_journal(d.signal),
                 instrument=_journal(cycle.profil if cycle is not None else self._profils.get(d.cle.symbole)),
                 courtier=_journal(self._profil_compte),compte=_journal(lot.compte),
-                permission=permission,version_calendrier=version,snapshot_ia=None,
+                permission=permission,version_calendrier=version,snapshot_ia=self._contexte_ia(d.cle.symbole,instant),
                 risque_initial=plan.risque if plan is not None else None,
                 budget_gele=plan.budget_gele if plan is not None else None,
                 fonds_propres_reference=plan.fonds_propres_reference if plan is not None else None,
@@ -240,7 +259,7 @@ class MoteurMinimal:
                 permission,version=self._contexte_fondamental(tick.symbole,instant)
                 record=enregistrement_cloture(self._enveloppe(instant),bougie=evenement.bougie,resultat=resultat,
                     profil=self._profils[tick.symbole],indicateurs=indicateurs,etat_strategie={},
-                    permission=permission,version_calendrier=version,snapshot_ia=None)
+                    permission=permission,version_calendrier=version,snapshot_ia=self._contexte_ia(tick.symbole,instant))
                 enregistrements.append(enregistrement(record.type,record.enveloppe,
                     {**record.contenu,'compte':_journal(lot.compte),'courtier':_journal(self._profil_compte)}))
                 if isinstance(resultat,SignalTechnique): signaux.append(resultat)
@@ -254,7 +273,7 @@ def fabriquer_moteur_minimal(strategie: Strategie, configuration: ConfigurationF
                              deploiement: str = 'squelette', *, horaires: Mapping[str, HorairesCotation],
                              periodes_couvertes: Mapping[str, Sequence[Intervalle]],coordinateur:CoordinateurCompte,
                               profils:Mapping,profil_compte=None,scenario_fondamental=None,
-                              controle_fondamental=None,source_fondamentale=None) -> MoteurMinimal:
+                              controle_fondamental=None,source_fondamentale=None,lecteur_ia=None,source_ia=None) -> MoteurMinimal:
     """Point de composition du moteur minimal, appelé par la coquille."""
     return MoteurMinimal(strategie,configuration,mode,deploiement,horaires,periodes_couvertes,
-        coordinateur,profils,profil_compte,scenario_fondamental,controle_fondamental,source_fondamentale)
+        coordinateur,profils,profil_compte,scenario_fondamental,controle_fondamental,source_fondamentale,lecteur_ia,source_ia)

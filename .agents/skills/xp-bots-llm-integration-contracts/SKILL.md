@@ -14,6 +14,13 @@ description: "Complément IA distant de XP-Bots (A01–A12) : API distantes Groq
 - Référence : `reference/llm_contracts.py` (`parse_model_output`, `parse_advisory_output`,
   `build_policy_event`, `make_snapshot`, `overlay_decision`, `combined_entry_allowed`, `reserve_cost_usd`,
   `budget_admits`) ; ni client HTTP, ni persistance, ni verrouillage concurrent.
+- État réel du lecteur depuis la phase 8 London : quatre couches communes figées sous
+  `xpbots.contexte_ia`, dossier actif `mcl/london-contexte-ia/` ; snapshot complètement validé,
+  cache causal avec preuves de réception et reprise pure, port réel BLOCK/NEUTRAL du coordinateur.
+  La couture London reçoit des snapshots synthétiques et conserve ComplementAbsent en référence.
+  L'oracle overlay_decision retourne avant de valider la fin d'une liste si le premier veto est actif :
+  cette limite est testée ; un snapshot malformé entier reste refusé selon A10/A12. Le service,
+  les lectures physiques et l'orchestration A/B complète restent à construire.
 - Contexte non normatif : `docs/references/IA_Generative_Forex_Scalping_M15_v2.md`.
 
 ## Workflow

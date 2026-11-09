@@ -51,7 +51,7 @@
     },
     {
       "id": "1b",
-      "profondeur": 1,
+      "profondeur": 3,
       "nom": "contexte-ia",
       "chemins": [
         "src/xpbots/contexte_ia"
@@ -60,7 +60,7 @@
         "xpbots.contexte_ia"
       ],
       "contrats": [
-        "mcl/robot-ema-v3/COUTURES.md"
+        "mcl/london-contexte-ia/contrats/couche-*.md"
       ]
     },
     {
@@ -107,7 +107,7 @@
     },
     {
       "id": "2d",
-      "profondeur": 2,
+      "profondeur": 4,
       "nom": "service-ia",
       "chemins": [
         "src/xpbots/service_ia"
@@ -135,7 +135,7 @@
     },
     {
       "id": "4",
-      "profondeur": 4,
+      "profondeur": 5,
       "nom": "infrastructure",
       "chemins": [
         "src/xpbots/infrastructure"
@@ -149,7 +149,7 @@
     },
     {
       "id": "5",
-      "profondeur": 5,
+      "profondeur": 6,
       "nom": "app",
       "chemins": [
         "src/xpbots/app"
@@ -181,7 +181,8 @@
       "id": "contexte_ia",
       "responsabilite": "Lire le snapshot IA et rendre BLOCK ou NEUTRAL (A07, A10, A12).",
       "depend_de": [
-        "noyau"
+        "noyau",
+        "execution"
       ],
       "couche": "1b"
     },

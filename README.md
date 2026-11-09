@@ -69,6 +69,8 @@ La même vérification tourne en intégration continue (`.github/workflows/robot
 
 Les contrôles C05 communs sont construits depuis la phase 7 London : [bilan et contrats](mcl/london-controles-fondamentaux/PLAN-MCL.md). Le rejeu London utilise leur port réel avec des arrivées scénarisées ; son scénario technique neutre demeure explicite. Cela ne réalise ni les sources physiques, ni l’intégration du robot EMA au compte.
 
+Le [lecteur IA commun](mcl/london-contexte-ia/PLAN-MCL.md) est construit depuis la phase 8 London : quatre couches figées, validation complète du snapshot, cache causal exportable et port facultatif BLOCK/NEUTRAL. La couture London reçoit des snapshots synthétiques aux heures déclarées ; elle conserve le complément absent en référence. L’orchestration A/B et le service externe restent futurs.
+
 ## Agents AI de développement
 
 Les agents qui travaillent dans ce dépôt (Claude Code, Codex, GitHub Copilot, Cline) suivent [AGENTS.md](AGENTS.md) et les [règles transversales](.agents/PROJECT_RULES.md) : orchestrateur de skills en premier, audit de fin avec pied d'audit et marqueur, création contrôlée des skills manquantes. Les skills ont une seule source éditable, `.agents/skills/` ; `.claude/skills/` n'en contient que des copies générées. Les hooks de chaque outil appellent un moteur unique, `.agents/hooks/agent_lifecycle.py`. Cette gouvernance est distincte du complément IA des robots (sections A01–A15).

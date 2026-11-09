@@ -132,7 +132,7 @@ financier ; aucune rentabilité n'est promise ; démonstration obligatoire avant
 |---|---|---|---|
 | 0 | `noyau` (squelette) | — | 1 |
 | 1a | `donnees_temps` | noyau | 2 |
-| 1b | `contexte_ia` | noyau | 7 |
+| 1b (profondeur 3 du bloc commun) | `contexte_ia` | noyau canonique, execution (port partagé) | 7 |
 | 2a | `moteur_ema` | noyau, donnees_temps | 3 |
 | 2b | `execution` | noyau, donnees_temps | 4–5 |
 | 2c (profondeur 3 du bloc commun) | `fondamental` | noyau canonique, execution (port partagé) | 6 |
@@ -270,6 +270,12 @@ avec D), **C11.9** (début inclus, fin exclue, calendrier révisé tardivement).
 absent ».
 
 ### 7.F `contexte_ia` (A07, A10, A12) — phase 7
+
+Disponibilité commune depuis la phase 8 London : quatre couches figées dans
+`mcl/london-contexte-ia/`, sources `xpbots.contexte_ia`. Le lecteur valide le snapshot complet,
+conserve les vetos et leurs preuves de réception sans renouvellement, et fournit le port
+BLOCK/NEUTRAL canonique. L'esquisse historique EMA est préservée ; son squelette et sa phase 7
+ne sont pas déclarés achevés. Les profondeurs actuelles sont celles de sa carte composite.
 
 | Couche | Unité | Contrat |
 |---|---|---|

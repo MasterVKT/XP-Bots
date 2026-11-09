@@ -2,7 +2,7 @@
 
 > Document de travail MCL du **composite** : robot 2 London Breakout M15 (`LONDON_V3`) et composants partagés.
 > La source de vérité est le [plan d'implémentation](../../docs/architecture/robot_london_v3/README.md)
-> (version 1.4.8, validé par l'utilisateur le 05/11/2026). Ce fichier en reprend les sections 0 à 2 et renvoie
+> (version 1.4.9, validé par l'utilisateur le 05/11/2026). Ce fichier en reprend les sections 0 à 2 et renvoie
 > au plan pour le reste ; en cas d'écart, le plan prévaut et l'écart est corrigé ici dans la même modification.
 > Fichiers voisins : `carte.json` (carte au grain des paquets, servant à `analyser` et `verifier`, **jamais à
 > `figer`**) et `journal.jsonl` (traces de l'outil). Chaque artefact de chair a son propre dossier
@@ -180,3 +180,4 @@ chaque artefact au début de sa phase.
 | 5 | Terminée | 07/11/2026 | Onze couches 0a à 3 du coordinateur commun figées dans [london-execution-coordinateur](../london-execution-coordinateur/PLAN-MCL.md), checkpoints après les niveaux 1 et 3 ; un défigeage correctif 0a (risque nul confirmé et restauration mal formée), correction locale avant gel 1b (retrait pendant arrêt) ; 613 tests dont 80 propres au composant, cartes strictes, 29 mutations distinctes détectées et publication consignées au bilan ; arbitrage R4/R5 ; aucune couture, phase 6 non commencée |
 | 6 | Terminée | 08/11/2026 | Cycle C08 (4), sorties (5a), reprise (5b) et coordinateur (6) figés dans le dossier commun ; checkpoint 6 ; couture S4 avec ordres, remplissages et sorties natives papier ; 707 tests dont 170 du coordinateur et 37 du squelette ; mutations, audit et publication au bilan ; phase 7 non commencée |
 | 7 | Terminée | 09/11/2026 | Cinq couches C05 communes figées, checkpoint après 2, port réel et calendrier causal branchés au rejeu ; 62 tests propres (50 catégorie 1, 12 catégorie 2), 49 du squelette ; suite intégrale de 782 tests ; bilan et mutations dans london-controles-fondamentaux ; phase 8 non commencée |
+| 8 | Terminée | 09/11/2026 | Quatre couches du lecteur IA commun figées dans london-contexte-ia ; CP2 ; snapshot strict, cache causal et reprise, port BLOCK/NEUTRAL et politique financière ; couture S4/S5/S7 et preuve C09, L-15 été/hiver ; 58 tests propres (47 catégorie 1, 11 catégorie 2), 60 du squelette, suite intégrale de 851 tests ; phase 9 non commencée |

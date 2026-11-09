@@ -217,6 +217,13 @@ L-14 est vérifié au vrai moteur London en été et en hiver. Les lectures phys
 
 ## Phase 8 — Artefact `contexte-ia`
 
+Réalisée le 09/11/2026 : quatre couches communes figées dans
+[`london-contexte-ia`](../../../mcl/london-contexte-ia/PLAN-MCL.md), CP2 et couture du vrai port.
+Les 58 tests propres et 11 nouveaux tests du squelette couvrent les cas ci-dessous, dont L-15
+sur le vrai moteur London été/hiver. La comparaison d'oracle explicite son retour prématuré sur
+les listes mixtes malformées ; le lecteur rejette le snapshot entier selon A10/A12. La référence
+conserve le complément absent. L'orchestration A/B complète reste l'objet de la phase 9.
+
 - **Objectif** : lecture du snapshot, cache des vetos, port `BLOCK` ou `NEUTRAL` (document 02, §6.6).
 - **Skills** : `xp-bots-llm-integration-contracts`, MCL.
 - **Prérequis** : phase 7.

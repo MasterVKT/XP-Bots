@@ -39,7 +39,7 @@ contre doublures et contre le réel.
 |---|---|---|---|
 | 0 | noyau (squelette) | — (CI du squelette) | 1 |
 | 1a | donnees_temps | `mcl/donnees-temps/` | 2 |
-| 1b | contexte_ia | `mcl/contexte-ia/` | 7 |
+| 1b (profondeur 3) | contexte_ia | `mcl/london-contexte-ia/` (commun) | 7 |
 | 2a | moteur_ema | `mcl/moteur-ema/` | 3 |
 | 2b | execution | `mcl/execution-coordinateur/` | 4–5 |
 | 2c | fondamental | `mcl/london-controles-fondamentaux/` (commun) | 6 |
@@ -91,3 +91,12 @@ Les cinq couches C05 sous `xpbots.fondamental` sont figées dans le dossier acti
 `london-controles-fondamentaux`, après arbitrage R4/R5. Les types et le port sont ceux du noyau
 London et du coordinateur unique ; l'adaptateur EMA existant reste la frontière des domaines.
 Le squelette EMA n'est pas recâblé et aucune phase EMA supplémentaire n'est déclarée terminée.
+
+### Disponibilité commune après la phase 8 London
+
+Les quatre couches du lecteur IA sont figées sous `xpbots.contexte_ia`, dossier actif
+`london-contexte-ia`. Le port est celui du coordinateur commun ; les types temporels, de
+configuration et de décision viennent du noyau canonique. La carte recalcule les profondeurs
+des futurs consommateurs, sans renommer leurs identifiants. Le squelette EMA n'est pas recâblé
+et aucune phase EMA supplémentaire n'est déclarée terminée. L'esquisse `mcl/contexte-ia/`
+reste historique et ne doit pas être implémentée comme un second lecteur.

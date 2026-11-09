@@ -115,3 +115,24 @@ Le bloc commun de phase 7 est désormais construit : cinq couches gelées et CP2
 dans la couture London, 62 tests propres. Le rejeu scénarisé conserve les dates de réception et
 de connaissance ; aucune source physique ni orchestration EMA n'est anticipée. La dépendance
 directe du segment de rejeu London à C05 est inscrite dans sa carte composite stricte.
+
+### Arbitrage R4/R5 du 09/11/2026 — phase 8 London
+
+Le lecteur IA est encore une esquisse EMA sans source ni contrat gelé. La phase 8 construit un
+seul bloc commun sous `xpbots.contexte_ia`, dossier actif `mcl/london-contexte-ia/` et tests
+`tests/robot/london_contexte_ia/`. Le dossier historique `mcl/contexte-ia/` est préservé comme
+esquisse ; il ne doit pas être développé en parallèle. Le préfixe suit R1 et ne crée aucun second
+lecteur. Les deux cartes composites désignent les contrats du même bloc.
+
+Le temps, la configuration IA et les décisions sont ceux du noyau canonique London ; le port
+LecteurContexteIA appartient au coordinateur commun. L'adaptateur EMA 0a reste l'unique frontière
+des domaines. Aucun noyau ni moteur n'est défigé ou importé par ce lecteur. Les sources de snapshots
+et le stockage physique restent en phase 11 ; le cache exporte et importe des valeurs pures.
+La branche de référence conserve ComplementAbsent. Aucune nouvelle phase EMA n'est déclarée
+terminée. La dépendance au port commun place ce bloc à profondeur 3 dans les deux composites ;
+les profondeurs des consommateurs EMA encore planifiés sont recalculées, en conservant leurs IDs.
+
+La phase 8 réalise ce bloc unique : quatre couches gelées et CP2, 58 tests propres, vrai port
+IA dans la couture London et contexte C09 causal. La dépendance directe du rejeu London au
+lecteur est inscrite dans sa carte composite stricte. Le squelette EMA reste distinct ; aucun
+artefact amont ni phase EMA n'est défigé ou déclaré achevé par cette disponibilité commune.

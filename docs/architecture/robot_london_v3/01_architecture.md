@@ -256,7 +256,7 @@ src/xpbots/
     c3_dimensionnement/ c4_cycle/ c5a_sorties/ c5b_reprise/ c6_coordinateur/
   fondamental/                      artefact commun london-controles-fondamentaux (phase 7 figée)
     c0_types/ c1a_message/ c1b_annonces/ c2_etat_permissions/ c3_permissions/
-  contexte_ia/                      artefact contexte-ia
+  contexte_ia/                      artefact commun london-contexte-ia (phase 8 figée)
   orchestration/                    artefact orchestration
   rejeu/                            artefact journal-rejeu
   infra/                            artefact infrastructure : seul lieu des entrées-sorties réelles

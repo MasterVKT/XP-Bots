@@ -105,7 +105,7 @@
         "xpbots.contexte_ia"
       ],
       "contrats": [
-        "mcl/contexte-ia/contrats/*.md"
+        "mcl/london-contexte-ia/contrats/couche-*.md"
       ]
     },
     {
@@ -279,7 +279,8 @@
         "orchestration",
         "moteur-london",
         "aleatoire",
-        "controles-fondamentaux"
+        "controles-fondamentaux",
+        "contexte-ia"
       ],
       "couche": "5"
     },

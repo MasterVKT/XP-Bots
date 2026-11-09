@@ -1,0 +1,190 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "london-contexte-ia",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": "Lecteur commun A10/A12 : snapshot strict, cache causal, reprise et port BLOCK ou NEUTRAL."
+  },
+  "langage": "python",
+  "sources": [
+    "src/xpbots/contexte_ia"
+  ],
+  "exclure": [],
+  "couches": [
+    {
+      "id": "0",
+      "profondeur": 0,
+      "nom": "types",
+      "chemins": [
+        "src/xpbots/contexte_ia/c0_types"
+      ],
+      "imports": [
+        "xpbots.contexte_ia.c0_types"
+      ],
+      "contrats": [
+        "mcl/london-contexte-ia/contrats/couche-0.md",
+        "src/xpbots/contexte_ia/c0_types/__init__.py",
+        "tests/robot/london_contexte_ia/test_cat*_c0_*.py"
+      ]
+    },
+    {
+      "id": "1",
+      "profondeur": 1,
+      "nom": "snapshot",
+      "chemins": [
+        "src/xpbots/contexte_ia/c1_snapshot"
+      ],
+      "imports": [
+        "xpbots.contexte_ia.c1_snapshot"
+      ],
+      "contrats": [
+        "mcl/london-contexte-ia/contrats/couche-1.md",
+        "src/xpbots/contexte_ia/c1_snapshot/__init__.py",
+        "tests/robot/london_contexte_ia/test_cat*_c1_*.py"
+      ]
+    },
+    {
+      "id": "2",
+      "profondeur": 2,
+      "nom": "cache",
+      "chemins": [
+        "src/xpbots/contexte_ia/c2_cache"
+      ],
+      "imports": [
+        "xpbots.contexte_ia.c2_cache"
+      ],
+      "contrats": [
+        "mcl/london-contexte-ia/contrats/couche-2.md",
+        "src/xpbots/contexte_ia/c2_cache/__init__.py",
+        "tests/robot/london_contexte_ia/test_cat*_c2_*.py"
+      ]
+    },
+    {
+      "id": "3",
+      "profondeur": 3,
+      "nom": "contexte",
+      "chemins": [
+        "src/xpbots/contexte_ia/c3_contexte"
+      ],
+      "imports": [
+        "xpbots.contexte_ia.c3_contexte"
+      ],
+      "contrats": [
+        "mcl/london-contexte-ia/contrats/couche-3.md",
+        "src/xpbots/contexte_ia/c3_contexte/__init__.py",
+        "tests/robot/london_contexte_ia/test_cat*_c3_*.py"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "types",
+      "responsabilite": "types",
+      "depend_de": [
+        "amont-noyau"
+      ],
+      "couche": "0"
+    },
+    {
+      "id": "snapshot",
+      "responsabilite": "snapshot",
+      "depend_de": [
+        "types",
+        "amont-noyau"
+      ],
+      "couche": "1"
+    },
+    {
+      "id": "cache",
+      "responsabilite": "cache",
+      "depend_de": [
+        "types",
+        "snapshot",
+        "amont-noyau"
+      ],
+      "couche": "2"
+    },
+    {
+      "id": "contexte",
+      "responsabilite": "contexte",
+      "depend_de": [
+        "types",
+        "cache",
+        "amont-noyau",
+        "amont-execution"
+      ],
+      "couche": "3"
+    }
+  ],
+  "externes": [
+    {
+      "id": "amont-noyau",
+      "imports": [
+        "xpbots.noyau.c0a_temps",
+        "xpbots.noyau.c0c_configuration",
+        "xpbots.noyau.c1c_domaine"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "id": "amont-execution",
+      "imports": [
+        "xpbots.execution.c0b_controles"
+      ],
+      "couches_autorisees": [
+        "3"
+      ]
+    },
+    {
+      "id": "io-interdites",
+      "imports": [
+        "os",
+        "pathlib",
+        "io",
+        "time",
+        "sqlite3",
+        "subprocess",
+        "threading",
+        "random",
+        "socket",
+        "http",
+        "urllib",
+        "MetaTrader5",
+        "reference"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "paquets-aval",
+      "imports": [
+        "xpbots.app",
+        "xpbots.infra",
+        "xpbots.infrastructure",
+        "xpbots.rejeu",
+        "xpbots.orchestration",
+        "xpbots.london",
+        "xpbots.moteur_ema",
+        "xpbots.donnees",
+        "xpbots.donnees_temps",
+        "xpbots.fondamental",
+        "xpbots.service_ia"
+      ],
+      "couches_autorisees": []
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "strict",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}
