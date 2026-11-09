@@ -22,7 +22,7 @@ from xpbots.infra.squelette import ecrire_journal, lire_configuration, lire_lign
 from xpbots.london.c2_moteur import fabriquer_strategie
 from xpbots.noyau.c0c_configuration import charger_configuration_figee
 from xpbots.noyau.c2_journal import serialiser
-from xpbots.orchestration.squelette import fabriquer_moteur_minimal, composer_coordinateur_neutre, SCENARIO_TECHNIQUE
+from xpbots.orchestration.squelette import fabriquer_moteur_minimal, composer_coordinateur, SCENARIO_TECHNIQUE
 from xpbots.rejeu.squelette import (ContratPapier, ExecutionPapierMinimale, StockageMemoirePapier,
     analyser_lignes_ticks, hypotheses_marche_squelette, profils_papier, rejouer)
 
@@ -62,7 +62,8 @@ def _contrats_papier(arguments,symboles):
     return contrats
 
 
-def composer_rejeu_papier(configuration,ticks,tailles,contrats,*,strategie=None,deploiement='squelette'):
+def composer_rejeu_papier(configuration,ticks,tailles,contrats,*,strategie=None,deploiement='squelette',
+                         controle_fondamental=None,source_fondamentale=None,scenario=None):
     """Composition synthétique déclarée ; aucun terminal ou compte réel."""
     if not ticks: raise ValueError('aucun tick dans le fichier')
     horaires,periodes=hypotheses_marche_squelette(ticks,configuration)
@@ -71,12 +72,18 @@ def composer_rejeu_papier(configuration,ticks,tailles,contrats,*,strategie=None,
     creation=premier//86_400_000*86_400_000
     execution=ExecutionPapierMinimale(configuration,profils,creation)
     execution.avancer_au(premier)
-    coordinateur=composer_coordinateur_neutre(configuration,deploiement,profils,execution,premier,
-        observation=execution.observation(),base_utc=execution.base_utc())
+    if source_fondamentale is not None and (source_fondamentale.controle is not controle_fondamental
+            or (source_fondamentale.prochaine_reception_ms is not None
+                and source_fondamentale.prochaine_reception_ms<premier)):
+        raise ValueError('source C05 liée au contrôle et bornée au rejeu requise')
+    coordinateur=composer_coordinateur(configuration,deploiement,profils,execution,premier,
+        observation=execution.observation(),base_utc=execution.base_utc(),
+        controle_fondamental=controle_fondamental,scenario=scenario)
     strategie=strategie if strategie is not None else fabriquer_strategie(configuration,tailles)
     moteur=fabriquer_moteur_minimal(strategie,configuration,MODE_REJEU,deploiement,
         horaires=horaires,periodes_couvertes=periodes,coordinateur=coordinateur,profils=profils,
-        profil_compte=execution.profil_compte,scenario_fondamental=SCENARIO_TECHNIQUE)
+        profil_compte=execution.profil_compte,scenario_fondamental=scenario,
+        controle_fondamental=controle_fondamental,source_fondamentale=source_fondamentale)
     return moteur,execution,StockageMemoirePapier()
 
 
@@ -98,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
         ticks = list(analyser_lignes_ticks(lire_lignes(arguments.ticks)))
         tailles = _tailles_tick(arguments.tick_size, {tick.symbole for tick in ticks})
         contrats=_contrats_papier(arguments.contrat_papier,{t.symbole for t in ticks})
-        moteur,execution,stockage=composer_rejeu_papier(configuration,ticks,tailles,contrats)
+        moteur,execution,stockage=composer_rejeu_papier(configuration,ticks,tailles,contrats,scenario=arguments.scenario)
         resultat = rejouer(ticks,moteur,execution,stockage)
         chemin = ecrire_journal(arguments.sortie, (serialiser(e) for e in resultat.enregistrements))
     except (ValueError, OSError) as erreur:

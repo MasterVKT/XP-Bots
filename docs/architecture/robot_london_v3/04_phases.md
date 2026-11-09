@@ -197,6 +197,11 @@ Le scénario neutre, le contrat et la grille synthétiques sont explicites ; la 
 
 ## Phase 7 — Artefact `controles-fondamentaux`
 
+Réalisée le 09/11/2026 : les cinq couches du dossier actif partagé
+[`london-controles-fondamentaux`](../../../mcl/london-controles-fondamentaux/PLAN-MCL.md) sont
+figées après leurs gates et CP2. La couture utilise le vrai port C05 avec arrivées scénarisées ;
+L-14 est vérifié au vrai moteur London en été et en hiver. Les lectures physiques restent en phase 11.
+
 - **Objectif** : permissions externes et garde d'annonces (document 02, §6.5 ; C05).
 - **Skills** : `xp-bots-fundamental-permissions`, MCL.
 - **Prérequis** : phase 6.

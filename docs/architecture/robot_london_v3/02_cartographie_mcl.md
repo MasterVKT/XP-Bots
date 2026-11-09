@@ -417,6 +417,13 @@ normalisés `FULL`, `BUY_ONLY`, `SELL_ONLY` seront traduits par l’adaptateur ;
 
 ### 6.5 Artefact `controles-fondamentaux` (paquet `xpbots.fondamental`, phase 7)
 
+Réalisé le 09/11/2026 dans le dossier actif commun préfixé
+[`mcl/london-controles-fondamentaux/`](../../../mcl/london-controles-fondamentaux/PLAN-MCL.md),
+après arbitrage R4/R5 : cinq couches figées, checkpoint après 2, port C05 réel branché au rejeu.
+L'esquisse historique EMA n'est pas un second composant ; les deux cartes composites désignent le
+même bloc. Les interfaces et dépendances réelles sont celles de ce dossier. Aucun calcul macro ni
+lecteur physique n'est construit. Les scénarios injectent les seuls paquets externes, aux formats exacts.
+
 Rôle : valider les permissions externes et le calendrier, puis implémenter le port fondamental du
 coordinateur. Point d'insertion : remplace l'implémentation neutre du port, hors scénario de contrôle technique.
 

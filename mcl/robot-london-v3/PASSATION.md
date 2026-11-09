@@ -1,8 +1,8 @@
-# Rapport de passation — robot London (`LONDON_V3`), reprise à la phase 7
+# Rapport de passation — robot London (`LONDON_V3`), reprise à la phase 8
 
-> Mis à jour le 08/11/2026 à la fin de la phase 6, à l'intention de l'agent qui reprend l'exécution du plan dans une
+> Mis à jour le 09/11/2026 à la fin de la phase 7, à l'intention de l'agent qui reprend l'exécution du plan dans une
 > autre session, éventuellement avec un autre modèle ou un autre outil. Son but : que la suite soit construite
-> exactement selon la logique, la rigueur et les conventions des phases 0 à 6. Ce rapport est un **contexte de
+> exactement selon la logique, la rigueur et les conventions des phases 0 à 7. Ce rapport est un **contexte de
 > reprise**, pas une source normative : en cas d'écart avec les spécifications, les exports figés, le plan ou le
 > code réel, ce sont eux qui prévalent, et l'écart se signale (plan directeur, §0).
 
@@ -11,12 +11,12 @@
 | Élément | Valeur |
 |---|---|
 | Dépôt | `MasterVKT/XP-Bots` |
-| Branche de travail | `master`, après intégration en coexistence structurée (`5e5e288`) ; les commits `9c39d23` et `70c60d9` sont présents ; phase 4 `85069c0` ; phase 5 `4213a07` ; le commit de phase 6 porte cette mise à jour |
-| Plan suivi | [Plan directeur 1.4.7](../../docs/architecture/robot_london_v3/README.md), documents 01 à 08 du même dossier |
-| Phases terminées | 0, 1, 2, 3, 4, 5 et 6 ; état et publication vérifiables dans le journal Git |
-| Prochaine action | **Phase 7 — contrôles fondamentaux C05**, seulement sur demande explicite ; le coordinateur commun est achevé, le producteur fondamental reste à construire |
-| Suite du robot | 707 tests verts des deux lignées ; 170 propres au coordinateur (151 catégorie 1, 19 catégorie 2), 79 au moteur London, 37 au squelette |
-| Contrôles | Régression intégrale, ressources métier, plan London, gouvernance et cartes strictes : preuves de phase 6 dans [le bilan](../london-execution-coordinateur/PLAN-MCL.md) et le journal MCL |
+| Branche de travail | `master`, après intégration en coexistence structurée (`5e5e288`) ; les commits `9c39d23` et `70c60d9` sont présents ; phase 4 `85069c0` ; phase 5 `4213a07` ; phase 6 `5b017cc` ; le commit de phase 7 porte cette mise à jour |
+| Plan suivi | [Plan directeur 1.4.8](../../docs/architecture/robot_london_v3/README.md), documents 01 à 08 du même dossier |
+| Phases terminées | 0, 1, 2, 3, 4, 5, 6 et 7 ; état et publication vérifiables dans le journal Git |
+| Prochaine action | **Phase 8 — lecteur de contexte IA**, seulement sur demande explicite ; le port C05 est achevé et branché au rejeu London |
+| Suite du robot | 782 tests verts des deux lignées ; 62 propres à C05 (50 catégorie 1, 12 catégorie 2), 170 au coordinateur, 79 au moteur London, 49 au squelette |
+| Contrôles | Régression intégrale, ressources métier, plan London, gouvernance et cartes strictes : preuves de phase 7 dans [le bilan](../london-controles-fondamentaux/PLAN-MCL.md) et le journal MCL |
 | Environnement vérifié | Python 3.13 ; `numpy` 2.4.1, `pandas` 3.0.0, `tzdata` 2025.3 (`requirements-dev.txt`, tests seulement) ; aucun accès réseau requis |
 
 ## 1. Résumé exécutif
@@ -29,7 +29,7 @@ de bout en bout déployable, le noyau partagé figé (types, configuration figé
 `london-donnees-temps` figé (bougies M15 et H1 causales, validées, enrichies de TR, ATR, A_t, du rang de préchargement et
 des repères de Londres, avec reprise exacte). La phase 4 a ajouté `moteur-london`, huit couches figées, et
 remplacé S3 : de vraies cassures sont journalisées puis refusées sans ordre par le coordinateur minimal. La
-phase 5 a figé les onze couches pures du coordinateur commun, après arbitrage R4/R5. La phase 6 a figé le cycle C08, les sorties, la reprise et le coordinateur, puis remplacé S4. Les journées synthétiques passent avec ordres, remplissages et sorties. La phase 7 construira les contrôles fondamentaux ; seul leur port et le scénario neutre explicite existent ici.
+phase 5 a figé les onze couches pures du coordinateur commun, après arbitrage R4/R5. La phase 6 a figé le cycle C08, les sorties, la reprise et le coordinateur, puis remplacé S4. Les journées synthétiques passent avec ordres, remplissages et sorties. La phase 7 a figé les cinq couches C05 communes, après arbitrage R4/R5, et branché le vrai port au rejeu ; les permissions et calendriers sont reçus à leurs instants scénarisés. Le neutre reste explicite.
 
 ## 2. Mission et règle d'exécution
 
@@ -58,7 +58,7 @@ Lecture obligatoire avant de toucher au code, dans cet ordre :
 3. [Document 04](../../docs/architecture/robot_london_v3/04_phases.md) : gabarit commun des phases et fiche de la
    phase à exécuter.
 4. [Document 02](../../docs/architecture/robot_london_v3/02_cartographie_mcl.md) : section de l'artefact (pour la
-   phase 6 : §6.4), conventions des cartes, tableau des artefacts (§5), squelette (§3).
+   phase 8 : §6.6), conventions des cartes, tableau des artefacts (§5), squelette (§3).
 5. [Document 03](../../docs/architecture/robot_london_v3/03_acceptation_et_tests.md) : catégories de tests,
    commandes de gate, affectation des cas C11, S02.6 et A14, scénarios L-01 à L-19, gardes transverses.
 6. [Document 01](../../docs/architecture/robot_london_v3/01_architecture.md), §9.3 : table des motifs et des
@@ -126,7 +126,9 @@ Lecture obligatoire avant de toucher au code, dans cet ordre :
 | 4 | `85069c0` | Artefact `moteur-london` figé (8 couches), checkpoint après le niveau 1 et couture S3 ; protocole `sur_issue` et taille de tick explicite ; mutations et défigeages éventuels au bilan de l’artefact |
 | 5 | `4213a07` | Onze couches pures communes figées, checkpoints 1 et 3 ; adaptation EMA, gardes, risque, arbitrage et dimensionnement ; aucune couture S4 ; bilan et mutations dans le dossier actif |
 
-| 6 | Commit portant ce rapport | Quatre couches C08 figées dans le coordinateur unique, checkpoint 6 ; extensions et corrections tracées ; couture S4, profils papier explicites et vrais ordres ; bilan et mutations dans le dossier actif |
+| 6 | `5b017cc` | Quatre couches C08 figées dans le coordinateur unique, checkpoint 6 ; extensions et corrections tracées ; couture S4, profils papier explicites et vrais ordres ; bilan et mutations dans le dossier actif |
+
+| 7 | Commit portant ce rapport | Cinq couches C05 communes figées dans london-controles-fondamentaux ; CP2 ; schémas stricts, registre causal, heartbeat, calendrier, port réel et couture avec L-14 été/hiver ; bilan et mutations dans le dossier actif |
 
 ### 6.2 Carte composite (`mcl/robot-london-v3/carte.json`, divergence stricte)
 
@@ -251,6 +253,42 @@ L'extension additive du noyau 1c ajoute deux causes de clôture, sans motif ou s
 Les extensions de registre et de dimensionnement sont tracées ; l'arbitrage R4/R5 reste applicable.
 L'adaptateur EMA de 0a demeure l'unique frontière des deux domaines ; aucun second coordinateur.
 
+### 6.8 Contrôles C05 communs disponibles depuis la phase 7
+
+Dossier actif `mcl/london-controles-fondamentaux/`, source `xpbots.fondamental`, tests
+`tests/robot/london_fondamental/` : cinq couches figées, 62 tests propres. L'esquisse historique
+`mcl/controles-fondamentaux/` est préservée ; aucune nouvelle phase EMA n'est déclarée terminée.
+
+0 définit les messages et versions immuables, JSON strict, devises C05 et classification HIGH
+externe versionnée ; 1a valide D-11 sans état ; 1b garde l'historique D-12 et les heures de connaissance ;
+2 gère séquences, interruptions explicites, heartbeat et expiration ; 3 implémente le port canonique
+`PermissionsFondamentales(commun, convertir_serveur, etat=None)`. Les signatures exactes et états
+exportables sont dans les contrats publics. Le convertisseur serveur est une frontière injectée
+qualifiée, jamais un décalage inféré du document. Le message garde la réception locale distincte
+de known_at. Une relecture ne renouvelle rien ; un invalide ne détruit pas le dernier message valide.
+
+Le port expose recevoir_permission, recevoir_calendrier, interrompre, avancer, prochaine_echeance_ms,
+evaluer, clotures_obligatoires et etat. Les consultations historiques restent causales. FLATTEN valide
+prime ; une HIGH connue ferme même si la permission est périmée. NO_NEW, direction incompatible,
+absence et péremption bloquent sans liquidation ; un heartbeat manqué alerte sans invalider un
+message encore valide. Une nouvelle séquence valide résout une interruption explicite.
+
+La composition Python `composer_rejeu_papier` exige un contrôle réel, ou le scénario neutre explicite ;
+ces choix sont exclusifs. `SourceFondamentaleScenario` livre les `PaquetFondamental` synthétiques
+à leur réception exacte. Les échéances C05 rejoignent celles du coordinateur sans nouvelle cotation.
+Le journal conserve les vrais messages, réceptions et versions, ainsi que les alertes de suivi. Le moteur démarre au temps du coordinateur : les échéances d’un C05 restauré avant le premier tick sont observées à cet instant sans recul de l’horloge papier ; un C05 futur au démarrage est refusé.
+L-14 passe sur les vrais flux et moteur London en été et hiver : demande à N−900 s et fill au tick
+suivant. Sans cotation fraîche, C08 conserve demande prioritaire et protections jusqu'au marché
+négociable ; le test distingue cette attente d'un retard de contrôle. La CLI reste un contrôle
+technique neutre explicite ; fichiers réels et transport physique sont réservés à la phase 11.
+
+Un défigeage correction de 1b a retiré une ligne blanche finale de son test après contrôle de l’index ; aucune signature ou règle ne change. L’AST est identique, puis gate, gel, mutations et archive sont rejoués.
+
+Le contrôle de gouvernance de phase 7 passe ses huit étapes sur l'arbre de travail. Le test natif
+du lanceur PowerShell passe également sur une archive exacte du commit initial `5b017cc` : la
+limite de phase 6 conservée au §13.1 n'est pas reproduite dans cette vérification. Aucun des hooks
+ou tests de gouvernance modifiés avant la requête n'est inclus dans le commit de phase 7.
+
 ## 7. Méthode MCL telle qu'appliquée
 
 ### 7.1 Vocabulaire
@@ -358,7 +396,7 @@ nouveau gel, puis nouvelle passe de mutations jusqu'à détection totale. Phase 
    artefact).
 2. Documents : `mcl/<artefact>/PLAN-MCL.md` §5 (bilan : couches, défigeages et leurs motifs, choix de conception
    arrêtés, contrôles dérivés des sources, mutations, couture) ; ligne de la phase dans
-   `mcl/robot-london-v3/PLAN-MCL.md` §7 ; plan directeur : version d'un cran (phase 7 → **1.4.8**), date, phrase
+   `mcl/robot-london-v3/PLAN-MCL.md` §7 ; plan directeur : version d'un cran (phase 8 → **1.4.9**), date, phrase
    d'état de l'en-tête, ligne du journal des révisions (§7) ; [guide](../../docs/architecture/GUIDE_IMPLEMENTATION.md) :
    phrase « État du dépôt au … » et numéro de version du plan ; document 02 seulement si une dépendance ou une
    sortie réelle diffère de l'esquisse ; ce rapport de passation : §0 et §6.1 (état), §9 (briefing de la phase
@@ -388,34 +426,28 @@ Le marqueur `[XP-BOTS-AUDIT:BLOQUE]` ne sert qu'à un blocage prouvé et expliqu
 l'humain). Les sous-agents n'émettent jamais de marqueur. Sous Claude Code, le hook de fin refuse une réponse sans
 pied complet ; ailleurs, la règle s'applique sans hook.
 
-## 9. Briefing de la phase 7 — contrôles fondamentaux
+## 9. Briefing de la phase 8 — lecteur de contexte IA
 
-La phase 6 est terminée et publiée par le commit portant ce rapport. Ne commencer la phase 7 que
-sur demande explicite. Lire le document 04 (phase 7), le document 02 §6.5, le document 01 §2.1 et
-§2.2, C05 et les exports normatifs avant d'arrêter les contrats. Appliquer orchestrateur, MCL,
-planification, permissions fondamentales, causalité des données et audit ; ajouter les skills utiles.
+La phase 7 est terminée par le commit portant ce rapport. Ne commencer la phase 8 que sur demande
+explicite. Lire le document 04 (phase 8), le document 02 §6.6, les contrats de snapshot A07/A10/A12,
+les exports IA, schémas et prompts. Appliquer orchestrateur, MCL, planification, contrats IA,
+causalité et audit ; ajouter les skills utiles. Ne pas appeler d'API ni construire le service IA.
 
-Construire l'artefact `controles-fondamentaux` sous `xpbots.fondamental`, couches 0, 1a et 1b, 2, 3 ;
-checkpoint après 2. Finaliser la carte et les contrats avant le code, aux dépendances réelles. Les
-ports de contrôle existent dans `xpbots.execution.c0b_controles` : les consommer, sans recréer les
-types ou introduire une permission implicite. L'IA facultative ne produit jamais C05.
+Construire l'artefact `contexte-ia`, couches 0, 1, 2, 3 ; checkpoint après 2. Vérifier le code réel
+et arbitrer R4/R5 avant tout nouveau composant commun ; préserver les socles EMA et London.
+Consommer les types et le port `LecteurContexteIA` existants, sans seconde gouvernance ni duplication
+de C05. Le complément absent rend NEUTRAL et ne produit jamais de permission fondamentale.
 
-Le producteur doit respecter le schéma `fundamental-permission-v1`, séquence, `known_at`, validité,
-heartbeat et directions/états de risque exacts ; les fenêtres d'annonces HIGH sont causales et
-semi-ouvertes. Vérifier C11.8 et C11.9, A14-6 et A14-8 côté socle, L-14, heartbeat manqué, expiration,
-FLATTEN, annonce apprise tardivement et calendrier périmé sans liquidation arbitraire. Les fixtures
-suivent exactement le dossier d'échange D-11 et l'export MQL5 D-12 ; aucune lecture réelle de fichier,
-aucun accès réseau ou terminal avant les phases correspondantes.
+Tester A14-2, A14-7, A14-8, A14-16 et L-15 ; comparer au véritable `overlay_decision` de référence
+dans les seuls tests. Vérifier causalité, cache, séquence, intégrité, snapshot périmé et expiration
+propre des vetos, avec export/import sans renouvellement. Le bras de référence conserve le
+complément absent. Ne pas anticiper l'orchestration A/B complète, la persistance physique ni C10.
 
-Le scénario `TECHNICAL_CONTROL_NEUTRAL` reste réservé aux essais explicitement nommés ; aucune
-permission historique n'est fabriquée. Les limites de calendrier et heures de connaissance sont
-journalisées. Ne pas anticiper le lecteur IA, l'orchestration complète, le simulateur C10 ni le disque.
+Sortie : quatre unités gelées, couture au port réel, gate des deux robots, mutations par couche
+et couture, documents et passation, directeur 1.4.9, audit, commit français et push. Rapport invitant
+ensuite à « passe à la phase 9 ». Les défauts et limites de poste restent décrits au bilan de phase 7.
 
-Sortie : toutes les couches gelées, cas d'acceptation vérifiés sur le vrai bloc, gate des deux robots,
-mutations par couche et couture éventuelle selon le plan, documents et passation à jour, directeur
-1.4.8, audit, commit français et push. Rapport invitant ensuite à « passe à la phase 8 ».
-
-## 10. Leçons et pièges des phases 0 à 6
+## 10. Leçons et pièges des phases 0 à 7
 
 1. **Divergence stricte** : une dépendance réelle oubliée dans la carte fait échouer le gate ; déclarer aussi les
    dépendances vers les couches de types.
@@ -443,10 +475,8 @@ mutations par couche et couture éventuelle selon le plan, documents et passatio
     explicite ; celui de 1a a aussi ajouté le test exact des extrêmes hétérogènes révélé par mutation.
 13. **Liens Markdown** : la porte `markdown-links` vérifie les liens relatifs des fichiers modifiés.
 
-## 11. Aperçu des phases 7 à 13 (points d'attention)
+## 11. Aperçu des phases 8 à 13 (points d'attention)
 
-- **7** (`controles-fondamentaux`) : fixtures au format exact du dossier d'échange (D-11) et de l'export MQL5 (D-12,
-  document 01, §2.1 et §2.2) ; aucune lecture de fichier réel avant la phase 11.
 - **8** (`contexte-ia`) : égalité avec `overlay_decision` ; persistance du cache par export et import.
 - **9** (`orchestration`) : moteur unique, bras A/B indépendants, stratégies injectées (D-18), aucune importation
   de `xpbots.london` ; rejouabilité C11.14 ; couture en `PAPER_AB` sur fixtures.
@@ -475,13 +505,13 @@ mutations par couche et couture éventuelle selon le plan, documents et passatio
 ## 13. Contrôle de reprise (à faire avant tout changement)
 
 1. La branche contient `9c39d23`, l’intégration `5e5e288`, ce rapport et le moteur `c2_moteur` ; vérifier
-   le commit de phase 6 dans `git log` (après `4213a07`) et le récupérer depuis la branche publiée si nécessaire. Ne pas repartir
+   le commit de phase 7 dans `git log` (après `5b017cc`) et le récupérer depuis la branche publiée si nécessaire. Ne pas repartir
    de la seule ancienne branche de phase 3, qui ne contient ni coexistence ni moteur S02.
 2. `mcl.py statut` indique « Toutes les couches sont figées » pour `mcl/noyau`,
    `mcl/london-donnees-temps` et `mcl/moteur-london`. Les quinze couches du coordinateur commun dans `mcl/london-execution-coordinateur` sont aussi figées.
-3. `python tools/run_london_tests.py` donne au moins 707 tests verts des deux lignées ; `python tools/verify_project.py` PASS ;
-   `mcl.py --dossier mcl/robot-london-v3 verifier` VERT ; `git status --short` comparé à la fin de phase 6 : deux modifications préexistantes de
-   `.gitattributes` et `tests/robot/fixtures/squelette_ticks.csv` ont été préservées hors des commits des phases 4 à 6 ;
+3. `python tools/run_london_tests.py` donne au moins 782 tests verts des deux lignées ; `python tools/verify_project.py` PASS ;
+   `mcl.py --dossier mcl/robot-london-v3 verifier` VERT ; `git status --short` comparé à la fin de phase 7 : quinze modifications préexistantes de gouvernance,
+   de hooks et de leurs tests, de `.gitattributes` et de `tests/robot/fixtures/squelette_ticks.csv` ont été préservées hors du commit de phase 7 ;
    tout autre écart doit être identifié et expliqué.
 4. Sous Windows, conserver les octets LF de la fixture CSV lors d'un export pour les tests : employer
    `git -c core.autocrlf=false archive` pour obtenir les blobs exacts. Le réglage `core.autocrlf=true` avec

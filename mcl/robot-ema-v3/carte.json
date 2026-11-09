@@ -93,7 +93,7 @@
     },
     {
       "id": "2c",
-      "profondeur": 2,
+      "profondeur": 3,
       "nom": "fondamental",
       "chemins": [
         "src/xpbots/fondamental"
@@ -102,7 +102,7 @@
         "xpbots.fondamental"
       ],
       "contrats": [
-        "mcl/robot-ema-v3/COUTURES.md"
+        "mcl/london-controles-fondamentaux/contrats/*.md"
       ]
     },
     {
@@ -208,7 +208,7 @@
       "responsabilite": "Appliquer C05.",
       "depend_de": [
         "noyau",
-        "donnees_temps"
+        "execution"
       ],
       "couche": "2c"
     },

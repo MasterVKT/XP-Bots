@@ -42,7 +42,7 @@ contre doublures et contre le réel.
 | 1b | contexte_ia | `mcl/contexte-ia/` | 7 |
 | 2a | moteur_ema | `mcl/moteur-ema/` | 3 |
 | 2b | execution | `mcl/execution-coordinateur/` | 4–5 |
-| 2c | fondamental | `mcl/controles-fondamentaux/` | 6 |
+| 2c | fondamental | `mcl/london-controles-fondamentaux/` (commun) | 6 |
 | 2d | service_ia | `mcl/service-ia/` | 10 |
 | 3 | journal_rejeu | `mcl/journal-rejeu/` | 8 |
 | 4 | infrastructure | `mcl/infrastructure/` | 9–10 (segments minimaux dès la phase 1) |
@@ -84,3 +84,10 @@ l'utilisateur. Bilan par `mcl.py rapport` à la clôture de chaque artefact.
 Le dossier actif `london-execution-coordinateur` contient désormais quinze couches figées, incluant
 cycle C08, sorties et reprise. Le robot EMA doit consommer ces mêmes interfaces via 0a ; aucune
 nouvelle phase EMA n'est déclarée réalisée et son squelette historique n'est pas modifié.
+
+### Disponibilité commune après la phase 7 London
+
+Les cinq couches C05 sous `xpbots.fondamental` sont figées dans le dossier actif commun
+`london-controles-fondamentaux`, après arbitrage R4/R5. Les types et le port sont ceux du noyau
+London et du coordinateur unique ; l'adaptateur EMA existant reste la frontière des domaines.
+Le squelette EMA n'est pas recâblé et aucune phase EMA supplémentaire n'est déclarée terminée.

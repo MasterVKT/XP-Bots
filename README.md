@@ -57,7 +57,7 @@ Cette simulation utilise un index temporaire et conserve l'index réel, la branc
 
 ## Robot 1 Triple EMA + RSI + repli (en construction)
 
-Le [plan d'implémentation](docs/architecture/PLAN_IMPLEMENTATION_ROBOT_EMA_V3.md) découpe la construction en phases ; l'avancement est suivi dans [le plan composite](mcl/robot-ema-v3/PLAN-MCL.md). Le squelette actuel rejoue une fixture de ticks synthétiques jusqu'au journal C09, avec le composant données et temps (bougies M15, indicateurs EMA/RSI/ATR, trous, préchauffage) et le moteur de la méthode S01 (signaux identiques à la référence, refusés tant que le fondamental et l'exécution manquent) : aucun ordre, aucun appel réseau, aucune donnée de prix réelle. Le journal est écrit sous `runtime/`, exclu de Git, et n'est jamais écrasé.
+Le [plan d'implémentation](docs/architecture/PLAN_IMPLEMENTATION_ROBOT_EMA_V3.md) découpe la construction en phases ; l'avancement est suivi dans [le plan composite](mcl/robot-ema-v3/PLAN-MCL.md). Le squelette actuel rejoue une fixture de ticks synthétiques jusqu'au journal C09, avec le composant données et temps (bougies M15, indicateurs EMA/RSI/ATR, trous, préchauffage) et le moteur de la méthode S01 (signaux identiques à la référence, refusés par son segment minimal tant que les composants communs ne sont pas branchés à son squelette) : aucun ordre, aucun appel réseau, aucune donnée de prix réelle. Le journal est écrit sous `runtime/`, exclu de Git, et n'est jamais écrasé.
 
 ```powershell
 python tools/run_robot_tests.py
@@ -66,6 +66,8 @@ python -m xpbots.app.rejeu --ticks tests/robot/fixtures/squelette_ticks.csv --ma
 ```
 
 La même vérification tourne en intégration continue (`.github/workflows/robot-ci.yml`) avec `python tools/verify_project.py` et le contrôle d'architecture des cartes MCL.
+
+Les contrôles C05 communs sont construits depuis la phase 7 London : [bilan et contrats](mcl/london-controles-fondamentaux/PLAN-MCL.md). Le rejeu London utilise leur port réel avec des arrivées scénarisées ; son scénario technique neutre demeure explicite. Cela ne réalise ni les sources physiques, ni l’intégration du robot EMA au compte.
 
 ## Agents AI de développement
 

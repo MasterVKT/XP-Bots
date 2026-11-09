@@ -91,7 +91,7 @@
         "xpbots.fondamental"
       ],
       "contrats": [
-        "mcl/controles-fondamentaux/contrats/*.md"
+        "mcl/london-controles-fondamentaux/contrats/*.md"
       ]
     },
     {
@@ -278,7 +278,8 @@
         "execution-coordinateur",
         "orchestration",
         "moteur-london",
-        "aleatoire"
+        "aleatoire",
+        "controles-fondamentaux"
       ],
       "couche": "5"
     },

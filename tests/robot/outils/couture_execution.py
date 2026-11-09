@@ -14,7 +14,8 @@ def composer(ticks,strategie=None,configuration=None,horaires=None,periodes=None
     symboles={t.symbole for t in ticks}
     tailles={s:D('.00001') for s in symboles}
     contrats={s:ContratPapier(D('1000'),D('.1'),D('1'),D('.1')) for s in symboles}
-    m,e,s=composer_rejeu_papier(configuration,ticks,tailles,contrats,strategie=strategie)
+    m,e,s=composer_rejeu_papier(configuration,ticks,tailles,contrats,strategie=strategie,
+        scenario='TECHNICAL_CONTROL_NEUTRAL')
     if horaires is not None or periodes is not None:
         from xpbots.rejeu.squelette import hypotheses_marche_squelette
         h,p=hypotheses_marche_squelette(ticks,configuration)

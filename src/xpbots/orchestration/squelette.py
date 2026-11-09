@@ -21,6 +21,7 @@ from xpbots.donnees.c1c_couverture import RegistreCouverture
 from xpbots.donnees.c3_flux import FluxBougies
 from xpbots.execution.c4_cycle import CommandeExecution
 from xpbots.execution.c0b_controles import ControleTechniqueNeutre
+from xpbots.fondamental.c3_permissions import PermissionsFondamentales
 from xpbots.execution.c6_coordinateur import CoordinateurCompte, LotCoordinateur
 from xpbots.noyau.c0c_configuration import ConfigurationFigee
 from xpbots.noyau.c1a_marche import Tick, Cotation
@@ -38,6 +39,18 @@ def composer_coordinateur_neutre(configuration,deploiement,profils,port,instant_
     """Composition pure du coordinateur réel pour le seul rejeu technique synthétique."""
     return CoordinateurCompte(configuration.technique,deploiement,profils,port.profil_compte,
         port,ControleTechniqueNeutre(),instant_ms,longueur_empreinte=LONGUEUR_EMPREINTE_SQUELETTE,
+        mode='REJEU',observation=observation,base_utc=base_utc)
+
+
+def composer_coordinateur(configuration,deploiement,profils,port,instant_ms,*,observation,base_utc,
+                          controle_fondamental=None,scenario=None):
+    if scenario == SCENARIO_TECHNIQUE and controle_fondamental is None:
+        return composer_coordinateur_neutre(configuration,deploiement,profils,port,instant_ms,
+            observation=observation,base_utc=base_utc)
+    if scenario is not None or not isinstance(controle_fondamental,PermissionsFondamentales):
+        raise ValueError('port C05 réel ou scénario technique explicite requis, choix exclusifs')
+    return CoordinateurCompte(configuration.technique,deploiement,profils,port.profil_compte,
+        port,controle_fondamental,instant_ms,longueur_empreinte=LONGUEUR_EMPREINTE_SQUELETTE,
         mode='REJEU',observation=observation,base_utc=base_utc)
 
 
@@ -87,7 +100,8 @@ class MoteurMinimal:
 
     def __init__(self, strategie: Strategie, configuration: ConfigurationFigee, mode: str, deploiement: str,
                  horaires: Mapping[str, HorairesCotation], periodes_couvertes: Mapping[str, Sequence[Intervalle]],
-                 coordinateur:CoordinateurCompte,profils:Mapping,profil_compte=None,scenario_fondamental=None) -> None:
+                 coordinateur:CoordinateurCompte,profils:Mapping,profil_compte=None,scenario_fondamental=None,
+                 controle_fondamental=None,source_fondamentale=None) -> None:
         if not isinstance(strategie, Strategie):
             raise ValueError('stratégie injectée avec identifiant, sur_bougie et sur_issue attendue')
         if set(horaires) != set(periodes_couvertes):
@@ -100,6 +114,14 @@ class MoteurMinimal:
         self._deploiement = deploiement
         self._coordinateur = coordinateur
         self._profils=dict(profils);self._profil_compte=profil_compte;self._scenario=scenario_fondamental
+        if controle_fondamental is not None and not isinstance(controle_fondamental,PermissionsFondamentales):
+            raise ValueError('contrôle C05 réel requis')
+        if source_fondamentale is not None and source_fondamentale.controle is not controle_fondamental:
+            raise ValueError('source et coordinateur doivent utiliser le même contrôle C05')
+        self._fondamental=controle_fondamental;self._source_fondamentale=source_fondamentale
+        if controle_fondamental is not None and controle_fondamental.etat.dernier_ms>coordinateur.etat.dernier_ms:
+            raise ValueError('contrôle C05 futur au démarrage du moteur')
+        self._instant_fondamental=coordinateur.etat.dernier_ms
         self._intentions_journalisees={}
         self._flux = {symbole: FluxBougies(symbole, configuration.technique, horaires[symbole],
                                            RegistreCouverture(periodes_couvertes[symbole])) for symbole in horaires}
@@ -121,7 +143,30 @@ class MoteurMinimal:
         return enregistrement(TypeEnregistrement.ALERTE,self._enveloppe(instant_ms),{'alerte':code})
 
     @property
-    def prochaine_echeance_ms(self): return self._coordinateur.prochaine_echeance_ms
+    def prochaine_echeance_ms(self):
+        dates=[self._coordinateur.prochaine_echeance_ms]
+        if self._fondamental is not None:
+            dates.append(self._fondamental.prochaine_echeance_ms(self._instant_fondamental))
+        if self._source_fondamentale is not None:
+            dates.append(self._source_fondamentale.prochaine_reception_ms)
+        return min((t for t in dates if t is not None),default=None)
+
+    def _controles(self,instant):
+        traces=[]
+        if self._source_fondamentale is not None:
+            traces.extend(self._source_fondamentale.recevoir(instant))
+        if self._fondamental is not None:
+            traces.extend(dict(alerte=e.nature,**_journal(e)) for e in self._fondamental.avancer(instant))
+            self._instant_fondamental=instant
+        return [enregistrement(TypeEnregistrement.ALERTE,self._enveloppe(instant),v) for v in traces]
+
+    def _contexte_fondamental(self,symbole,instant):
+        if self._fondamental is None:return {'scenario':self._scenario},None
+        etat=self._fondamental.etat
+        histoire=[v for v in etat.permissions.historique if v.symbole==symbole and v.instant_ms<=instant]
+        permission=next((v for v in reversed(histoire) if hasattr(v,'message')),None)
+        version=next((v for v in reversed(etat.calendrier.versions) if v.reception_ms<=instant),None)
+        return dict(permission=_journal(permission),dernier_evenement=_journal(histoire[-1]) if histoire else None),_journal(version)
 
     def _consommer(self,lot,instant):
         lignes=[]
@@ -137,6 +182,7 @@ class MoteurMinimal:
             i=nouvelles[-1] if nouvelles else None
             cycle=cycles.get(d.cle);plan=cycle.plan if cycle is not None else None
             motif=d.issue.motif if d.issue is not None else None
+            permission,version=self._contexte_fondamental(d.cle.symbole,instant)
             contenu=dict(cle=d.cle.texte(),empreinte_cle=d.cle.empreinte(LONGUEUR_EMPREINTE_SQUELETTE),
                 strategie=d.cle.strategie,symbole=d.cle.symbole,sens=d.cle.sens.value,
                 tentatives=_journal(d.tentatives),issue=_issue(i),issues_nouvelles=tuple(_issue(v) for v in nouvelles),
@@ -145,7 +191,7 @@ class MoteurMinimal:
                 etat_intention=d.statut.value,signal=_journal(d.signal),
                 instrument=_journal(cycle.profil if cycle is not None else self._profils.get(d.cle.symbole)),
                 courtier=_journal(self._profil_compte),compte=_journal(lot.compte),
-                permission={'scenario':self._scenario},version_calendrier=None,snapshot_ia=None,
+                permission=permission,version_calendrier=version,snapshot_ia=None,
                 risque_initial=plan.risque if plan is not None else None,
                 budget_gele=plan.budget_gele if plan is not None else None,
                 fonds_propres_reference=plan.fonds_propres_reference if plan is not None else None,
@@ -156,12 +202,14 @@ class MoteurMinimal:
         return lignes
 
     def traiter_evenement(self,instant_ms,*,reponses=(),observation=None,base_utc=None):
+        controles=self._controles(instant_ms)
         lot=self._coordinateur.traiter(instant_ms,reponses=reponses,observation=observation,base_utc=base_utc)
-        return SortieMoteur(tuple(self._consommer(lot,instant_ms)),lot.commandes,lot)
+        return SortieMoteur(tuple(controles+self._consommer(lot,instant_ms)),lot.commandes,lot)
 
     def confirmer_persistance(self,preuve,instant_ms):
+        controles=self._controles(instant_ms)
         lot=self._coordinateur.confirmer_persistance(preuve,instant_ms)
-        return SortieMoteur(tuple(self._consommer(lot,instant_ms)),lot.commandes,lot)
+        return SortieMoteur(tuple(controles+self._consommer(lot,instant_ms)),lot.commandes,lot)
 
     def traiter_tick(self,tick:Tick,**kwargs)->SortieMoteur:
         return self.traiter_ticks((tick,),**kwargs)
@@ -172,11 +220,12 @@ class MoteurMinimal:
             raise ValueError('ticks de symboles configurés requis')
         if len({t.instant_reception_ms for t in ticks})!=1: raise ValueError('un instant de réception par groupe requis')
         instant=ticks[0].instant_reception_ms
+        controles=self._controles(instant)
         cotations={t.symbole:Cotation(t.symbole,Decimal(str(t.bid)),Decimal(str(t.ask)),
             t.instant_fournisseur_ms,t.instant_reception_ms) for t in ticks}
         lot=self._coordinateur.traiter(instant,cotations=tuple(cotations.values()),reponses=reponses,
             observation=observation,base_utc=base_utc)
-        enregistrements=self._consommer(lot,instant);commandes=list(lot.commandes);signaux=[]
+        enregistrements=controles+self._consommer(lot,instant);commandes=list(lot.commandes);signaux=[]
         for tick in ticks:
             for evenement in self._flux[tick.symbole].sur_tick(tick):
                 if not isinstance(evenement,BougieEnrichie):
@@ -188,9 +237,10 @@ class MoteurMinimal:
                 if not isinstance(resultat,ResultatTechnique): raise ValueError('résultat technique requis pour chaque M15')
                 indicateurs={} if evenement.indicateurs is None else dict(tr=evenement.indicateurs.tr,
                     atr=evenement.indicateurs.atr,a=evenement.indicateurs.a,rang=evenement.indicateurs.rang)
+                permission,version=self._contexte_fondamental(tick.symbole,instant)
                 record=enregistrement_cloture(self._enveloppe(instant),bougie=evenement.bougie,resultat=resultat,
                     profil=self._profils[tick.symbole],indicateurs=indicateurs,etat_strategie={},
-                    permission={'scenario':self._scenario},version_calendrier=None,snapshot_ia=None)
+                    permission=permission,version_calendrier=version,snapshot_ia=None)
                 enregistrements.append(enregistrement(record.type,record.enveloppe,
                     {**record.contenu,'compte':_journal(lot.compte),'courtier':_journal(self._profil_compte)}))
                 if isinstance(resultat,SignalTechnique): signaux.append(resultat)
@@ -203,7 +253,8 @@ class MoteurMinimal:
 def fabriquer_moteur_minimal(strategie: Strategie, configuration: ConfigurationFigee, mode: str,
                              deploiement: str = 'squelette', *, horaires: Mapping[str, HorairesCotation],
                              periodes_couvertes: Mapping[str, Sequence[Intervalle]],coordinateur:CoordinateurCompte,
-                             profils:Mapping,profil_compte=None,scenario_fondamental=None) -> MoteurMinimal:
+                              profils:Mapping,profil_compte=None,scenario_fondamental=None,
+                              controle_fondamental=None,source_fondamentale=None) -> MoteurMinimal:
     """Point de composition du moteur minimal, appelé par la coquille."""
     return MoteurMinimal(strategie,configuration,mode,deploiement,horaires,periodes_couvertes,
-        coordinateur,profils,profil_compte,scenario_fondamental)
+        coordinateur,profils,profil_compte,scenario_fondamental,controle_fondamental,source_fondamentale)

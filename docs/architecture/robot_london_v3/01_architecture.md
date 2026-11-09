@@ -96,8 +96,9 @@ laisse le complément IA `NEUTRAL` (A12) et déclenche une alerte, sans effet su
   - `calendrier.json` : numéro de version strictement croissant ; heure du serveur et heure GMT du terminal à
     l'export ; fenêtre couverte, du début du jour UTC précédent jusqu'à au moins l'instant d'export plus
     `news_forward_coverage_seconds` ; événements d'importance haute des devises USD, EUR et GBP, avec
-    identifiants d'événement et de valeur, code d'événement, devise, type, secteur, heure de l'événement et heure
-    de dernière mise à jour, en heure du serveur ;
+    identifiants d'événement et de valeur, code d'événement, devise, type, secteur, heure de l'événement en heure
+    du serveur et révision native ; l'heure de connaissance est affectée localement à la lecture, selon le
+    format précis du document 08, §4.1 ;
   - `seances_<symbole_courtier>.json` : numéro de version, heures d'export, et pour chaque jour de semaine les
     intervalles de cotation et de négociation en heure du serveur.
 - **Cadence** : calendrier chaque minute, séances au démarrage puis chaque heure (constantes d'ingénierie
@@ -253,7 +254,8 @@ src/xpbots/
     c0a_types/ c0b_ports_controles/ c0c_garde_cotation/ c0d_prix/ c0e_echeances/
     c1a_port_calcul/ c1b_gardes_compte/ c1c_reservations/ c2a_risque/ c2b_arbitrage/
     c3_dimensionnement/ c4_cycle/ c5a_sorties/ c5b_reprise/ c6_coordinateur/
-  fondamental/                      artefact controles-fondamentaux
+  fondamental/                      artefact commun london-controles-fondamentaux (phase 7 figée)
+    c0_types/ c1a_message/ c1b_annonces/ c2_etat_permissions/ c3_permissions/
   contexte_ia/                      artefact contexte-ia
   orchestration/                    artefact orchestration
   rejeu/                            artefact journal-rejeu
@@ -265,7 +267,7 @@ tests/robot/
   outils/                           fabriques synthétiques, courtier scénarisé, faux module MetaTrader5
   squelette/                        segments minimaux S1 à S7 et test de bout en bout du squelette
   transverses/                      gardes transverses : lanceur, pureté du cœur, carte composite
-  noyau/ donnees_temps/ moteur_london/ execution_coordinateur/ controles_fondamentaux/
+  noyau/ london_donnees_temps/ moteur_london/ london_execution_coordinateur/ london_fondamental/
   contexte_ia/ orchestration/ journal_rejeu/ infrastructure/ points_entree/ service_ia/
   moteur_london_v1/ donnees_historiques/
 mql5/Services/XPBotsExport.mq5      service MQL5 d'export du calendrier et des séances (D-12), seul code MQL5

@@ -1,16 +1,16 @@
 # Plan d'implémentation intégrale du robot 2 — London Breakout M15 (`LONDON_V3`)
 
-> Plan directeur, version **1.4.7** du **8 novembre 2026**. Statut : **validé par l'utilisateur le
+> Plan directeur, version **1.4.8** du **9 novembre 2026**. Statut : **validé par l'utilisateur le
 > 05/11/2026** ; couverture vérifiée mécaniquement par `python tools/verifier_plan_london.py`
 > ([document 06](06_verification_exhaustive.md)). Toutes les décisions de conception et les douze arbitrages de
 > spécification sont arrêtés. Les phases 0 à 12 s'exécutent entièrement dans le conteneur de développement, sans
 > autre action humaine que la demande de passage à la phase suivante ; les autres **actions humaines** (§5) sont
-> regroupées dans la phase 13. Phases 0, 1 et 2 terminées le 05/11/2026, phases 3 et 4 le 06/11/2026, phase 5 le 07/11/2026 (structure MCL
+> regroupées dans la phase 13. Phases 0, 1 et 2 terminées le 05/11/2026, phases 3 et 4 le 06/11/2026, phase 5 le 07/11/2026, phase 6 le 08/11/2026 et phase 7 le 09/11/2026 (structure MCL
 > composite dans [`mcl/robot-london-v3/`](../../../mcl/robot-london-v3/PLAN-MCL.md), squelette déployable,
 > [registre des coutures](../../../mcl/squelette/COUTURES.md), noyau figé dans [`mcl/noyau/`](../../../mcl/noyau/PLAN-MCL.md),
 > bougies M15 et H1 causales et enrichies figées dans [`mcl/london-donnees-temps/`](../../../mcl/london-donnees-temps/PLAN-MCL.md),
 > méthode S02 pure figée dans [`mcl/moteur-london/`](../../../mcl/moteur-london/PLAN-MCL.md) et couture S3 réalisée) ;
-> les quinze couches du coordinateur commun sont figées dans [`mcl/london-execution-coordinateur/`](../../../mcl/london-execution-coordinateur/PLAN-MCL.md). La phase 6 a construit le cycle d’ordre, les sorties et la reprise, puis remplacé S4 ; le rejeu papier exécute les vrais ordres London. Ce plan organise la construction ;
+> les quinze couches du coordinateur commun sont figées dans [`mcl/london-execution-coordinateur/`](../../../mcl/london-execution-coordinateur/PLAN-MCL.md). La phase 6 a construit le cycle d’ordre, les sorties et la reprise, puis remplacé S4 ; le rejeu papier exécute les vrais ordres London. La phase 7 a figé les cinq couches C05 communes dans [`mcl/london-controles-fondamentaux/`](../../../mcl/london-controles-fondamentaux/PLAN-MCL.md) : permissions, calendrier causal, heartbeat et port réel branché au rejeu ; le neutre reste explicite. Ce plan organise la construction ;
 > il n'ajoute, ne retire et ne modifie aucune règle métier, aucun seuil et aucun coût.
 
 ## 0. Autorité, portée et lecture
@@ -254,3 +254,4 @@ Procédure complète de chacune : [document 07](07_procedures_humaines.md).
 | 1.4.5 | 06/11/2026 | Phase 4 exécutée : artefact `moteur-london`, huit couches figées, checkpoint après le niveau 1 ; méthode S02 pure comparée aux oracles et vérifiée par mutations ; couture S3 avec vraies cassures sur ticks après préchargement, refusées sans ordre par S4 ; protocole de stratégie étendu par `sur_issue`, taille de tick explicitement fournie par symbole à S7 ; document 02, §6.3, aligné sur les dépendances directes et les sorties réelles ; passation préparée pour la phase 5 |
 | 1.4.6 | 07/11/2026 | Phase 5 exécutée : onze couches 0a à 3 du coordinateur commun figées dans `london-execution-coordinateur`, checkpoints après les niveaux 1 et 3 ; arbitrage R4/R5 et adaptateurs typés EMA, risque all-in, gardes et dimensionnement ; aucune couture S4 ; bilan, dépendances réelles, guide et passation alignés sur la phase 6 |
 | 1.4.7 | 08/11/2026 | Phase 6 exécutée : couches 4, 5a, 5b et 6 du coordinateur commun figées, checkpoint 6 ; cycle C08, sorties, reprise sur preuves natives et couture S4 avec vrais ordres papier ; profils synthétiques et scénario neutre explicites ; bilan, tests, mutations et passation alignés sur la phase 7 |
+| 1.4.8 | 09/11/2026 | Phase 7 : cinq couches C05 communes figées, checkpoint après 2 ; schémas D-11/D-12 stricts, historique causal, heartbeat, directions et FLATTEN, calendrier HIGH et clôture L-14 ; port réel dans la couture, scénario neutre explicite ; passation vers la phase 8 |

@@ -37,6 +37,10 @@ TEXTES_AUTORISES_PAR_FICHIER = {
     ('moteur_ema/c0_parametres.py', 'WILDER'): 'variante implémentée : refus de démarrer sinon',
     ('moteur_ema/c0_parametres.py', 'EMA15_TO_EMA50'): 'variante implémentée : refus de démarrer sinon',
 }
+TEXTES_AUTORISES_PAR_AFFECTATION = {
+    ('fondamental/c0_types/_impl.py', '_DEVISES', valeur)
+    for valeur in ('EURUSD', 'GBPUSD', 'XAUUSD', 'EUR', 'GBP', 'USD')
+}  # C05 et plan London §6.5 : table de devises explicitement codée, pas un paramètre recopié.
 APPELS_D_HORLOGE = {('datetime', 'now'), ('datetime', 'utcnow'), ('datetime', 'today'), ('date', 'today'),
                     ('time', 'time'), ('time', 'time_ns'), ('time', 'monotonic'), ('time', 'monotonic_ns'),
                     ('time', 'perf_counter'), ('time', 'perf_counter_ns')}
@@ -81,8 +85,12 @@ def litteraux_interdits(source, relatif, nombres, textes):
             continue
         parent = noeud
         fonction = None
+        affectation = None
         while parent in parents:
             parent = parents[parent]
+            if (isinstance(parent, ast.Assign) and isinstance(parents.get(parent), ast.Module)
+                    and len(parent.targets) == 1 and isinstance(parent.targets[0], ast.Name)):
+                affectation = parent.targets[0].id
             if isinstance(parent, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 fonction = parent.name
                 break
@@ -92,12 +100,22 @@ def litteraux_interdits(source, relatif, nombres, textes):
                 and (relatif, fonction, v) not in NOMBRES_AUTORISES_PAR_FONCTION:
             violations.append(f'{relatif}:{noeud.lineno} nombre {v!r}')
         if type(v) is str and v in textes and v not in TEXTES_AUTORISES \
-                and (relatif, v) not in TEXTES_AUTORISES_PAR_FICHIER:
+                and (relatif, v) not in TEXTES_AUTORISES_PAR_FICHIER \
+                and (relatif, affectation, v) not in TEXTES_AUTORISES_PAR_AFFECTATION:
             violations.append(f'{relatif}:{noeud.lineno} texte {v!r}')
     return violations
 
 
 class TestReglesTransverses(unittest.TestCase):
+    def test_exception_table_c05_limitee_a_l_affectation_du_module(self):
+        source = ("_DEVISES = {'EURUSD': ('EUR', 'USD')}\n"
+                  "_AUTRE = 'USD'\n"
+                  "def risque():\n    _DEVISES = {'USD': 'EUR'}\n    return 'EURUSD'\n")
+        fichier = 'fondamental/c0_types/_impl.py'
+        violations = litteraux_interdits(source, fichier, set(), {'EURUSD', 'EUR', 'USD'})
+        self.assertEqual(len(violations), 4)
+        self.assertEqual(len(litteraux_interdits(source, 'autre_module.py', set(), {'EURUSD', 'EUR', 'USD'})), 7)
+
     def test_aucune_valeur_normative_recopiee(self):
         nombres, textes = valeurs_normatives()
         violations = []

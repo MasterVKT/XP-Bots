@@ -2,7 +2,7 @@
 
 > Document de travail MCL du **composite** : robot 2 London Breakout M15 (`LONDON_V3`) et composants partagés.
 > La source de vérité est le [plan d'implémentation](../../docs/architecture/robot_london_v3/README.md)
-> (version 1.4.7, validé par l'utilisateur le 05/11/2026). Ce fichier en reprend les sections 0 à 2 et renvoie
+> (version 1.4.8, validé par l'utilisateur le 05/11/2026). Ce fichier en reprend les sections 0 à 2 et renvoie
 > au plan pour le reste ; en cas d'écart, le plan prévaut et l'écart est corrigé ici dans la même modification.
 > Fichiers voisins : `carte.json` (carte au grain des paquets, servant à `analyser` et `verifier`, **jamais à
 > `figer`**) et `journal.jsonl` (traces de l'outil). Chaque artefact de chair a son propre dossier
@@ -179,3 +179,4 @@ chaque artefact au début de sa phase.
 | 4 | Terminée | 06/11/2026 | Artefact `moteur-london` : huit couches figées ([plan MCL](../moteur-london/PLAN-MCL.md)), contrats avant code et régression intégrale à chaque gate ; checkpoint après le niveau 1 ; S02, oracles `london_signal` et `london_setups`, causalité, quotas et propriété testés ; couture S3 remplacée et extensions S4/S7 tracées ; 532 tests verts des deux lignées, dont 79 propres à l’artefact ; 23 mutations distinctes détectées après une correction exacte de 1a, huit défigeages correctifs incluant la normalisation LF des fiches ; contrôles finaux consignés au bilan  |
 | 5 | Terminée | 07/11/2026 | Onze couches 0a à 3 du coordinateur commun figées dans [london-execution-coordinateur](../london-execution-coordinateur/PLAN-MCL.md), checkpoints après les niveaux 1 et 3 ; un défigeage correctif 0a (risque nul confirmé et restauration mal formée), correction locale avant gel 1b (retrait pendant arrêt) ; 613 tests dont 80 propres au composant, cartes strictes, 29 mutations distinctes détectées et publication consignées au bilan ; arbitrage R4/R5 ; aucune couture, phase 6 non commencée |
 | 6 | Terminée | 08/11/2026 | Cycle C08 (4), sorties (5a), reprise (5b) et coordinateur (6) figés dans le dossier commun ; checkpoint 6 ; couture S4 avec ordres, remplissages et sorties natives papier ; 707 tests dont 170 du coordinateur et 37 du squelette ; mutations, audit et publication au bilan ; phase 7 non commencée |
+| 7 | Terminée | 09/11/2026 | Cinq couches C05 communes figées, checkpoint après 2, port réel et calendrier causal branchés au rejeu ; 62 tests propres (50 catégorie 1, 12 catégorie 2), 49 du squelette ; suite intégrale de 782 tests ; bilan et mutations dans london-controles-fondamentaux ; phase 8 non commencée |

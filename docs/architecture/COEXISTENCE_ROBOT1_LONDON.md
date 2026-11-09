@@ -96,3 +96,22 @@ moteur n'est importé par le coordinateur. London remplace S4 et utilise les com
 son rejeu papier. Cette disponibilité n'intègre pas le robot EMA de plateforme et ne remplace pas
 son squelette. L'extension additive du domaine London ajoute seulement deux causes de clôture ;
 elle est tracée dans le journal MCL du noyau. Les noyaux EMA et journaux historiques restent intacts.
+
+### Arbitrage R4/R5 du 09/11/2026 — phase 7 London
+
+Les contrôles fondamentaux C05 sont communs aux deux méthodes et ne sont pas encore implémentés.
+La phase 7 construit une seule fois `xpbots.fondamental`, consommant le port canonique déjà figé
+dans `xpbots.execution.c0b_controles` et les types du noyau London. L'adaptation des signaux EMA
+reste à la frontière 0a du coordinateur ; aucun second domaine de permission n'est créé.
+
+L'esquisse EMA `mcl/controles-fondamentaux` est conservée comme historique non gelé. Selon R1,
+le dossier actif de construction est `mcl/london-controles-fondamentaux`, avec les tests sous
+`tests/robot/london_fondamental`. Les sources sont déclarées COMMUN et contrôlées par les deux
+cartes composites. Leurs dépendances réelles sont alignées, sans déclarer une nouvelle phase EMA
+réalisée. Cette décision s'inscrit dans la demande explicite d'achever la phase 7 et ne modifie
+aucune règle C05, valeur figée ou ressource normative.
+
+Le bloc commun de phase 7 est désormais construit : cinq couches gelées et CP2, port C05 réel
+dans la couture London, 62 tests propres. Le rejeu scénarisé conserve les dates de réception et
+de connaissance ; aucune source physique ni orchestration EMA n'est anticipée. La dépendance
+directe du segment de rejeu London à C05 est inscrite dans sa carte composite stricte.

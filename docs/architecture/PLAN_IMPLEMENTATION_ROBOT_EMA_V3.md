@@ -135,7 +135,7 @@ financier ; aucune rentabilité n'est promise ; démonstration obligatoire avant
 | 1b | `contexte_ia` | noyau | 7 |
 | 2a | `moteur_ema` | noyau, donnees_temps | 3 |
 | 2b | `execution` | noyau, donnees_temps | 4–5 |
-| 2c | `fondamental` | noyau, donnees_temps (paramètres) | 6 |
+| 2c (profondeur 3 du bloc commun) | `fondamental` | noyau canonique, execution (port partagé) | 6 |
 | 2d | `service_ia` | noyau, contexte_ia (format du snapshot) | 10 |
 | 3 | `journal_rejeu` | noyau, profondeurs 1–2 | 8 |
 | 4 | `infrastructure` | noyau, execution (types C04), contexte_ia, journal_rejeu (schéma) | 9 (segments minimaux dès la phase 1) |
@@ -251,6 +251,11 @@ nommé, journalisé, interdit en `DEMO`) et un courtier scripté : cycle complet
 sortie 16:00 ou 7 200 s ; septième entrée du jour refusée ; signal refusé à l'exécution → cooldown.
 
 ### 7.E `fondamental` (C05) — phase 6
+
+Disponibilité commune depuis la phase 7 London : les cinq couches C05 sont figées dans
+`mcl/london-controles-fondamentaux/`, sources `xpbots.fondamental`. L'esquisse EMA historique est
+préservée ; sa consommation future passe par les ports et types canoniques communs. Cette
+disponibilité ne déclare pas achevée la phase 6 EMA et ne modifie pas son squelette.
 
 | Couche | Unité | Contrat |
 |---|---|---|

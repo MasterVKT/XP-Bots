@@ -1,0 +1,224 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "london-controles-fondamentaux",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": "C05 commun aux deux méthodes : permissions, calendrier causal, état et port du coordinateur."
+  },
+  "langage": "python",
+  "sources": [
+    "src/xpbots/fondamental"
+  ],
+  "exclure": [],
+  "couches": [
+    {
+      "id": "0",
+      "profondeur": 0,
+      "nom": "types_fondamentaux",
+      "chemins": [
+        "src/xpbots/fondamental/c0_types"
+      ],
+      "imports": [
+        "xpbots.fondamental.c0_types"
+      ],
+      "contrats": [
+        "mcl/london-controles-fondamentaux/contrats/couche-0.md",
+        "src/xpbots/fondamental/c0_types/__init__.py",
+        "tests/robot/london_fondamental/test_cat*_c0_*.py"
+      ]
+    },
+    {
+      "id": "1a",
+      "profondeur": 1,
+      "nom": "message_permission",
+      "chemins": [
+        "src/xpbots/fondamental/c1a_message"
+      ],
+      "imports": [
+        "xpbots.fondamental.c1a_message"
+      ],
+      "contrats": [
+        "mcl/london-controles-fondamentaux/contrats/couche-1a.md",
+        "src/xpbots/fondamental/c1a_message/__init__.py",
+        "tests/robot/london_fondamental/test_cat*_c1a_*.py"
+      ]
+    },
+    {
+      "id": "1b",
+      "profondeur": 1,
+      "nom": "garde_annonces",
+      "chemins": [
+        "src/xpbots/fondamental/c1b_annonces"
+      ],
+      "imports": [
+        "xpbots.fondamental.c1b_annonces"
+      ],
+      "contrats": [
+        "mcl/london-controles-fondamentaux/contrats/couche-1b.md",
+        "src/xpbots/fondamental/c1b_annonces/__init__.py",
+        "tests/robot/london_fondamental/test_cat*_c1b_*.py"
+      ]
+    },
+    {
+      "id": "2",
+      "profondeur": 2,
+      "nom": "etat_permissions",
+      "chemins": [
+        "src/xpbots/fondamental/c2_etat_permissions"
+      ],
+      "imports": [
+        "xpbots.fondamental.c2_etat_permissions"
+      ],
+      "contrats": [
+        "mcl/london-controles-fondamentaux/contrats/couche-2.md",
+        "src/xpbots/fondamental/c2_etat_permissions/__init__.py",
+        "tests/robot/london_fondamental/test_cat*_c2_*.py"
+      ]
+    },
+    {
+      "id": "3",
+      "profondeur": 3,
+      "nom": "permissions",
+      "chemins": [
+        "src/xpbots/fondamental/c3_permissions"
+      ],
+      "imports": [
+        "xpbots.fondamental.c3_permissions"
+      ],
+      "contrats": [
+        "mcl/london-controles-fondamentaux/contrats/couche-3.md",
+        "src/xpbots/fondamental/c3_permissions/__init__.py",
+        "tests/robot/london_fondamental/test_cat*_c3_*.py"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "types_fondamentaux",
+      "responsabilite": "types fondamentaux",
+      "depend_de": [
+        "amont-noyau"
+      ],
+      "couche": "0"
+    },
+    {
+      "id": "message_permission",
+      "responsabilite": "message permission",
+      "depend_de": [
+        "types_fondamentaux",
+        "amont-noyau",
+        "sources-externes"
+      ],
+      "couche": "1a"
+    },
+    {
+      "id": "garde_annonces",
+      "responsabilite": "garde annonces",
+      "depend_de": [
+        "types_fondamentaux",
+        "amont-noyau",
+        "sources-externes"
+      ],
+      "couche": "1b"
+    },
+    {
+      "id": "etat_permissions",
+      "responsabilite": "etat permissions",
+      "depend_de": [
+        "types_fondamentaux",
+        "message_permission",
+        "amont-noyau"
+      ],
+      "couche": "2"
+    },
+    {
+      "id": "permissions",
+      "responsabilite": "permissions",
+      "depend_de": [
+        "types_fondamentaux",
+        "etat_permissions",
+        "garde_annonces",
+        "amont-noyau",
+        "amont-execution"
+      ],
+      "couche": "3"
+    }
+  ],
+  "externes": [
+    {
+      "id": "amont-noyau",
+      "imports": [
+        "xpbots.noyau.c0a_temps",
+        "xpbots.noyau.c0c_configuration",
+        "xpbots.noyau.c1c_domaine",
+        "xpbots.noyau.c2_journal",
+        "xpbots.noyau.c1b_instrument"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1a",
+        "1b",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "id": "amont-execution",
+      "imports": [
+        "xpbots.execution.c0b_controles"
+      ],
+      "couches_autorisees": [
+        "3"
+      ]
+    },
+    {
+      "id": "sources-externes",
+      "imports": [],
+      "couches_autorisees": []
+    },
+    {
+      "id": "io-interdites",
+      "imports": [
+        "os",
+        "pathlib",
+        "io",
+        "time",
+        "sqlite3",
+        "subprocess",
+        "threading",
+        "random",
+        "socket",
+        "http",
+        "urllib",
+        "MetaTrader5",
+        "reference"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "paquets-aval",
+      "imports": [
+        "xpbots.app",
+        "xpbots.infra",
+        "xpbots.infrastructure",
+        "xpbots.rejeu",
+        "xpbots.orchestration",
+        "xpbots.london",
+        "xpbots.moteur_ema",
+        "xpbots.donnees",
+        "xpbots.donnees_temps"
+      ],
+      "couches_autorisees": []
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "strict",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}

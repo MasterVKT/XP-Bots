@@ -13,7 +13,11 @@ description: "Contrat C05 de XP-Bots : permissions fondamentales externes obliga
   clôtures obligatoires) ; valeurs `news_*` et `fundamental_*` du bloc `common` de
   `config/parametres_figes_v3.json`.
 - Données historiques nécessaires : section 4 de `docs/data/03_Donnees_Historiques_Requises_et_Validation.md`.
-- Composant à construire : contrôles fondamentaux obligatoires (`docs/architecture/GUIDE_IMPLEMENTATION.md`).
+- État réel : cinq couches communes figées sous `xpbots.fondamental`, dossier actif
+  `mcl/london-controles-fondamentaux/` (arbitrage R4/R5). Le port `PermissionsFondamentales` compose
+  le validateur, le registre causal et la garde d'annonces ; export/import purs, heartbeat et échéances.
+  La couture London utilise ce port avec paquets scénarisés ; les lecteurs physiques restent futurs.
+  L'esquisse historique `mcl/controles-fondamentaux/` n'est pas un second composant à construire.
 
 ## Workflow
 

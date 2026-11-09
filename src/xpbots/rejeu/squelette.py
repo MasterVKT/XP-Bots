@@ -17,6 +17,8 @@ from xpbots.execution.c4_cycle import (CommandeExecution, NatureCommande, Repons
     StatutAccuse, PreuvePersistance, PreuveAbsence)
 from xpbots.execution.c5b_reprise import ObservationNative, PositionNative, OrdreNatif
 from xpbots.execution.c6_coordinateur import LotCoordinateur
+from xpbots.fondamental.c0_types import TableImportance, devises_pour, instant
+from xpbots.fondamental.c3_permissions import PermissionsFondamentales
 from xpbots.noyau.c0a_temps import aligner
 from xpbots.noyau.c0c_configuration import ConfigurationFigee
 from xpbots.noyau.c1a_marche import ErreurMarche, Tick
@@ -27,6 +29,62 @@ from xpbots.noyau.c2_journal import Enregistrement
 from xpbots.orchestration.squelette import SortieMoteur
 
 COLONNES_TICKS = ('canonical_symbol', 'broker_symbol', 'time_utc_ms', 'sequence', 'bid', 'ask')
+
+
+@dataclass(frozen=True)
+class PaquetFondamental:
+    instant_ms: int
+    nature: str
+    octets: bytes = b''
+    symbole: str | None = None
+    table: TableImportance | None = None
+
+    def __post_init__(self):
+        instant(self.instant_ms)
+        if self.nature not in ('PERMISSION','CALENDRIER','INTERRUPTION') or type(self.octets) is not bytes:
+            raise ValueError('paquet C05 synthétique mal typé')
+        if self.nature=='CALENDRIER':
+            if not isinstance(self.table,TableImportance) or self.symbole is not None:
+                raise ValueError('classification explicite du calendrier requise')
+        else:
+            devises_pour(self.symbole)
+            if self.table is not None or (self.nature=='INTERRUPTION' and self.octets):
+                raise ValueError('paquet de permission incohérent')
+
+
+class SourceFondamentaleScenario:
+    """Doublure des seules arrivées externes ; le contrôle et ses couches sont réels."""
+    def __init__(self,controle,paquets):
+        if not isinstance(controle,PermissionsFondamentales):raise ValueError('port C05 réel requis')
+        self.controle=controle;self._paquets=tuple(paquets);self._index=0
+        precedent=controle.etat.dernier_ms
+        for p in self._paquets:
+            if not isinstance(p,PaquetFondamental) or p.instant_ms<precedent:
+                raise ValueError('paquets typés et chronologiques requis')
+            precedent=p.instant_ms
+
+    @property
+    def prochaine_reception_ms(self):
+        return self._paquets[self._index].instant_ms if self._index<len(self._paquets) else None
+
+    def recevoir(self,t):
+        instant(t);traces=[]
+        if self.prochaine_reception_ms is not None and self.prochaine_reception_ms<t:
+            raise ValueError('réception C05 sautée par le pilote de rejeu')
+        while self.prochaine_reception_ms==t:
+            p=self._paquets[self._index]
+            if p.nature=='INTERRUPTION':
+                change=self.controle.interrompre(p.symbole,t)
+                traces.append(dict(alerte='PERMISSION_INTERROMPUE',symbole=p.symbole,change=change,instant_ms=t))
+            else:
+                r=(self.controle.recevoir_permission(p.symbole,p.octets,t) if p.nature=='PERMISSION'
+                    else self.controle.recevoir_calendrier(p.octets,t,p.table))
+                statut='ACCEPTE' if r.acceptee else 'RELU' if r.ignoree else 'REJETE'
+                traces.append(dict(alerte=p.nature+'_'+statut,symbole=p.symbole,instant_ms=t,
+                    raison=r.raison,sequence=r.permission.message.sequence if p.nature=='PERMISSION' and r.permission else None,
+                    version=r.version.version if p.nature=='CALENDRIER' and r.version else None))
+            self._index+=1
+        return tuple(traces)
 
 
 class ErreurDonnees(ValueError):
