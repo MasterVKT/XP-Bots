@@ -269,3 +269,14 @@ reste explicitement à résoudre dans l'environnement Windows avant de déclarer
 Le rapport brut de gouvernance en échec et la comparaison au commit initial sont conservés sous
 `.local/reports/`, sans transformer le résultat en réussite 8/8. La publication de phase 6 conserve
 cette limite et ne déclare aucune mise en service réelle.
+
+### Phase 10 — correction du prix Ask de stress
+
+Le contrat 0d a été formellement défigé en modification : l’Ask exact imposé par
+C10 (Bid + 1,25 × spread) peut tomber entre deux incréments natifs. C06 arrondit
+les protections, sans prescrire cet arrondi de la cotation de stress. Le test
+rouge a précédé le retrait de cette restriction locale. Les couches 0d, 2a, 3,
+4, 5a, 5b et 6 ont toutes repassé leurs gates intégraux ; checkpoint enregistré.
+Les deux fichiers contractuels révisés sont la fiche 0d et son test propre.
+L’interface publique et les protections sur grille restent conservées. Preuves
+et arbitrage : [DEFIGEAGE-0d-PHASE10.md](DEFIGEAGE-0d-PHASE10.md).

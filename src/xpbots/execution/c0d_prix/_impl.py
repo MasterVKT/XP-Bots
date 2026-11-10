@@ -46,7 +46,7 @@ def construire_niveaux(signal,cotation,profil,commun):
     if not profil.convention_declenchement_verifiee: return RefusPrix(Motif.ENVIRONMENT_NOT_READY,'convention_declenchement_verifiee')
     with localcontext(Context(prec=48)):
         tick=profil.tick_size
-        if cotation.spread<0 or not all(est_sur_grille(v,tick) for v in (cotation.bid,cotation.ask)):
+        if cotation.spread<0:
             return RefusPrix(Motif.ENVIRONMENT_NOT_READY,'cotation')
         brut=decimal_depuis(signal.stop_technique); a=decimal_depuis(signal.atr_reference)
         d=signal.sens.signe*(decimal_depuis(signal.cloture_prix)-brut)

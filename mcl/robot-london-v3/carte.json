@@ -161,7 +161,7 @@
         "xpbots.rejeu"
       ],
       "contrats": [
-        "mcl/journal-rejeu/contrats/*.md"
+        "mcl/london-journal-rejeu/contrats/couche-*.md"
       ]
     },
     {

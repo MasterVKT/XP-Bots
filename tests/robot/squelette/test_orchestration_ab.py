@@ -114,7 +114,7 @@ class TestOrchestrationAB(unittest.TestCase):
         s['REFERENCE']=Panne();r=rejouer_ab(ticks,m,e,s)
         self.assertFalse(r.reponses['REFERENCE'])
         self.assertEqual(sum(v.nature is NatureReponse.REMPLISSAGE for v in r.reponses['IA']),1)
-        self.assertTrue(any(v.vers_dict().get('alerte')=='STOCKAGE_PAPIER_INDISPONIBLE' and v.enveloppe.bras=='REFERENCE' for v in r.enregistrements))
+        self.assertTrue(any(v.vers_dict().get('alerte')=='STOCKAGE_REJEU_INDISPONIBLE' and v.enveloppe.bras=='REFERENCE' for v in r.enregistrements))
 
     def test_sorties_obligatoires_malgre_panne_stockage(self):
         ticks=ticks_courts();m,e,s=composer(ticks,[export(),permission(),permission(S+30000,2,risk_state='FLATTEN')],fabriques=fabrique())

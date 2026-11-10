@@ -259,6 +259,8 @@ La suite du squelette compte 67 tests. Le simulateur C10 n’est pas commencé.
 
 ## Phase 10 — Artefact `journal-rejeu`
 
+Réalisée le 10/11/2026 : huit unités communes figées dans [london-journal-rejeu](../../../mcl/london-journal-rejeu/PLAN-MCL.md), checkpoints 1 et 3, remplacement S1/S5 et adaptation S7. La mesure d’un mois synthétique et les contrôles sont détaillés au bilan ; aucune donnée réelle ni qualification de rentabilité.
+
 - **Objectif** : simulateur C10, analyse des ticks, rejeu, métriques, bootstrap et rapports (document 02, §6.8).
 - **Skills** : `xp-bots-validation-replay`, `xp-bots-market-data-causality`, MCL.
 - **Prérequis** : phase 9. Arbitrage intégré au contrat : P-11 (1b).

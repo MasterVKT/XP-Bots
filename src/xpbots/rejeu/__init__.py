@@ -1,5 +1,5 @@
-"""Artefact `journal-rejeu` : simulateur C10, rejeu, métriques et rapports (construit en phase 10).
+"""Rejeu commun C10 construit en phase 10 : huit unités pures sous c0a à c3.
 
-En phase 1, il ne contient que les segments minimaux du squelette : analyse des lignes de ticks (S1),
-exécution papier (S5) et boucle de rejeu, module `squelette`.
+Le module squelette conserve les façades S1/S5 et les paquets externes de fixtures.
+Les sources physiques et la qualification de données réelles restent externes.
 """

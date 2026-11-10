@@ -60,7 +60,7 @@ class TestCoutureCoordinateur(unittest.TestCase):
             def persister(self,lot): raise OSError('panne synthétique')
         r=rejouer(ticks,m,e,StockageIndisponible())
         self.assertFalse(any(x.nature is NatureReponse.REMPLISSAGE for x in r.reponses))
-        self.assertTrue(any(x.vers_dict().get('alerte')=='STOCKAGE_PAPIER_INDISPONIBLE' for x in r.enregistrements))
+        self.assertTrue(any(x.vers_dict().get('alerte')=='STOCKAGE_REJEU_INDISPONIBLE' for x in r.enregistrements))
     def test_symboles_independants(self):
         ticks=[Tick(s,s,t,t,i,1.1,1.1001) for i,(t,s) in enumerate(((0,'GBPUSD'),(0,'EURUSD'),(M15,'GBPUSD'),(M15,'EURUSD')))]
         self.assertEqual({x['symbole'] for x in enregistrements(ticks) if x['type'] is TypeEnregistrement.CLOTURE},{'EURUSD','GBPUSD'})

@@ -18,7 +18,7 @@
     "src/xpbots/london/*",
     "src/xpbots/noyau/c[0-9]*",
     "src/xpbots/orchestration/squelette.py",
-    "src/xpbots/rejeu/*"
+    "src/xpbots/rejeu/squelette.py"
   ],
   "couches": [
     {
@@ -121,21 +121,21 @@
     },
     {
       "id": "3",
-      "profondeur": 3,
+      "profondeur": 5,
       "nom": "journal-rejeu",
       "chemins": [
-        "src/xpbots/journal_rejeu"
+        "src/xpbots/rejeu"
       ],
       "imports": [
-        "xpbots.journal_rejeu"
+        "xpbots.rejeu"
       ],
       "contrats": [
-        "mcl/robot-ema-v3/COUTURES.md"
+        "mcl/london-journal-rejeu/contrats/couche-*.md"
       ]
     },
     {
       "id": "4",
-      "profondeur": 5,
+      "profondeur": 6,
       "nom": "infrastructure",
       "chemins": [
         "src/xpbots/infrastructure"
@@ -149,7 +149,7 @@
     },
     {
       "id": "5",
-      "profondeur": 6,
+      "profondeur": 7,
       "nom": "app",
       "chemins": [
         "src/xpbots/app"
@@ -242,8 +242,11 @@
       "responsabilite": "Journaliser, rejouer et mesurer (C09, C10, A13).",
       "depend_de": [
         "noyau",
-        "donnees_temps",
-        "execution"
+        "execution",
+        "orchestration",
+        "fondamental",
+        "contexte_ia",
+        "moteur-london"
       ],
       "couche": "3"
     },
@@ -344,6 +347,15 @@
       "couches_autorisees": [
         "2b",
         "orchestration"
+      ]
+    },
+    {
+      "id": "moteur-london",
+      "imports": [
+        "xpbots.london"
+      ],
+      "couches_autorisees": [
+        "3"
       ]
     }
   ],

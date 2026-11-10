@@ -519,16 +519,18 @@ amont figé, injecté comme en production.
 
 ### 6.8 Artefact `journal-rejeu` (paquet `xpbots.rejeu`, phase 10)
 
+Réalisé le 10/11/2026 dans le dossier actif commun [london-journal-rejeu](../../../mcl/london-journal-rejeu/PLAN-MCL.md), après arbitrage R4/R5 : huit unités figées et checkpoints après 1 et 3. Les interfaces finales et imports directs sont ceux de cette carte active. S1/S5 délèguent au bloc ; S7 compose les coûts C10 et rapports. L’esquisse EMA est préservée. Les données restent synthétiques et aucune qualification financière n’est acquise.
+
 Rôle : simulateur d'exécution C10 (qui implémente le protocole du courtier et le port de calcul), rejeu des
 périodes, métriques, bootstrap et rapports ; cœur pur qui reçoit des lignes de fichiers et rend des résultats.
 
 | Unité | Couche | Responsabilité | Entrée → sortie | Dépend de | Amont | Sources |
 |---|---|---|---|---|---|---|
-| `types_rejeu` | 0a | Définir modèles d'exécution, comptes simulés, trades, jours de marché, perturbations et blocs | — | — | noyau | C10 |
+| `types_rejeu` | 0a | Définir modèles d'exécution, comptes simulés, trades, jours de marché, perturbations et conditions datées | — | — | noyau | C10 |
 | `protocole_c10` | 0b | Exposer blocs de dates, scénarios de coûts et seuils tels qu'écrits | configuration IA → protocole typé | — | noyau | C10, A13 |
 | `analyse_ticks` | 1a | Analyser et valider des lignes de ticks dans l'ordre natif | lignes de texte, manifeste → ticks, registre de trous | `types_rejeu` | noyau | C10, données §2 |
-| `simulateur_execution` | 1b | Exécuter les commandes sur ticks selon le modèle de référence ou de stress et fournir le port de calcul | commandes, ticks → réponses, état du compte | `types_rejeu` | execution-coordinateur, noyau | C10, C11.12, P-11 |
-| `metriques` | 1c | Calculer effectifs, espérance, profit factor, drawdown de fonds propres, rétention et fréquence | trades, courbe, jours → métriques | `types_rejeu` | noyau | C09, C10, A13 |
+| `simulateur_execution` | 1b | Exécuter les commandes sur ticks selon le modèle de référence ou de stress et fournir le port de calcul | commandes, ticks → réponses, état du compte | `types_rejeu`, `protocole_c10` | execution-coordinateur, noyau | C10, C11.12, P-11 |
+| `metriques` | 1c | Calculer effectifs, espérance, profit factor, drawdown de fonds propres, rétention et fréquence | trades, courbe, jours → métriques | `types_rejeu`, `protocole_c10` | noyau | C09, C10, A13 |
 | `bootstrap` | 1d | Bootstrap de blocs de cinq journées, graine et réplications de l'export, percentiles | sommes journalières → intervalles | `types_rejeu`, `protocole_c10` | noyau | C10, A13.7 |
 | `executeur_rejeu` | 2 | Rejouer une période : analyse, orchestration, simulateur ; blocs, rejeu continu, bras, perturbations, verrou du test réservé | périodes, ticks, configuration → résultats | `analyse_ticks`, `simulateur_execution`, `protocole_c10` | orchestration, moteur-london (fabrique), noyau ; moteur-london-v1 à partir de 13.4 | C10, A13 |
 | `rapports` | 3 | Produire les rapports C10, A11 London et A13 | résultats → rapports structurés | `metriques`, `bootstrap`, `executeur_rejeu` | noyau | C10, A11, A13, A14 |

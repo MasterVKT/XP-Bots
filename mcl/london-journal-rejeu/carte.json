@@ -1,0 +1,357 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "london-journal-rejeu",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": "Bloc partagé C10 : données, simulation, métriques, bootstrap, rejeu et rapports."
+  },
+  "langage": "python",
+  "sources": [
+    "src/xpbots/rejeu"
+  ],
+  "exclure": [
+    "src/xpbots/rejeu/squelette.py"
+  ],
+  "couches": [
+    {
+      "id": "0a",
+      "profondeur": 0,
+      "nom": "types",
+      "chemins": [
+        "src/xpbots/rejeu/c0a_types"
+      ],
+      "imports": [
+        "xpbots.rejeu.c0a_types"
+      ],
+      "contrats": [
+        "mcl/london-journal-rejeu/contrats/couche-0a.md",
+        "src/xpbots/rejeu/c0a_types/__init__.py",
+        "tests/robot/london_rejeu/test_cat*_c0a_*.py"
+      ]
+    },
+    {
+      "id": "0b",
+      "profondeur": 0,
+      "nom": "protocole",
+      "chemins": [
+        "src/xpbots/rejeu/c0b_protocole"
+      ],
+      "imports": [
+        "xpbots.rejeu.c0b_protocole"
+      ],
+      "contrats": [
+        "mcl/london-journal-rejeu/contrats/couche-0b.md",
+        "src/xpbots/rejeu/c0b_protocole/__init__.py",
+        "tests/robot/london_rejeu/test_cat*_c0b_*.py"
+      ]
+    },
+    {
+      "id": "1a",
+      "profondeur": 1,
+      "nom": "ticks",
+      "chemins": [
+        "src/xpbots/rejeu/c1a_ticks"
+      ],
+      "imports": [
+        "xpbots.rejeu.c1a_ticks"
+      ],
+      "contrats": [
+        "mcl/london-journal-rejeu/contrats/couche-1a.md",
+        "src/xpbots/rejeu/c1a_ticks/__init__.py",
+        "tests/robot/london_rejeu/test_cat*_c1a_*.py"
+      ]
+    },
+    {
+      "id": "1b",
+      "profondeur": 1,
+      "nom": "simulateur",
+      "chemins": [
+        "src/xpbots/rejeu/c1b_simulateur"
+      ],
+      "imports": [
+        "xpbots.rejeu.c1b_simulateur"
+      ],
+      "contrats": [
+        "mcl/london-journal-rejeu/contrats/couche-1b.md",
+        "src/xpbots/rejeu/c1b_simulateur/__init__.py",
+        "tests/robot/london_rejeu/test_cat*_c1b_*.py"
+      ]
+    },
+    {
+      "id": "1c",
+      "profondeur": 1,
+      "nom": "metriques",
+      "chemins": [
+        "src/xpbots/rejeu/c1c_metriques"
+      ],
+      "imports": [
+        "xpbots.rejeu.c1c_metriques"
+      ],
+      "contrats": [
+        "mcl/london-journal-rejeu/contrats/couche-1c.md",
+        "src/xpbots/rejeu/c1c_metriques/__init__.py",
+        "tests/robot/london_rejeu/test_cat*_c1c_*.py"
+      ]
+    },
+    {
+      "id": "1d",
+      "profondeur": 1,
+      "nom": "bootstrap",
+      "chemins": [
+        "src/xpbots/rejeu/c1d_bootstrap"
+      ],
+      "imports": [
+        "xpbots.rejeu.c1d_bootstrap"
+      ],
+      "contrats": [
+        "mcl/london-journal-rejeu/contrats/couche-1d.md",
+        "src/xpbots/rejeu/c1d_bootstrap/__init__.py",
+        "tests/robot/london_rejeu/test_cat*_c1d_*.py"
+      ]
+    },
+    {
+      "id": "2",
+      "profondeur": 2,
+      "nom": "executeur",
+      "chemins": [
+        "src/xpbots/rejeu/c2_executeur"
+      ],
+      "imports": [
+        "xpbots.rejeu.c2_executeur"
+      ],
+      "contrats": [
+        "mcl/london-journal-rejeu/contrats/couche-2.md",
+        "src/xpbots/rejeu/c2_executeur/__init__.py",
+        "tests/robot/london_rejeu/test_cat*_c2_*.py"
+      ]
+    },
+    {
+      "id": "3",
+      "profondeur": 3,
+      "nom": "rapports",
+      "chemins": [
+        "src/xpbots/rejeu/c3_rapports"
+      ],
+      "imports": [
+        "xpbots.rejeu.c3_rapports"
+      ],
+      "contrats": [
+        "mcl/london-journal-rejeu/contrats/couche-3.md",
+        "src/xpbots/rejeu/c3_rapports/__init__.py",
+        "tests/robot/london_rejeu/test_cat*_c3_*.py"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "types",
+      "responsabilite": "types",
+      "depend_de": [
+        "noyau"
+      ],
+      "couche": "0a"
+    },
+    {
+      "id": "protocole",
+      "responsabilite": "protocole",
+      "depend_de": [
+        "noyau"
+      ],
+      "couche": "0b"
+    },
+    {
+      "id": "ticks",
+      "responsabilite": "ticks",
+      "depend_de": [
+        "types",
+        "noyau"
+      ],
+      "couche": "1a"
+    },
+    {
+      "id": "simulateur",
+      "responsabilite": "simulateur",
+      "depend_de": [
+        "types",
+        "protocole",
+        "noyau",
+        "execution"
+      ],
+      "couche": "1b"
+    },
+    {
+      "id": "metriques",
+      "responsabilite": "metriques",
+      "depend_de": [
+        "types",
+        "protocole",
+        "noyau"
+      ],
+      "couche": "1c"
+    },
+    {
+      "id": "bootstrap",
+      "responsabilite": "bootstrap",
+      "depend_de": [
+        "types",
+        "protocole",
+        "noyau",
+        "aleatoire"
+      ],
+      "couche": "1d"
+    },
+    {
+      "id": "executeur",
+      "responsabilite": "executeur",
+      "depend_de": [
+        "types",
+        "protocole",
+        "ticks",
+        "simulateur",
+        "noyau",
+        "execution",
+        "orchestration",
+        "london",
+        "fondamental",
+        "contexte"
+      ],
+      "couche": "2"
+    },
+    {
+      "id": "rapports",
+      "responsabilite": "rapports",
+      "depend_de": [
+        "types",
+        "protocole",
+        "metriques",
+        "bootstrap",
+        "executeur",
+        "noyau"
+      ],
+      "couche": "3"
+    }
+  ],
+  "externes": [
+    {
+      "id": "noyau",
+      "imports": [
+        "xpbots.noyau.c0a_temps",
+        "xpbots.noyau.c0b_nombres",
+        "xpbots.noyau.c0c_configuration",
+        "xpbots.noyau.c1a_marche",
+        "xpbots.noyau.c1b_instrument",
+        "xpbots.noyau.c1c_domaine",
+        "xpbots.noyau.c2_journal"
+      ],
+      "couches_autorisees": [
+        "0a",
+        "0b",
+        "1a",
+        "1b",
+        "1c",
+        "1d",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "id": "execution",
+      "imports": [
+        "xpbots.execution"
+      ],
+      "couches_autorisees": [
+        "1b",
+        "2"
+      ]
+    },
+    {
+      "id": "orchestration",
+      "imports": [
+        "xpbots.orchestration.c0_contrats",
+        "xpbots.orchestration.c1_bras",
+        "xpbots.orchestration.c2_moteur"
+      ],
+      "couches_autorisees": [
+        "2"
+      ]
+    },
+    {
+      "id": "london",
+      "imports": [
+        "xpbots.london"
+      ],
+      "couches_autorisees": [
+        "2"
+      ]
+    },
+    {
+      "id": "fondamental",
+      "imports": [
+        "xpbots.fondamental"
+      ],
+      "couches_autorisees": [
+        "2"
+      ]
+    },
+    {
+      "id": "contexte",
+      "imports": [
+        "xpbots.contexte_ia"
+      ],
+      "couches_autorisees": [
+        "2"
+      ]
+    },
+    {
+      "id": "aleatoire",
+      "imports": [
+        "random"
+      ],
+      "couches_autorisees": [
+        "1d"
+      ]
+    },
+    {
+      "id": "frontieres-physiques",
+      "imports": [
+        "os",
+        "pathlib",
+        "io",
+        "time",
+        "socket",
+        "http",
+        "urllib",
+        "sqlite3",
+        "threading",
+        "subprocess",
+        "MetaTrader5",
+        "reference"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "aval-et-socles-historiques",
+      "imports": [
+        "xpbots.rejeu.squelette",
+        "xpbots.app",
+        "xpbots.infra",
+        "xpbots.infrastructure",
+        "xpbots.journal_rejeu",
+        "xpbots.donnees_temps",
+        "xpbots.moteur_ema",
+        "xpbots.london_v1"
+      ],
+      "couches_autorisees": []
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "strict",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}

@@ -1,38 +1,28 @@
-"""Coutures S1 et S5 : ticks CSV, profils synthétiques déclarés et transport papier C08.
-
-Le modèle papier au prochain tick ne représente pas les délais, coûts ou remplissages partiels C10.
-Les contrats et limites sont consignés dans mcl/squelette/COUTURES.md. Aucun accès extérieur ici.
-"""
-from __future__ import annotations
-
-from dataclasses import dataclass, field, replace
-from decimal import Context, Decimal, localcontext
-from itertools import groupby
-import math
+"""Façades S1/S5 vers le lecteur, le simulateur et le pilote communs de phase 10."""
+from dataclasses import dataclass,field
+from datetime import date
+from decimal import Decimal
+import hashlib
 from types import MappingProxyType
-from typing import Iterable, Iterator, Protocol, Sequence
-
+from typing import Sequence
 from xpbots.contexte_ia.c0_types import instant as instant_ia
 from xpbots.contexte_ia.c3_contexte import LecteurContexte
-from xpbots.execution.c0a_types import EtatCompte, PositionCompte, ControleNatif
-from xpbots.execution.c1b_gardes import MouvementCompte, reconstituer_base_utc
-from xpbots.execution.c4_cycle import (CommandeExecution, NatureCommande, ReponseCourtier, NatureReponse,
-    StatutAccuse, PreuvePersistance, PreuveAbsence)
-from xpbots.execution.c5b_reprise import ObservationNative, PositionNative, OrdreNatif
-from xpbots.execution.c6_coordinateur import LotCoordinateur
-from xpbots.fondamental.c0_types import TableImportance, devises_pour, instant
+from xpbots.fondamental.c0_types import TableImportance,devises_pour,instant
 from xpbots.fondamental.c3_permissions import PermissionsFondamentales
-from xpbots.noyau.c0a_temps import aligner
+from xpbots.noyau.c0a_temps import aligner,instant_vers_datetime
 from xpbots.noyau.c0c_configuration import ConfigurationFigee
-from xpbots.noyau.c1a_marche import ErreurMarche, Tick
-from xpbots.noyau.c1b_instrument import (HorairesCotation, Intervalle, ProfilCompte,
-    construire_profil_instrument)
-from xpbots.noyau.c1c_domaine import Sens, CauseCloture
+from xpbots.noyau.c1a_marche import Tick
+from xpbots.noyau.c1b_instrument import HorairesCotation,Intervalle,construire_profil_instrument
 from xpbots.noyau.c2_journal import Enregistrement
-from xpbots.orchestration.c0_contrats import SortieMoteur,ReceptionExterne,MiseAJourBras
+from xpbots.execution.c4_cycle import ReponseCourtier
+from xpbots.orchestration.c0_contrats import ReceptionExterne
+from xpbots.rejeu.c0a_types import ManifesteTicks,ConditionContrat,TarifCommission
+from xpbots.rejeu.c0b_protocole import ScenarioExecution
+from xpbots.rejeu.c1a_ticks import analyser_lignes_ticks as analyser_ticks_manifestes
+from xpbots.rejeu.c1b_simulateur import SimulateurExecution
+from xpbots.rejeu.c2_executeur import StockageMemoireRejeu,piloter
 
-COLONNES_TICKS = ('canonical_symbol', 'broker_symbol', 'time_utc_ms', 'sequence', 'bid', 'ask')
-
+COLONNES_TICKS=('canonical_symbol','broker_symbol','time_utc_ms','sequence','bid','ask')
 
 @dataclass(frozen=True)
 class PaquetFondamental:
@@ -146,52 +136,32 @@ class SourceSnapshotScenario:
 
 
 class ErreurDonnees(ValueError):
-    """Fichier de ticks refusé : format, ordre ou valeur invalide."""
+    """Refus de la façade CSV historique ; aucune qualification de provenance réelle."""
 
 
-def _entier(texte: str, nom: str, ligne: int) -> int:
-    if not texte.isascii() or not texte.isdigit():
-        raise ErreurDonnees(f'ligne {ligne} : {nom} doit être un entier positif ou nul')
-    return int(texte)
-
-
-def _prix(texte: str, nom: str, ligne: int) -> float:
+def analyser_lignes_ticks(lignes,manifeste=None):
+    """Le manifeste réel est préféré ; sinon déclaration explicite d'une fixture LF."""
+    lignes=tuple(lignes)
     try:
-        valeur = float(texte)
-    except ValueError as erreur:
-        raise ErreurDonnees(f'ligne {ligne} : {nom} illisible') from erreur
-    if not math.isfinite(valeur) or valeur <= 0:
-        raise ErreurDonnees(f'ligne {ligne} : {nom} doit être un nombre fini strictement positif')
-    return valeur
-
-
-def analyser_lignes_ticks(lignes: Iterable[str]) -> Iterator[Tick]:
-    """Convertir les lignes d'un fichier de ticks en ticks ordonnés ; toute anomalie lève `ErreurDonnees`."""
-    iterateur = iter(lignes)
-    entete = next(iterateur, None)
-    if entete is None:
-        raise ErreurDonnees('fichier de ticks vide')
-    if tuple(entete.split(',')) != COLONNES_TICKS:
-        raise ErreurDonnees(f'en-tête inattendu : {entete!r}')
-    precedent: tuple[int, int] | None = None
-    for numero, ligne in enumerate(iterateur, start=2):
-        champs = ligne.split(',')
-        if len(champs) != len(COLONNES_TICKS):
-            raise ErreurDonnees(f'ligne {numero} : {len(COLONNES_TICKS)} champs attendus')
-        symbole, symbole_courtier, instant, sequence, bid, ask = champs
-        if not symbole or not symbole_courtier:
-            raise ErreurDonnees(f'ligne {numero} : symbole vide')
-        instant_ms = _entier(instant, 'time_utc_ms', numero)
-        try:  # en rejeu, l'heure de réception est l'heure fournisseur (P-04)
-            tick = Tick(symbole, symbole_courtier, instant_ms, instant_ms, _entier(sequence, 'sequence', numero),
-                        _prix(bid, 'bid', numero), _prix(ask, 'ask', numero))
-        except ErreurMarche as erreur:
-            raise ErreurDonnees(f'ligne {numero} : {erreur}') from erreur
-        cle = (tick.instant_fournisseur_ms, tick.numero)
-        if precedent is not None and cle <= precedent:
-            raise ErreurDonnees(f'ligne {numero} : ticks non strictement ordonnés par instant puis séquence')
-        precedent = cle
-        yield tick
+        if manifeste is None:
+            lignes=tuple(l.rstrip('\r\n')+'\n' for l in lignes)
+            if not lignes or tuple(lignes[0].rstrip('\n').split(','))!=COLONNES_TICKS:
+                raise ErreurDonnees('en-tête CSV inattendu ou fichier vide')
+            # Seules les métadonnées sont relevées ici, sans trier ni produire de Tick.
+            symboles={};instants=[]
+            for ligne in lignes[1:]:
+                symbole,natif,t,_,_,_=ligne.rstrip('\n').split(',')
+                if symbole in symboles and symboles[symbole]!=natif:raise ErreurDonnees('liaison native modifiée')
+                symboles[symbole]=natif;instants.append(int(t))
+            if not instants:raise ErreurDonnees('aucun tick dans le fichier')
+            intervalle=Intervalle(min(instants),max(instants)+1)
+            horaires={s:HorairesCotation((intervalle,),(),intervalle.debut_ms,intervalle.fin_ms+1) for s in symboles}
+            manifeste=ManifesteTicks('S1_FIXTURE_LF_DECLAREE',symboles,intervalle,(intervalle,),(),
+                hashlib.sha256(''.join(lignes).encode('utf-8')).hexdigest(),
+                instant_vers_datetime(intervalle.debut_ms).date(),'FAÇADE_S1_LF','DECIMAL_TEXTE',horaires)
+        return iter(analyser_ticks_manifestes(lignes,manifeste))
+    except (ValueError,TypeError,OverflowError) as erreur:
+        raise ErreurDonnees(str(erreur)) from erreur
 
 
 def hypotheses_marche_squelette(ticks: Sequence[Tick], configuration: ConfigurationFigee
@@ -261,235 +231,25 @@ def profils_papier(ticks,tailles,contrats,horaires,configuration):
     return profils
 
 
-@dataclass
-class _PositionPapier:
-    commande: CommandeExecution
-    ticket: str
-    ordre: str
-    volume: Decimal
-    prix: Decimal
-    sl: Decimal | None
-    tp: Decimal | None
-    premier_fill_ms: int
+class StockageMemoirePapier(StockageMemoireRejeu):
+    """Nom historique du stockage mémoire commun, sans durabilité physique."""
 
 
-class StockageMemoirePapier:
-    """Transaction mémoire du scénario technique ; aucune durabilité physique."""
-    def __init__(self):
-        self.dernier_lot=None
-
-    def persister(self,lot):
-        if not isinstance(lot,LotCoordinateur): raise ValueError('lot réel requis')
-        if self.dernier_lot is not None and lot.etat.revision<self.dernier_lot.etat.revision:
-            raise ValueError('révision ancienne')
-        self.dernier_lot=lot
-        return PreuvePersistance(lot.etat.revision,tuple(c.reference for c in lot.preparations))
-
-
-class ExecutionPapierMinimale:
-    """Frontière S5 : calculs USD synthétiques et exécutions au prochain tick disponible.
-
-    Aucun coût, délai C10 ou remplissage partiel d'entrée ; les réductions sont natives et confirmées.
-    Les réserves de glissement C07 ne sont jamais retranchées du résultat réalisé.
-    """
-    def __init__(self,configuration,profils,creation_ms):
-        self.configuration=configuration;self.profils=dict(profils)
-        self.creation_ms=creation_ms;self.instant_ms=creation_ms
-        self._solde=Decimal(str(configuration.technique.commun.initial_equity_usd))
-        self._positions={};self._entrees={};self._clotures={};self._vues=set();self._prix={}
-        self._histoire=[];self._mouvements=[];self._vies={};self._termines=set();self._numero=0;self._dernier_tick=None
-
-    @property
-    def profil_compte(self):
-        p=self.configuration.technique.commun
-        return ProfilCompte('PAPIER_S5','MEMOIRE','SYNTHETIQUE','STANDARD',p.account_currency,
-            p.account_leverage,'HEDGING','PERCENT',Decimal(0),Decimal(0),self.creation_ms)
-
-    @property
-    def positions_ouvertes(self): return tuple(self._positions)
-
-    def avancer_au(self,t):
-        if type(t) is not int or t<self.instant_ms: raise ValueError('horloge papier non causale')
-        self.instant_ms=t
-
-    def specifications(self,symbole): return self.profils[symbole]
-
-    def profit(self,profil,sens,volume,entree,sortie):
-        with localcontext(Context(prec=48)):
-            return Decimal(sens.signe)*volume*profil.taille_contrat*(sortie-entree)
-
-    def frais_aller_retour(self,profil,sens,volume): return Decimal(0)
-    def frais_sortie(self,profil,sens,volume): return Decimal(0)
-
-    def marge(self,profil,sens,volume,entree):
-        with localcontext(Context(prec=48)):
-            return volume*profil.taille_contrat*entree/Decimal(self.configuration.technique.commun.account_leverage)
-
-    def _prix_sortie(self,p):
-        q=self._prix[p.commande.cle.symbole]
-        return q[0] if p.commande.cle.sens is Sens.ACHAT else q[1]
-
-    def etat_compte(self):
-        flottant=Decimal(0);marge=Decimal(0);positions=[]
-        for k,p in self._positions.items():
-            profil=self.profils[k.symbole]
-            flottant+=self.profit(profil,k.sens,p.volume,p.prix,self._prix_sortie(p))
-            marge+=self.marge(profil,k.sens,p.volume,p.prix)
-            positions.append(PositionCompte(p.ticket,k.symbole,profil.sous_jacent,p.volume,
-                p.commande.donnees['risque_initial'],k))
-        return EtatCompte(self.instant_ms,self._solde+flottant,self._solde,marge,tuple(positions))
-
-    def controler(self,ordre,compte,remplacement=False):
-        profil=self.profils[ordre.cle.symbole]
-        ancienne=next((self.marge(profil,ordre.cle.sens,p.volume,p.prix)
-            for k,p in self._positions.items() if k==ordre.cle),Decimal(0)) if remplacement else Decimal(0)
-        totale=compte.marge_utilisee-ancienne+self.marge(profil,ordre.cle.sens,ordre.volume,ordre.entree)
-        libre=compte.fonds_propres-totale
-        return ControleNatif(profil.horaires.ouvert_a(self.instant_ms),totale,libre,
-            compte.fonds_propres>0 and libre>=0,'S5_SYNTHETIQUE')
-
-    def base_utc(self):
-        borne=self.instant_ms//86_400_000*86_400_000
-        absence=not any(ouverture<=borne and (fermeture is None or fermeture>=borne)
-            for ouverture,fermeture in self._vies.values())
-        return reconstituer_base_utc(self.etat_compte(),tuple(self._mouvements),
-            Intervalle(self.creation_ms,self.instant_ms+1),aucune_position_minuit=absence)
-
-    def _reponse(self,nature,cle,donnees,prefixe):
-        self._numero+=1
-        r=ReponseCourtier(nature,cle,f'S5:{prefixe}:{self._numero}',self.instant_ms,donnees)
-        self._histoire.append(r)
-        return r
-
-    def _accuse(self,c,statut,code,ordre=None):
-        return self._reponse(NatureReponse.ACCUSE,c.cle,dict(commande=c.reference,statut=statut,
-            code_natif=code,definitif=statut is StatutAccuse.REFUSE,ordre=ordre),'accuse')
-
-    def observation(self,cle=None):
-        positions=[];ordres=[]
-        for k,p in self._positions.items():
-            d=p.commande.donnees
-            positions.append(PositionNative(p.ticket,self.profils[k.symbole].symbole_courtier,p.volume,
-                d['magic'],d['commentaire'],sl=p.sl,tp=p.tp))
-        for c,ordre in self._entrees.values():
-            d=c.donnees
-            ordres.append(OrdreNatif(ordre,d['symbole_courtier'],d['volume'],d['magic'],d['commentaire']))
-        for ticket,c in self._clotures.items():
-            p=next((p for p in self._positions.values() if p.ticket==ticket),None)
-            if p is not None:
-                d=p.commande.donnees
-                ordres.append(OrdreNatif('C:'+c.reference,d['symbole_courtier'],c.donnees['volume'],
-                    d['magic'],d['commentaire'],NatureCommande.CLOTURE))
-        absences=()
-        if cle is not None and cle in self._termines and cle not in self._entrees and cle not in self._positions:
-            if not any(r.cle==cle and r.nature is NatureReponse.REMPLISSAGE for r in self._histoire):
-                absences=(PreuveAbsence(cle,self.instant_ms,self.creation_ms,self.instant_ms,True,True,True,True,True,True),)
-        return ObservationNative(replace(self.etat_compte(),positions=()),self.creation_ms,True,
-            tuple(positions),tuple(ordres),tuple(self._histoire),absences)
-
-    def soumettre(self,commandes):
-        evenements=[]
-        for c in commandes:
-            if not isinstance(c,CommandeExecution): raise TypeError('commande C08 requise')
-            if c.nature in (NatureCommande.MINUTERIE,NatureCommande.ALERTE): continue
-            if c.reference in self._vues: continue
-            self._vues.add(c.reference)
-            if c.nature is NatureCommande.RAPPROCHEMENT:
-                evenements.append(self.observation(c.cle));continue
-            if c.nature is NatureCommande.ENTREE:
-                profil=self.profils[c.cle.symbole]
-                if (c.cle in self._entrees or c.cle in self._positions
-                        or self.instant_ms>=c.donnees['expire_ms'] or not profil.horaires.ouvert_a(self.instant_ms)):
-                    self._termines.add(c.cle)
-                    evenements.append(self._accuse(c,StatutAccuse.REFUSE,'S5_ENTREE_REFUSEE'));continue
-                ordre='O:'+c.cle.empreinte(64)
-                self._entrees[c.cle]=(c,ordre)
-                evenements.append(self._accuse(c,StatutAccuse.ACCEPTE,'S5_ENTREE_ACCEPTEE',ordre));continue
-            if c.nature is NatureCommande.ANNULATION:
-                for k,(entree,ordre) in tuple(self._entrees.items()):
-                    if ordre==c.donnees['ordre']:
-                        del self._entrees[k];self._termines.add(k)
-                evenements.append(self._reponse(NatureReponse.ANNULATION,c.cle,
-                    dict(ordre=c.donnees['ordre'],confirmee=True),'annulation'));continue
-            p=self._positions.get(c.cle)
-            if p is None or p.ticket!=c.donnees['ticket']:
-                evenements.append(self._accuse(c,StatutAccuse.REFUSE,'S5_POSITION_INCONNUE'));continue
-            if c.nature is NatureCommande.TP:
-                if c.donnees['sl']!=p.sl:
-                    evenements.append(self._accuse(c,StatutAccuse.REFUSE,'S5_SL_INCHANGE_REQUIS'));continue
-                p.tp=c.donnees['tp']
-                evenements.append(self._reponse(NatureReponse.PROTECTIONS,c.cle,
-                    dict(ticket=p.ticket,sl=p.sl,tp=p.tp),'protection'));continue
-            if c.nature is NatureCommande.CLOTURE:
-                precedente=self._clotures.get(p.ticket)
-                if precedente is None or c.donnees['volume']>precedente.donnees['volume']:
-                    self._clotures[p.ticket]=c
-                evenements.append(self._accuse(c,StatutAccuse.ACCEPTE,'S5_CLOTURE_ACCEPTEE'))
-        return tuple(evenements)
-
-    def _fermer(self,k,p,volume,prix,cause):
-        volume=min(volume,p.volume);profil=self.profils[k.symbole]
-        gain=self.profit(profil,k.sens,volume,p.prix,prix)
-        self._solde+=gain;p.volume-=volume
-        self._numero+=1
-        self._mouvements.append(MouvementCompte(f'S5:solde:{self._numero}',self.instant_ms,gain))
-        r=self._reponse(NatureReponse.CLOTURE,k,dict(ticket=p.ticket,volume_restant=p.volume,
-            prix=prix,execution_ms=self.instant_ms,frais_sortie=Decimal(0),cause=cause),'cloture')
-        if not p.volume:
-            del self._positions[k];self._vies[k]=(p.premier_fill_ms,self.instant_ms)
-            self._termines.add(k)
-        return r
-
-    def sur_tick(self,tick):
-        if not isinstance(tick,Tick): raise TypeError('tick requis')
-        cle=(tick.instant_reception_ms,tick.numero)
-        if self._dernier_tick is not None and cle<=self._dernier_tick: raise ValueError('ordre des ticks papier invalide')
-        self.avancer_au(tick.instant_reception_ms);self._dernier_tick=cle
-        bid,ask=Decimal(str(tick.bid)),Decimal(str(tick.ask));self._prix[tick.symbole]=(bid,ask)
-        reponses=[]
-        for k,p in tuple(self._positions.items()):
-            if k.symbole!=tick.symbole: continue
-            prix=bid if k.sens is Sens.ACHAT else ask
-            sl=p.sl is not None and (prix<=p.sl if k.sens is Sens.ACHAT else prix>=p.sl)
-            tp=p.tp is not None and (prix>=p.tp if k.sens is Sens.ACHAT else prix<=p.tp)
-            if sl or tp:
-                reponses.append(self._fermer(k,p,p.volume,prix,CauseCloture.STOP_LOSS if sl else CauseCloture.TAKE_PROFIT))
-        for ticket,c in tuple(self._clotures.items()):
-            p=self._positions.get(c.cle)
-            if p is None:
-                del self._clotures[ticket];continue
-            if c.cle.symbole!=tick.symbole: continue
-            prix=bid if c.cle.sens is Sens.ACHAT else ask
-            reponses.append(self._fermer(c.cle,p,c.donnees['volume'],prix,c.donnees['cause']))
-            del self._clotures[ticket]
-        for k,(c,ordre) in tuple(self._entrees.items()):
-            if k.symbole!=tick.symbole: continue
-            d=c.donnees;prix=ask if k.sens is Sens.ACHAT else bid
-            ticket='P:'+k.empreinte(64)
-            p=_PositionPapier(c,ticket,ordre,d['volume'],prix,d['sl'],d['tp'],self.instant_ms)
-            self._positions[k]=p;self._vies[k]=(self.instant_ms,None)
-            del self._entrees[k];self._termines.add(k)
-            reponses.append(self._reponse(NatureReponse.REMPLISSAGE,k,dict(transaction='D:'+ticket,ticket=ticket,
-                ordre=ordre,volume_cumule=d['volume'],volume_position=p.volume,prix_moyen=prix,
-                execution_ms=self.instant_ms,frais_entree=Decimal(0),sl=p.sl,tp=p.tp,
-                reliquat=Decimal(0),reliquat_annule=True),'remplissage'))
-        return tuple(reponses)
-
-
-class Moteur(Protocol):
-    def traiter_ticks(self,ticks,**kwargs)->SortieMoteur: ...
-    def traiter_evenement(self,instant_ms,**kwargs)->SortieMoteur: ...
-    def confirmer_persistance(self,preuve,instant_ms)->SortieMoteur: ...
-    def alerte(self,code,instant_ms)->Enregistrement: ...
-    @property
-    def prochaine_echeance_ms(self)->int|None: ...
+class ExecutionPapierMinimale(SimulateurExecution):
+    """Façade du simulateur commun, ancien scénario synthétique explicitement nommé."""
+    def __init__(self,configuration,profils,creation_ms,scenario=None):
+        tarif=TarifCommission('ZERO_DECLARE_SQUELETTE',Decimal(0),Decimal(0),Decimal(0),Decimal(0))
+        conditions=tuple(ConditionContrat(p.releve_ms,p.horaires.fin_validite_ms,p.releve_ms,p,tarif)
+            for p in profils.values())
+        modele=scenario if scenario is not None else ScenarioExecution('SYNTHETIQUE_S5',0,0,Decimal(1))
+        super().__init__(configuration,conditions,creation_ms,modele)
 
 
 @dataclass(frozen=True)
 class ResultatRejeu:
-    nombre_ticks: int
-    enregistrements: tuple[Enregistrement, ...]
-    reponses: tuple[ReponseCourtier, ...] = field(default=())
+    nombre_ticks:int
+    enregistrements:tuple[Enregistrement,...]
+    reponses:tuple[ReponseCourtier,...]=field(default=())
 
 
 @dataclass(frozen=True)
@@ -497,99 +257,18 @@ class ResultatRejeuAB:
     nombre_ticks:int
     enregistrements:tuple
     reponses:object
-
     def __post_init__(self):
         object.__setattr__(self,'reponses',MappingProxyType({n:tuple(r) for n,r in self.reponses.items()}))
 
 
 def rejouer_ab(ticks,moteur,executions,stockages=None):
-    """Coquille S5 : deux comptes, une réception commune, preuves séparées."""
-    executions=dict(executions)
-    stockages=dict(stockages) if stockages is not None else {n:StockageMemoirePapier() for n in executions}
-    if (set(executions)!=set(moteur.bras) or set(stockages)!=set(executions)
-            or len({id(e) for e in executions.values()})!=len(executions)
-            or len({id(s) for s in stockages.values()})!=len(stockages)):
-        raise ValueError('transports et stockages propres à chaque bras requis')
-    nombre=0;lignes=[];reponses={n:[] for n in executions}
-    def transmettre(sortie,t):
-        file=[sortie]
-        while file:
-            s=file.pop(0);lignes.extend(s.enregistrements);evenements={n:[] for n in executions}
-            preuves={};entrees={}
-            # Toutes les sorties sont transmises avant toute admission des deux comptes.
-            for n,v in s.sorties:
-                evenements[n].extend(executions[n].soumettre(c for c in v.commandes if c.nature is not NatureCommande.ENTREE))
-            for n,v in s.sorties:
-                try:
-                    preuve=stockages[n].persister(v.lot) if v.lot is not None else None
-                except (OSError,ValueError):
-                    preuve=None;lignes.append(moteur.bras[n].alerte('STOCKAGE_PAPIER_INDISPONIBLE',t))
-                if preuve is not None:
-                    entrees[n]=tuple(c for c in v.commandes if c.nature is NatureCommande.ENTREE)
-                    if v.lot.preparations:preuves[n]=preuve
-            for n,commandes in entrees.items():evenements[n].extend(executions[n].soumettre(commandes))
-            maj={}
-            for n,ev in evenements.items():
-                if not ev:continue
-                r=tuple(x for x in ev if isinstance(x,ReponseCourtier));reponses[n].extend(r)
-                obs=next((x for x in reversed(ev) if isinstance(x,ObservationNative)),None)
-                maj[n]=MiseAJourBras(r,obs,executions[n].base_utc())
-            if maj:
-                # Toute réponse change la révision : les preuves anciennes sont abandonnées.
-                file.append(moteur.traiter_evenement(t,mises_a_jour=maj))
-            elif preuves:file.append(moteur.confirmer_persistance(preuves,t))
-    precedent=None
-    for t,g in groupby(ticks,key=lambda x:x.instant_reception_ms):
-        g=tuple(g)
-        if precedent is not None and t<precedent:raise ValueError('recul du rejeu')
-        precedent=t
-        while moteur.prochaine_echeance_ms is not None and moteur.prochaine_echeance_ms<t:
-            e=moteur.prochaine_echeance_ms
-            for p in executions.values():p.avancer_au(e)
-            transmettre(moteur.traiter_evenement(e,mises_a_jour={n:MiseAJourBras(base_utc=p.base_utc()) for n,p in executions.items()}),e)
-        maj={}
-        for n,p in executions.items():
-            natifs=tuple(r for tick in g for r in p.sur_tick(tick));reponses[n].extend(natifs)
-            maj[n]=MiseAJourBras(natifs,base_utc=p.base_utc())
-        nombre+=len(g);transmettre(moteur.traiter_ticks(g,mises_a_jour=maj),t)
-    return ResultatRejeuAB(nombre,tuple(lignes),reponses)
+    r=piloter(ticks,moteur,executions,stockages)
+    return ResultatRejeuAB(r.nombre_ticks,r.enregistrements,r.reponses)
 
 
-def rejouer(ticks: Iterable[Tick],moteur:Moteur,execution:ExecutionPapierMinimale,stockage=None)->ResultatRejeu:
-    """Temps simulé et groupes de réception : natif, sorties, bougies, arbitrage, preuve, envoi."""
-    stockage=stockage if stockage is not None else StockageMemoirePapier()
-    nombre=0;enregistrements=[];reponses=[]
-
-    def transmettre(sortie,instant):
-        file=[sortie]
-        while file:
-            s=file.pop(0);enregistrements.extend(s.enregistrements)
-            entrees=[c for c in s.commandes if c.nature is NatureCommande.ENTREE]
-            autres=[c for c in s.commandes if c.nature is not NatureCommande.ENTREE]
-            evenements=list(execution.soumettre(autres))
-            preuve=None
-            try:
-                if s.lot is not None: preuve=stockage.persister(s.lot)
-            except (OSError,ValueError):
-                enregistrements.append(moteur.alerte('STOCKAGE_PAPIER_INDISPONIBLE',instant))
-            if entrees and preuve is not None:
-                evenements.extend(execution.soumettre(entrees))
-            nouvelles=tuple(e for e in evenements if isinstance(e,ReponseCourtier))
-            reponses.extend(nouvelles)
-            observations=[e for e in evenements if isinstance(e,ObservationNative)]
-            if evenements:
-                file.append(moteur.traiter_evenement(instant,reponses=nouvelles,
-                    observation=observations[-1] if observations else None,base_utc=execution.base_utc()))
-            elif s.lot is not None and s.lot.preparations and preuve is not None:
-                file.append(moteur.confirmer_persistance(preuve,instant))
-
-    for instant,groupe in groupby(ticks,key=lambda t:t.instant_reception_ms):
-        groupe=tuple(groupe)
-        while moteur.prochaine_echeance_ms is not None and moteur.prochaine_echeance_ms<instant:
-            echeance=moteur.prochaine_echeance_ms
-            execution.avancer_au(echeance)
-            transmettre(moteur.traiter_evenement(echeance,base_utc=execution.base_utc()),echeance)
-        natifs=tuple(r for t in groupe for r in execution.sur_tick(t))
-        nombre+=len(groupe);reponses.extend(natifs)
-        transmettre(moteur.traiter_ticks(groupe,reponses=natifs,base_utc=execution.base_utc()),instant)
-    return ResultatRejeu(nombre,tuple(enregistrements),tuple(reponses))
+def rejouer(ticks,moteur,execution,stockage=None):
+    coeur=getattr(moteur,'moteur',moteur)
+    if len(coeur.bras)!=1:raise ValueError('un bras unique requis')
+    nom=next(iter(coeur.bras))
+    r=piloter(ticks,coeur,{nom:execution},{nom:stockage if stockage is not None else StockageMemoirePapier()})
+    return ResultatRejeu(r.nombre_ticks,r.enregistrements,r.reponses[nom])

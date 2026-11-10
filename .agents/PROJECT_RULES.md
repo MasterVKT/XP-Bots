@@ -78,3 +78,5 @@ MCL et de tests propres au London portent le préfixe `london-` ou `london_` lor
 - Les traces du cycle de vie des agents vivent dans le dossier temporaire du système ; elles ne se mélangent
   ni aux journaux de trading ni aux preuves de `docs/validation/`.
 - Un échec préexistant est documenté avec sa preuve ; il n'est jamais masqué.
+
+Depuis la phase 10 London, les huit unités pures de journal et rejeu sont communes sous `xpbots.rejeu.c*`, dossier actif `mcl/london-journal-rejeu/`. S1/S5 sont des façades ; S7 compose les coûts C10 et les rapports. L’esquisse EMA `mcl/journal-rejeu/` reste historique, sans second simulateur. Les données réelles, sources physiques et qualifications restent futures ; les verdicts des fixtures sont NON_VALIDE.

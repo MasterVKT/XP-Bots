@@ -1,8 +1,8 @@
-# Rapport de passation — robot London (`LONDON_V3`), reprise à la phase 10
+# Rapport de passation — robot London (`LONDON_V3`), reprise à la phase 11
 
-> Mis à jour le 09/11/2026 à la fin de la phase 9, à l'intention de l'agent qui reprend l'exécution du plan dans une
+> Mis à jour le 10/11/2026 à la fin de la phase 10, à l'intention de l'agent qui reprend l'exécution du plan dans une
 > autre session, éventuellement avec un autre modèle ou un autre outil. Son but : que la suite soit construite
-> exactement selon la logique, la rigueur et les conventions des phases 0 à 9. Ce rapport est un **contexte de
+> exactement selon la logique, la rigueur et les conventions des phases 0 à 10. Ce rapport est un **contexte de
 > reprise**, pas une source normative : en cas d'écart avec les spécifications, les exports figés, le plan ou le
 > code réel, ce sont eux qui prévalent, et l'écart se signale (plan directeur, §0).
 
@@ -11,12 +11,12 @@
 | Élément | Valeur |
 |---|---|
 | Dépôt | `MasterVKT/XP-Bots` |
-| Branche de travail | `master`, après intégration en coexistence structurée (`5e5e288`) ; les commits `9c39d23` et `70c60d9` sont présents ; phase 4 `85069c0` ; phase 5 `4213a07` ; phase 6 `5b017cc` ; phase 7 `27284c2` ; phase 8 `7f358c8` ; le commit de phase 9 porte cette mise à jour |
-| Plan suivi | [Plan directeur 1.4.10](../../docs/architecture/robot_london_v3/README.md), documents 01 à 08 du même dossier |
-| Phases terminées | 0, 1, 2, 3, 4, 5, 6, 7, 8 et 9 ; état et publication vérifiables dans le journal Git |
-| Prochaine action | **Phase 10 — journal-rejeu**, seulement sur demande explicite ; moteur commun et trois couches orchestration figés, bout en bout simple et PAPER_AB vérifiés |
-| Suite du robot | 908 tests verts des deux lignées ; 50 propres à orchestration (44 catégorie 1, 6 catégorie 2), 58 au lecteur IA, 62 à C05, 170 au coordinateur, 79 au moteur London, 67 au squelette |
-| Contrôles | Régression intégrale, ressources métier, plan London, gouvernance et cartes strictes : preuves de phase 9 dans [le bilan](../orchestration/PLAN-MCL.md) et le journal MCL |
+| Branche de travail | `master`, après intégration en coexistence structurée (`5e5e288`) ; les commits `9c39d23` et `70c60d9` sont présents ; phase 4 `85069c0` ; phase 5 `4213a07` ; phase 6 `5b017cc` ; phase 7 `27284c2` ; phase 8 `7f358c8` ; phase 9 `e86a9da` ; le commit de phase 10 porte cette mise à jour |
+| Plan suivi | [Plan directeur 1.4.11](../../docs/architecture/robot_london_v3/README.md), documents 01 à 08 du même dossier |
+| Phases terminées | 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 et 10 ; état et publication vérifiables dans le journal Git |
+| Prochaine action | **Phase 11 — infrastructure, source MQL5 et points d’entrée**, seulement sur demande explicite ; huit unités de rejeu figées, coutures S1/S5/S7 et checkpoint 3 vérifiés |
+| Suite du robot | 1 038 tests verts des deux lignées ; 124 propres au rejeu (105 catégorie 1, 19 catégorie 2), 70 au squelette ; les amonts restent figés |
+| Contrôles | Régression intégrale, ressources métier, plan London, gouvernance, cartes strictes et mutations : preuves au [bilan de phase 10](../london-journal-rejeu/PLAN-MCL.md) et dans les journaux MCL |
 | Environnement vérifié | Python 3.13 ; `numpy` 2.4.1, `pandas` 3.0.0, `tzdata` 2025.3 (`requirements-dev.txt`, tests seulement) ; aucun accès réseau requis |
 
 ## 1. Résumé exécutif
@@ -29,7 +29,7 @@ de bout en bout déployable, le noyau partagé figé (types, configuration figé
 `london-donnees-temps` figé (bougies M15 et H1 causales, validées, enrichies de TR, ATR, A_t, du rang de préchargement et
 des repères de Londres, avec reprise exacte). La phase 4 a ajouté `moteur-london`, huit couches figées, et
 remplacé S3 : de vraies cassures sont journalisées puis refusées sans ordre par le coordinateur minimal. La
-phase 5 a figé les onze couches pures du coordinateur commun, après arbitrage R4/R5. La phase 6 a figé le cycle C08, les sorties, la reprise et le coordinateur, puis remplacé S4. Les journées synthétiques passent avec ordres, remplissages et sorties. La phase 7 a figé les cinq couches C05 communes, après arbitrage R4/R5, et branché le vrai port au rejeu ; les permissions et calendriers sont reçus à leurs instants scénarisés. Le neutre reste explicite. La phase 8 a figé le lecteur IA partagé, son cache causal et sa reprise pure ; le vrai port est injecté au bras IA du rejeu. La référence conserve ComplementAbsent. La phase 9 a figé les trois couches d’orchestration communes : moteur unique, fabriques injectées, comptes PAPER_AB indépendants et journal d’entrées avec calculs rejoués sans backend. S4 est une façade ; les coutures S5/S7 sont adaptées. Le simulateur C10 reste à construire en phase 10.
+phase 5 a figé les onze couches pures du coordinateur commun, après arbitrage R4/R5. La phase 6 a figé le cycle C08, les sorties, la reprise et le coordinateur, puis remplacé S4. Les journées synthétiques passent avec ordres, remplissages et sorties. La phase 7 a figé les cinq couches C05 communes, après arbitrage R4/R5, et branché le vrai port au rejeu ; les permissions et calendriers sont reçus à leurs instants scénarisés. Le neutre reste explicite. La phase 8 a figé le lecteur IA partagé, son cache causal et sa reprise pure ; le vrai port est injecté au bras IA du rejeu. La référence conserve ComplementAbsent. La phase 9 a figé les trois couches d’orchestration communes : moteur unique, fabriques injectées, comptes PAPER_AB indépendants et journal d’entrées avec calculs rejoués sans backend. S4 est une façade ; les coutures S5/S7 sont adaptées. La phase 10 a figé les huit unités du rejeu commun : lecteur intègre, conditions et frais datés, simulateur C10, mesures C09, bootstrap apparié et rapports C10/A11/A13. S1/S5 délèguent au bloc unique ; S7 compose les coûts de référence ou de stress. Les résultats synthétiques restent NON_VALIDE. La correction de l’Ask exact du stress en 0d est tracée par défigeage et cascade.
 
 ## 2. Mission et règle d'exécution
 
@@ -58,7 +58,7 @@ Lecture obligatoire avant de toucher au code, dans cet ordre :
 3. [Document 04](../../docs/architecture/robot_london_v3/04_phases.md) : gabarit commun des phases et fiche de la
    phase à exécuter.
 4. [Document 02](../../docs/architecture/robot_london_v3/02_cartographie_mcl.md) : section de l'artefact (pour la
-   phase 10 : §6.8), conventions des cartes, tableau des artefacts (§5), squelette (§3).
+   phase 11 : §6.9, §6.10 et §6.12), conventions des cartes, tableau des artefacts (§5), squelette (§3).
 5. [Document 03](../../docs/architecture/robot_london_v3/03_acceptation_et_tests.md) : catégories de tests,
    commandes de gate, affectation des cas C11, S02.6 et A14, scénarios L-01 à L-19, gardes transverses.
 6. [Document 01](../../docs/architecture/robot_london_v3/01_architecture.md), §9.3 : table des motifs et des
@@ -128,7 +128,8 @@ Lecture obligatoire avant de toucher au code, dans cet ordre :
 | 6 | `5b017cc` | Quatre couches C08 figées dans le coordinateur unique, checkpoint 6 ; extensions et corrections tracées ; couture S4, profils papier explicites et vrais ordres ; bilan et mutations dans le dossier actif |
 | 7 | `27284c2` | Cinq couches C05 communes figées dans london-controles-fondamentaux ; CP2 ; schémas stricts, registre causal, heartbeat, calendrier, port réel et couture avec L-14 été/hiver ; bilan et mutations dans le dossier actif |
 | 8 | `7f358c8` | Quatre couches du lecteur IA commun figées dans london-contexte-ia ; CP2 ; snapshot strict, cache causal, preuves de reprise, politique financière et port réel ; couture C09 et L-15 été/hiver ; 10 mutations sur 10 détectées |
-| 9 | Commit portant ce rapport | Trois couches communes orchestration figées, CP2 ; moteur événementiel unique, état pur et reprise par API publiques, calculs journalisés et rejeu exact, comptes A/B indépendants ; 50 tests propres, sept nouvelles coutures et sept mutations détectées |
+| 9 | `e86a9da` | Trois couches communes orchestration figées, CP2 ; moteur événementiel unique, état pur et reprise par API publiques, calculs journalisés et rejeu exact, comptes A/B indépendants ; 50 tests propres, sept nouvelles coutures et sept mutations détectées |
+| 10 | Commit portant ce rapport | Huit unités communes de rejeu figées, checkpoints 1 et 3 ; coûts C10, métriques, bootstrap et rapports ; S1/S5 remplacés, S7 adapté ; 124 tests propres et trois nouvelles coutures ; correctif 0d et garde A13 tracés |
 
 ### 6.2 Carte composite (`mcl/robot-london-v3/carte.json`, divergence stricte)
 
@@ -186,7 +187,7 @@ Données (`xpbots.donnees.*`) :
 
 ### 6.4 Squelette actuel (registre des coutures à jour)
 
-- S1 : lecteur CSV canonique et hypothèse de couverture H1 ; validité du relevé d'horaires prolongée
+- S1 : façade vers `c1a_ticks`, manifeste réel fourni ou fixture LF explicitement déclarée ; hypothèse de couverture H1 ; validité du relevé d'horaires prolongée
   d'une H1 pour connaître la fermeture. Cette hypothèse ne représente aucun horaire réel.
 - S2 et S3 remplacés : vrais `FluxBougies` et `MoteurLondon`, tailles de tick explicites, H1 avant M15,
   aucun signal rétroactif et quotas au seul premier volume non nul confirmé.
@@ -194,15 +195,15 @@ Données (`xpbots.donnees.*`) :
   `traiter_ticks` groupe un même instant : réponses natives et issues, sorties, bougies puis admission
   simultanée. `traiter_evenement` traite les minuteries sans nouvelle cotation ; `confirmer_persistance`
   autorise la transmission après revalidation. Aucun moteur importé par l'orchestration (D-18).
-- S5 adapté aux vraies commandes C08 : ACK, fill au prochain tick, SL/TP natifs, clôture et réduction,
-  historique et observation native avec SL/TP actuels. Compte et calculs synthétiques USD, contrats et
-  grille fournis, point=tick, frais et swaps nuls connus. `StockageMemoirePapier` prouve une transaction
-  mémoire ; aucune durabilité physique ni simulation C10. Une panne de stockage interdit les entrées.
+- S5 remplacé : `ExecutionPapierMinimale` est une façade du `SimulateurExecution` commun,
+  `StockageMemoirePapier` dérive du stockage commun et `rejouer`/`rejouer_ab` appellent `piloter`.
+  Le scénario sans délai `SYNTHETIQUE_S5` reste explicite pour les anciens tests de frontière.
+  S7 utilise REFERENCE par défaut, ou STRESS ; le stockage reste en mémoire.
 - S6 : journal canonique du noyau ; une clé persistante par intention et ses mises à jour, traces C08,
   profils et compte, issues seulement lorsqu'un fait les justifie. L'écriture reste minimale.
 - S7 : `python -m xpbots.app.rejeu_squelette --ticks <csv> --sortie <dossier> --tick-size EURUSD=0.00001 --contrat-papier EURUSD=1000,0.1,1,0.1 --scenario TECHNICAL_CONTROL_NEUTRAL`.
   Répéter les deux paramètres d'instrument exactement par symbole. Les valeurs ci-dessus décrivent la
-  fixture synthétique ; elles ne qualifient aucun courtier. Le résumé donne fills, clôtures et positions. Ajouter `--mode PAPER_AB` compose deux comptes distincts ; REFERENCE conserve le complément absent, IA utilise le lecteur réel. `rejouer_ab` route faits natifs et preuves par bras.
+  fixture synthétique ; elles ne qualifient aucun courtier. Le résumé donne fills, clôtures et positions. Ajouter `--mode PAPER_AB` compose deux comptes distincts ; REFERENCE conserve le complément absent, IA utilise le lecteur réel. `rejouer_ab` délègue au pilote commun. Ajouter `--couts STRESS` utilise les coûts C10 de stress ; le résumé inclut le rapport NON_VALIDE_FIXTURE.
 
 ### 6.5 Interfaces London disponibles (figées)
 
@@ -346,6 +347,55 @@ Les deux extensions formelles de 0 et 1 ont ajouté le journal des calculs avant
 construction de 2 ; aucun contrat amont n’a changé. Les sept mutations couvrent
 les trois couches et les trois coutures modifiées. Le bilan contient les preuves.
 
+### 6.11 Rejeu commun disponible depuis la phase 10
+
+Dossier actif `mcl/london-journal-rejeu/`, sources `src/xpbots/rejeu/c*`, tests
+`tests/robot/london_rejeu/` : huit unités figées. Les feuilles 0a et 0b sont
+indépendantes ; 1b et 1c dépendent aussi de 0b. L’esquisse EMA historique
+`mcl/journal-rejeu/` reste intacte ; les deux composites pointent le bloc commun.
+
+- 0a : `ManifesteTicks`, `ConditionContrat`, `TarifCommission`, `Trade`, `PointCompte`,
+  `JourMarche`, `ValeurJour`, `FactureIA`, `EcartRejeu` ; décimaux finis et immuables.
+- 0b : `charger_protocole(ConfigurationFigee)` ; blocs, coûts, seuils et bootstrap.
+  Seules les valeurs exclusivement textuelles C10 sont centralisées ici. L’intervalle prospectif indique le premier bilan prévu au 04/02/2027 ; la collecte reste prolongeable jusqu’aux effectifs C10/A13, sans changer son début au 05/11/2026.
+- 1a : `analyser_lignes_ticks(lignes, manifeste)` vérifie l’empreinte exacte avant
+  exposition de `HistoriqueTicks`, sans tri ni comblement. `jours_marche` utilise
+  les horaires natifs connus et conserve les jours à zéro.
+- 1b : `SimulateurExecution(configuration, conditions, creation_ms, scenario, plans=None)` ;
+  port de calcul, livre natif, remplissages, commissions, courbe et trades.
+  Les TP limites ne subissent pas les ticks adverses des sorties au marché.
+- 1c : mesures C09 distinctes, rétention N/A ou trop faible, factures originales
+  réconciliées une fois et courbe économique distincte du compte courtier.
+- 1d : bootstrap apparié de blocs contigus, graine/export, percentiles exacts et
+  réplications sans trade signalées ; seul usage de `random` dans la production.
+- 2 : `SourceTicks`, `DemandeRejeu`, `ControlesRejeu`, `RegistreReserve`,
+  `executer_experience`, `executer_blocs`, `executer_continu`, `executer_perturbations`,
+  `rejouer_experience`, `piloter`. Une fabrique de contrôles fraîche est obligatoire.
+  Le réservé est gardé avant lecture, y compris si le manifeste dépasse le bloc.
+  Les comptes A/B sont indépendants et le continu garde son capital et ses arrêts.
+  Les conditions datées sont archivées pour vérifier la comparabilité de V1.
+  Le test de jonction vérifie aussi que toutes les réponses natives figurent
+  dans le journal d’entrée du moteur au même instant, sans perte ni réordonnancement.
+- 3 : `produire_rapport`, `rapport_a11`, `rapport_a13`, `comparer_routes`,
+  `comparer_couts_demo`, `rapporter_papier`, `serialiser_rapport` ; critères et preuves
+  manquantes structurés, JSON déterministe et aucun nombre non fini. Le rapport garde les cohortes technique neutre et C05 externe distinctes ; seule une matrice fondamentale externe complète participe à la qualification globale. Le delta total C05 (permissions et annonces) et l’effet isolé des permissions ont des champs séparés.
+
+Limites à conserver : les journées Forex ont leur propre dénominateur, l’or ne
+remplit pas l’objectif C09 Forex ; sans V1 comparable la rétention reste N/A.
+Les variations historiques de tick_size sont explicitement refusées par
+l’exécuteur dont la fabrique technique reçoit une grille fixe. Les conditions
+et tarifs datés restent pris en charge par le simulateur. Une liste de factures
+vide ne prouve pas une consommation réelle nulle : A13 exige une facture réelle
+même nulle et l’attestation du maintien de C10 sous le gel. Le port d’attestation
+doit rendre exactement True, pas seulement un hash bien formé. Les fixtures
+n’attestent jamais la réalité externe de C04, des modèles ou des performances.
+
+Le correctif 0d autorise l’Ask exact du stress entre deux ticks natifs ; SL/TP
+restent sur grille. Voir [l’ADR](../london-execution-coordinateur/DEFIGEAGE-0d-PHASE10.md).
+La cohorte London/amonts comporte 215 fichiers contractuels : les 183 anciens
+non concernés sont conservés, les deux fichiers 0d révisés sont tracés, et les
+30 nouveaux sont gelés en LF. La vérification porte aussi sur leurs blobs Git.
+
 ## 7. Méthode MCL telle qu'appliquée
 
 ### 7.1 Vocabulaire
@@ -453,7 +503,7 @@ nouveau gel, puis nouvelle passe de mutations jusqu'à détection totale. Phase 
    artefact).
 2. Documents : `mcl/<artefact>/PLAN-MCL.md` §5 (bilan : couches, défigeages et leurs motifs, choix de conception
    arrêtés, contrôles dérivés des sources, mutations, couture) ; ligne de la phase dans
-   `mcl/robot-london-v3/PLAN-MCL.md` §7 ; plan directeur : version d'un cran (phase 10 → **1.4.11**), date, phrase
+   `mcl/robot-london-v3/PLAN-MCL.md` §7 ; plan directeur : version d'un cran (phase 11 → **1.4.12**), date, phrase
    d'état de l'en-tête, ligne du journal des révisions (§7) ; [guide](../../docs/architecture/GUIDE_IMPLEMENTATION.md) :
    phrase « État du dépôt au … » et numéro de version du plan ; document 02 seulement si une dépendance ou une
    sortie réelle diffère de l'esquisse ; ce rapport de passation : §0 et §6.1 (état), §9 (briefing de la phase
@@ -483,40 +533,47 @@ Le marqueur `[XP-BOTS-AUDIT:BLOQUE]` ne sert qu'à un blocage prouvé et expliqu
 l'humain). Les sous-agents n'émettent jamais de marqueur. Sous Claude Code, le hook de fin refuse une réponse sans
 pied complet ; ailleurs, la règle s'applique sans hook.
 
-## 9. Briefing de la phase 10 — journal-rejeu
+## 9. Briefing de la phase 11 — infrastructure, source MQL5 et points d’entrée
 
-La phase 9 est achevée par le commit portant ce rapport. Attendre la demande
-explicite « Commence et achève intégralement la phase 10 ». Lire le document 04
-(phase 10), le document 02 §6.8, C10/C11 et A13–A15, le cahier de données et les
-contrats réels de l’orchestration et du coordinateur. Appliquer orchestrateur,
-MCL, planification, validation/rejeu, causalité et cohérence, puis audit.
+La phase 10 est achevée par le commit portant ce rapport. Attendre la demande
+explicite « Commence et achève intégralement la phase 11 ». Lire le document 04,
+fiche 11, le document 02 §6.9, §6.10 et §6.12, et les contrats finalisés tôt du
+document 08. Appliquer orchestrateur, MCL/planification, qualification courtier,
+causalité, mise en service, cohérence et audit. Inspecter les réalisations EMA
+et arbitrer la coexistence avant tout nouveau dossier actif.
 
-Construire les huit unités 0a/0b, 1a/1b/1c/1d, 2, 3 de journal-rejeu, avec
-contrats avant code, gates intégraux et gels inside-out ; checkpoints après les
-niveaux 1 et 3. Vérifier l’esquisse et la coexistence avant de choisir le dossier
-actif, sans écraser une réalisation EMA. Intégrer P-11 au contrat 1b et conserver
-le moteur unique : le simulateur remplace S5, l’analyse des ticks remplace S1.
+1. Construire le faux module MetaTrader5 conforme au document 08 §2 : constantes,
+   signatures, structures nommées, réponses, last_error, blocage et déconnexion.
+   Tester ses constantes contre la liste documentaire.
+2. Écrire requirements-windows.txt avec versions numpy/tzdata identiques aux
+   versions de développement. N’appeler ni n’installer un terminal pour ces tests.
+3. Écrire la source `mql5/Services/XPBotsExport.mq5` et les tests Python de format
+   sur fixtures (document 08 §4). Compilation et comparaison au terminal en 13.1.
+   mcl.py n’analyse pas MQL5 : convention de module et revue de code explicites.
+4. Construire infrastructure par couches : faux module, fichiers et SQLite
+   temporaires, dossier d’échange D-11, exports D-12 et conversion serveur/UTC.
+   Les tests de contrat sont écrits avec chaque couche et ignorés hors du poste ;
+   recenser leur activation en 13.1. Aucun import MT5 au chargement des composants.
+5. Construire les points d’entrée : boucle directe D-09, rejeu, qualification,
+   rapports et injection London ; garde du type de compte, refus du neutre
+   technique en démo/réel, refus du réel sans décision tracée, gabarits du registre
+   et fermetures exceptionnelles, procédure d’exploitation sans secret.
+6. Répétition générale PAPER sur séance London : vraie boucle directe, faux MT5,
+   fichiers d’échange temporaires, journaux complets et rejeu identique C11.14.
 
-Implémenter les coûts et délais de référence et de stress exactement prescrits,
-les protections natives avant les sorties logicielles, les gaps, le cas SL/TP de
-même milliseconde C11.12 et un TP limite jamais pénalisé. Vérifier fonds propres,
-drawdown, métriques et bootstrap sur résultats calculés à la main ; garder les
-critères a priori, rétention N/A et effectif trop faible, et le verrou du test
-réservé. Mesurer le coût d’un mois synthétique. Aucun historique réel ni résultat
-de rentabilité à inventer. Les remplissages simplifiés de S5 sont une limite
-connue et ne sont pas une validation C10.
+Raccorder S6, S7 et S1 en direct au code figé. Réutiliser le simulateur, le
+pilote et les rapports de phase 10 ; ne pas créer un moteur concurrent. Tester
+les contrats propres et les jonctions sur les vrais blocs, gates intégraux,
+gels et checkpoints, mutations, documents, audit et publication française.
+Les profils réellement disponibles, les constantes MT5 observées, les sondes,
+les séquences de prix et la qualification financière restent à confirmer en 13.
+Aucun appel au vrai terminal, aucune API et aucun ordre, même en démonstration.
 
-Réutiliser EntreeJournalisee et les ports de calcul tracés : ne pas créer un
-deuxième moteur ou réinterroger un backend pendant un rejeu archivé. Garder les
-comptes et preuves A/B distincts. La durabilité, MT5 et les fichiers physiques
-restent en phase 11, le service distant en 12 et la qualification en 13.
+Sortie : artefacts figés et répétition générale verte, tests de contrat recensés,
+directeur 1.4.12, passation phase 12, commit et push. Puis s’arrêter et inviter
+« passe à la phase 12 ». Aucun début de phase 11 n’est inclus dans la phase 10.
 
-Sortie : huit unités gelées, bout en bout simple et PAPER_AB vert, mutations,
-contrôles des deux robots et des ressources, documents, directeur 1.4.11,
-passation phase 11, audit, commit français et push. Puis s’arrêter et inviter
-« passe à la phase 11 ». Aucun appel API ou courtier.
-
-## 10. Leçons et pièges des phases 0 à 8
+## 10. Leçons et pièges des phases 0 à 10
 
 1. **Divergence stricte** : une dépendance réelle oubliée dans la carte fait échouer le gate ; déclarer aussi les
    dépendances vers les couches de types.
@@ -544,12 +601,17 @@ passation phase 11, audit, commit français et push. Puis s’arrêter et invite
     explicite ; celui de 1a a aussi ajouté le test exact des extrêmes hétérogènes révélé par mutation.
 13. **Liens Markdown** : la porte `markdown-links` vérifie les liens relatifs des fichiers modifiés.
 
-## 11. Aperçu des phases 10 à 13 (points d'attention)
+14. **Ask de stress** : conserver Bid + 1,25 × spread exactement, même entre deux ticks natifs ;
+    les protections gardent leurs arrondis. Le correctif 0d est tracé, ne pas le réintroduire.
+15. **Coûts IA** : absence de facture ne signifie pas gratuité réelle. Les zéros doivent être
+    documentés ; les factures de recherche restent dans le bilan global sans double débit.
+16. **Densité des ticks** : deux délais différents peuvent aboutir au même premier tick disponible ;
+    ne jamais inventer une cotation intermédiaire pour satisfaire une assertion de temps.
+17. **Rapports** : une précision sémantique/JSON n’est pas un taux de réussite des trades ;
+    données, C04, gel, corpus humain et performances prospectives sont des preuves distinctes.
 
-- **9** (`orchestration`) : moteur unique, bras A/B indépendants, stratégies injectées (D-18), aucune importation
-  de `xpbots.london` ; rejouabilité C11.14 ; couture en `PAPER_AB` sur fixtures.
-- **10** (`journal-rejeu`) : simulateur C10 (P-11), bootstrap semé, métriques calculées à la main ; aucune donnée
-  réelle.
+## 11. Aperçu des phases 11 à 13 (points d’attention)
+
 - **11** (`infrastructure`, `points-entree`, source MQL5) : faux module `MetaTrader5` conforme au document 08 ;
   `requirements-windows.txt` ; tests de contrat écrits mais ignorés hors du poste ; répétition générale `PAPER` dans
   le conteneur ; aucun appel au vrai terminal.
@@ -573,13 +635,13 @@ passation phase 11, audit, commit français et push. Puis s’arrêter et invite
 ## 13. Contrôle de reprise (à faire avant tout changement)
 
 1. La branche contient `9c39d23`, l’intégration `5e5e288`, ce rapport et le moteur `c2_moteur` ; vérifier
-   le commit de phase 9 dans `git log` (après `7f358c8`) et le récupérer depuis la branche publiée si nécessaire. Ne pas repartir
+   le commit de phase 10 dans `git log` (après `e86a9da`) et le récupérer depuis la branche publiée si nécessaire. Ne pas repartir
    de la seule ancienne branche de phase 3, qui ne contient ni coexistence ni moteur S02.
 2. `mcl.py statut` indique « Toutes les couches sont figées » pour `mcl/noyau`,
-   `mcl/london-donnees-temps` et `mcl/moteur-london`. Les quinze couches du coordinateur commun dans `mcl/london-execution-coordinateur`, les cinq couches C05 dans `mcl/london-controles-fondamentaux`, les quatre couches du lecteur IA dans `mcl/london-contexte-ia` et les trois couches d’orchestration dans `mcl/orchestration` sont aussi figées.
-3. `python tools/run_london_tests.py` donne au moins 908 tests verts des deux lignées ; `python tools/verify_project.py` PASS ;
-   `mcl.py --dossier mcl/robot-london-v3 verifier` VERT ; `git status --short` comparé à la fin de phase 9 : quinze modifications préexistantes de gouvernance,
-   de hooks et de leurs tests, de `.gitattributes` et de `tests/robot/fixtures/squelette_ticks.csv` ont été préservées hors des commits des phases 7, 8 et 9 ;
+   `mcl/london-donnees-temps` et `mcl/moteur-london`. Les quinze couches du coordinateur commun dans `mcl/london-execution-coordinateur`, les cinq couches C05 dans `mcl/london-controles-fondamentaux`, les quatre couches du lecteur IA dans `mcl/london-contexte-ia` et les trois couches d’orchestration dans `mcl/orchestration` sont aussi figées, ainsi que les huit unités de `mcl/london-journal-rejeu`.
+3. `python tools/run_london_tests.py` donne au moins 1 038 tests verts des deux lignées ; `python tools/verify_project.py` PASS ;
+   `mcl.py --dossier mcl/robot-london-v3 verifier` VERT ; `git status --short` comparé à la fin de phase 10 : quinze modifications préexistantes de gouvernance,
+   de hooks et de leurs tests, de `.gitattributes` et de `tests/robot/fixtures/squelette_ticks.csv` ont été préservées hors des commits des phases 7, 8, 9 et 10 ;
    tout autre écart doit être identifié et expliqué.
 4. Sous Windows, conserver les octets LF de la fixture CSV lors d'un export pour les tests : employer
    `git -c core.autocrlf=false archive` pour obtenir les blobs exacts. Le réglage `core.autocrlf=true` avec

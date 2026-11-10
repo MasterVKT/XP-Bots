@@ -26,11 +26,19 @@ class TestPrix(unittest.TestCase):
         self.assertIsInstance(construire_niveaux(s,q,profil(distance_stops_min_points=50),commun()),NiveauxExecutables)
         for p in (profil(distance_stops_min_points=51),profil(niveau_gel_points=50)):
             r=construire_niveaux(s,q,p,commun());self.assertEqual((r.motif,r.detail),(Motif.PROTECTION_ERROR,'CONTRAINTE_NATIVE_AVANT_ORDRE'))
-    def test_profil_non_pret_et_grille_cotation(self):
+    def test_profil_non_pret_et_cotation_non_croisee(self):
         for p in (None,profil(protections_a_l_entree=False),profil(convention_declenchement_verifiee=False)):
             self.assertIs(construire_niveaux(signal(),cotation(),p,commun()).motif,Motif.ENVIRONMENT_NOT_READY)
         q=cotation(ask=D('1.100401'))
+        self.assertEqual(construire_niveaux(signal(),q,profil(),commun()).entree,q.ask)
+        q=cotation(ask=D('1.099'))
         self.assertIs(construire_niveaux(signal(),q,profil(),commun()).motif,Motif.ENVIRONMENT_NOT_READY)
+    def test_stress_c10_ask_fractionnaire_entree_exacte_protections_sur_grille(self):
+        q=cotation(bid=D('1.1'),ask=D('1.100125'))
+        s=signal(stop_technique=1.0992,cloture_prix=1.1,atr_reference=.001)
+        n=construire_niveaux(s,q,profil(tick_size=D('.00001')),commun())
+        self.assertEqual((n.entree,n.stop,n.distance,n.objectif),
+            (D('1.100125'),D('1.09920'),D('.000925'),D('1.10198')))
     def test_objectif_depuis_fill_reel_sl_fixe_et_depasse(self):
         for sens in Sens:
             n=construire_niveaux(signal(sens),cotation(),profil(),commun())

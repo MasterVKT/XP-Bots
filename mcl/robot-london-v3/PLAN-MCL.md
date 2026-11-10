@@ -2,7 +2,7 @@
 
 > Document de travail MCL du **composite** : robot 2 London Breakout M15 (`LONDON_V3`) et composants partagés.
 > La source de vérité est le [plan d'implémentation](../../docs/architecture/robot_london_v3/README.md)
-> (version 1.4.10, validé par l'utilisateur le 05/11/2026). Ce fichier en reprend les sections 0 à 2 et renvoie
+> (version 1.4.11, validé par l'utilisateur le 05/11/2026). Ce fichier en reprend les sections 0 à 2 et renvoie
 > au plan pour le reste ; en cas d'écart, le plan prévaut et l'écart est corrigé ici dans la même modification.
 > Fichiers voisins : `carte.json` (carte au grain des paquets, servant à `analyser` et `verifier`, **jamais à
 > `figer`**) et `journal.jsonl` (traces de l'outil). Chaque artefact de chair a son propre dossier
@@ -182,6 +182,7 @@ chaque artefact au début de sa phase.
 | 7 | Terminée | 09/11/2026 | Cinq couches C05 communes figées, checkpoint après 2, port réel et calendrier causal branchés au rejeu ; 62 tests propres (50 catégorie 1, 12 catégorie 2), 49 du squelette ; suite intégrale de 782 tests ; bilan et mutations dans london-controles-fondamentaux ; phase 8 non commencée |
 | 8 | Terminée | 09/11/2026 | Quatre couches du lecteur IA commun figées dans london-contexte-ia ; CP2 ; snapshot strict, cache causal et reprise, port BLOCK/NEUTRAL et politique financière ; couture S4/S5/S7 et preuve C09, L-15 été/hiver ; 58 tests propres (47 catégorie 1, 11 catégorie 2), 60 du squelette, suite intégrale de 851 tests ; phase 9 non commencée |
 | 9 | Terminée | 09/11/2026 | Trois couches communes orchestration figées, CP2, moteur unique et fabriques injectées ; comptes PAPER_AB indépendants, calculs journalisés et rejeu exact sans backend ; couture S4/S5/S7, priorité C08 et L-15 été/hiver ; 50 tests propres et 67 du squelette, 908 tests des deux lignées ; bilan dans orchestration ; phase 10 non commencée |
+| 10 | Terminée | 10/11/2026 | Huit unités communes de london-journal-rejeu figées, checkpoints 1 et 3 ; C10, métriques et bootstrap apparié, rapports C10/A11/A13 ; S1/S5 remplacés, S7 coûts REFERENCE/STRESS ; 124 tests propres, 70 du squelette et 1 038 des deux lignées ; correctif 0d et cascade tracés ; phase 11 non commencée |
 
 La phase 9 justifie les dépendances directes nouvelles du point de composition S7
 vers execution-coordinateur, controles-fondamentaux et contexte-ia : il construit

@@ -41,6 +41,21 @@ TEXTES_AUTORISES_PAR_AFFECTATION = {
     ('fondamental/c0_types/_impl.py', '_DEVISES', valeur)
     for valeur in ('EURUSD', 'GBPUSD', 'XAUUSD', 'EUR', 'GBP', 'USD')
 }  # C05 et plan London §6.5 : table de devises explicitement codée, pas un paramètre recopié.
+TEXTES_AUTORISES_PAR_AFFECTATION.update(
+    ('rejeu/c2_executeur/_impl.py', '_FOREX_C09', valeur) for valeur in ('EURUSD', 'GBPUSD'))
+NOMBRES_AUTORISES_PAR_AFFECTATION = {
+    ('rejeu/c0b_protocole/_impl.py', nom, valeur)
+    for nom, valeurs in {
+        '_BORNES': (2019, 12, 2, 2020, 2023, 2025, 2026, 5, 11, 4),
+        '_SEUILS_TEXTUELS_C10': (200, 100, 50),
+        '_PROSPECTIF_C10': (2026, 11, 5, 2027, 2, 100),
+        '_SCENARIOS_C10': (250, 1000, 2),
+        '_DEBUT_DIAGNOSTIC_V3': (2026, 5, 11),
+        '_CENT_POUR_CENT': (100,),  # définition mathématique d'un percentile
+    }.items() for valeur in valeurs
+}  # Plan London §6.8 : constantes exclusivement textuelles C10, hors exports.
+NOMBRES_AUTORISES_PAR_AFFECTATION.add(
+    ('rejeu/c1d_bootstrap/_impl.py', '_CENT_POUR_CENT', 100))  # définition du percentile
 APPELS_D_HORLOGE = {('datetime', 'now'), ('datetime', 'utcnow'), ('datetime', 'today'), ('date', 'today'),
                     ('time', 'time'), ('time', 'time_ns'), ('time', 'monotonic'), ('time', 'monotonic_ns'),
                     ('time', 'perf_counter'), ('time', 'perf_counter_ns')}
@@ -97,7 +112,8 @@ def litteraux_interdits(source, relatif, nombres, textes):
         v = noeud.value
         if type(v) in (int, float) and v in nombres and v not in NOMBRES_AUTORISES \
                 and (relatif, v) not in NOMBRES_AUTORISES_PAR_FICHIER \
-                and (relatif, fonction, v) not in NOMBRES_AUTORISES_PAR_FONCTION:
+                and (relatif, fonction, v) not in NOMBRES_AUTORISES_PAR_FONCTION \
+                and (relatif, affectation, v) not in NOMBRES_AUTORISES_PAR_AFFECTATION:
             violations.append(f'{relatif}:{noeud.lineno} nombre {v!r}')
         if type(v) is str and v in textes and v not in TEXTES_AUTORISES \
                 and (relatif, v) not in TEXTES_AUTORISES_PAR_FICHIER \
@@ -107,6 +123,20 @@ def litteraux_interdits(source, relatif, nombres, textes):
 
 
 class TestReglesTransverses(unittest.TestCase):
+    def test_table_forex_c09_bornee_au_denommateur_du_module(self):
+        source = "_FOREX_C09 = {'EURUSD', 'GBPUSD'}\n_AUTRE = 'EURUSD'\n"
+        fichier = 'rejeu/c2_executeur/_impl.py'
+        self.assertEqual(len(litteraux_interdits(source, fichier, set(), {'EURUSD', 'GBPUSD'})), 1)
+        self.assertEqual(len(litteraux_interdits(source, 'autre.py', set(), {'EURUSD', 'GBPUSD'})), 3)
+
+    def test_exception_c10_limitee_aux_constantes_textuelles_du_module(self):
+        source = ('_SCENARIOS_C10 = ((250, 1000, 2),)\n'
+                  '_AUTRE = 1000\n'
+                  'def risque():\n    _SCENARIOS_C10 = 1000\n    return 2\n')
+        chemin = 'rejeu/c0b_protocole/_impl.py'
+        self.assertEqual(len(litteraux_interdits(source, chemin, {250, 1000, 2}, set())), 3)
+        self.assertEqual(len(litteraux_interdits(source, 'autre.py', {250, 1000, 2}, set())), 6)
+
     def test_exception_table_c05_limitee_a_l_affectation_du_module(self):
         source = ("_DEVISES = {'EURUSD': ('EUR', 'USD')}\n"
                   "_AUTRE = 'USD'\n"

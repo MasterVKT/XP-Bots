@@ -109,3 +109,13 @@ canoniques ; elle déclare aussi cet amont pour le coordinateur qui l’importai
 Les socles restent distincts, sans recâblage du squelette EMA ni achèvement d’une
 phase EMA supplémentaire. La méthode est une fabrique injectée ; aucun moteur de
 méthode n’est importé par le composant commun.
+
+### Disponibilité commune après la phase 10 London
+
+Les huit unités de rejeu C10 sont figées dans `mcl/london-journal-rejeu/`, sous
+`xpbots.rejeu.c*`, après arbitrage R4/R5. Les deux cartes pointent ce bloc unique.
+Le graphe réel place le journal à profondeur 5, l’infrastructure future à 6 et
+l’application à 7, sans renommer leurs identifiants. L’esquisse EMA historique,
+ses socles et son point d’entrée ne sont pas recâblés. Aucune nouvelle phase EMA
+n’est déclarée achevée. Le correctif commun 0d et sa cascade sont tracés dans
+[l’ADR de phase 10](../london-execution-coordinateur/DEFIGEAGE-0d-PHASE10.md).

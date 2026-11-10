@@ -53,6 +53,8 @@ def ticks_courts(fin=S+120000):
 
 
 def composer(ticks,paquets=(),strategie=None,controle=None,**options):
+    # Ces micro-scenarios C05 isolent les instants de reception/envoi, sans delai de marche.
+    options.setdefault('modele_couts','SYNTHETIQUE_S5')
     p=controle if controle is not None else PermissionsFondamentales(C.technique.commun,ConversionServeurScenario())
     source=SourceFondamentaleScenario(p,paquets)
     return (*composer_rejeu_papier(C,ticks,{'EURUSD':D('.00001')},

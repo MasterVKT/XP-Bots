@@ -165,3 +165,40 @@ est désormais explicite dans la carte EMA, sans changement amont. Les dépendan
 directes du point de composition London vers les contrôles et le coordinateur sont
 déclarées après la couture A/B. Les gardes de lignée et toutes les cartes restent
 strictes. Le squelette EMA et son protocole historique ne sont pas recâblés.
+
+### Arbitrage R4/R5 du 10/11/2026 — phase 10 London
+
+Le dossier journal-rejeu est une esquisse EMA à neuf unités, sans code sous
+xpbots.journal_rejeu et sans gel. La phase 10 construit une seule implémentation
+commune sous xpbots.rejeu.c*, suivie dans mcl/london-journal-rejeu, avec huit
+unités selon la fiche London. L’esquisse est conservée ; elle ne doit pas être
+développée comme un deuxième simulateur. Les deux composites pointeront le même
+bloc. Les socles et le squelette EMA restent distincts ; aucune phase EMA
+supplémentaire n’est déclarée achevée.
+
+Les types de marché et C09 sont ceux du noyau canonique, les commandes et réponses
+ceux du coordinateur commun. L’adaptation EMA reste à la frontière déjà figée.
+Le rejeu utilise MoteurDecision et les fabriques injectées, sans second moteur de
+décision. Le simulateur consomme des conditions contractuelles datées explicites ;
+les profils synthétiques des fixtures ne qualifient aucun compte réel. Les deux
+cartes contrôlent le bloc commun et ses imports, sans changement de règle métier.
+Les sources physiques et la persistance restent en phase 11.
+
+Les deux feuilles 0a et 0b sont indépendantes. Le protocole possède ses types de
+blocs et de scénarios ; les modèles de trades et de données sont en 0a. Les
+couches 1b et 1c dépendent explicitement aussi de 0b pour les scénarios et seuils,
+complément nécessaire à l’esquisse. Les checkpoints restent après 1 et 3.
+
+Le premier contrôle de la carte EMA révèle les profondeurs à recalculer : le
+journal partagé dépend désormais du moteur d’orchestration de profondeur 4 ; il
+est à profondeur 5, l’infrastructure future à 6 et l’application future à 7.
+Les identifiants de couches 3/4/5 restent stables ; seules leurs profondeurs
+sont alignées sur le graphe réel, avant toute source du nouvel artefact.
+
+La phase 10 réalise ce bloc unique : huit unités figées, checkpoints 1 et 3,
+124 tests propres, coutures S1/S5/S7 sur le code commun et comptes A/B indépendants.
+L’Ask de stress exact pouvait être hors grille native : la restriction ajoutée
+par 0d a été retirée par défigeage formel et cascade intégrale, sans changer les
+arrondis de protections ni C06/C10. Voir
+[l’ADR](../../mcl/london-execution-coordinateur/DEFIGEAGE-0d-PHASE10.md).
+Le squelette EMA reste distinct et l’ancienne esquisse journal-rejeu est intacte.

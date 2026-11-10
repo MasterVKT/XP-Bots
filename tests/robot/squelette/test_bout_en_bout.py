@@ -67,6 +67,9 @@ class TestBoutEnBout(unittest.TestCase):
                 self.assertEqual(execution.returncode, 0, execution.stderr)
                 self.assertEqual(execution.stderr, '')
                 resume = json.loads(execution.stdout)
+                rapport=resume.pop('rapport')
+                self.assertEqual(rapport['statut'],'NON_VALIDE_FIXTURE')
+                self.assertEqual(rapport['bras']['REFERENCE']['scenario_couts'],'REFERENCE')
                 lignes = (dossier / 'sortie' / 'decisions.jsonl').read_text(encoding='utf-8').splitlines()
                 self.assertEqual(resume, {'statut': 'OK', 'ticks': len(ticks), 'enregistrements': len(lignes),
                                           'journal': str(dossier / 'sortie' / 'decisions.jsonl'),

@@ -13,7 +13,7 @@ description: "Validation et rejeu de XP-Bots (C10–C11, A13–A15) : blocs chro
   `docs/data/03_Donnees_Historiques_Requises_et_Validation.md` ; valeurs `financial_*` et `bootstrap_*` de
   `config/parametres_IA_integration_v1.json`.
 - Contrôles existants (hors ligne, synthétiques) : `tests/check_technical.py`, `tests/check_llm.py`,
-  `tools/verify_project.py`. Composant à construire : journal et moteur de rejeu.
+  `tools/verify_project.py`. Composant construit depuis la phase 10 London : `src/xpbots/rejeu/c*`, huit unités figées dans `mcl/london-journal-rejeu/`. Le moteur reste `MoteurDecision` ; le rejeu archivé ne consulte aucun backend. L’esquisse EMA `mcl/journal-rejeu/` reste historique.
 
 ## Workflow
 
@@ -40,3 +40,19 @@ description: "Validation et rejeu de XP-Bots (C10–C11, A13–A15) : blocs chro
 - Référence nulle : rétention N/A, jamais 100 % ; référence < 50 trades : comparaison trop faible.
 - Les contrôles du dépôt ne prouvent ni l'exécution des quatorze cas C11 sur un robot de courtier, ni la
   qualité d'une API jamais appelée, ni un gain financier.
+
+## API de rejeu disponible
+
+`c1a_ticks` exige un manifeste, vérifie l’empreinte avant exposition du lot et
+ne trie ni ne comble les trous. `c1b_simulateur` consomme profils et tarifs datés.
+`c2_executeur.executer_experience` compose les vrais moteur, coordinateur et
+contrôles ; une fabrique de contrôles fraîche est obligatoire. L’accès au réservé
+est gardé avant le lecteur. Les jours Forex sont distincts des jours de l’or.
+`c3_rapports.produire_rapport` expose critères et preuves manquantes ; les fixtures
+restent NON_VALIDE. Une facture réelle, même nulle, documente la consommation IA ;
+sa simple absence n’est pas une gratuité. L’attestation A13 vérifie aussi le
+maintien de C10 sous le gel. Les références V1 et observations de démonstration
+sont des entrées explicites, jamais fabriquées par le rapport.
+S1/S5 délèguent à ce bloc ; la CLI synthétique expose `--couts REFERENCE|STRESS`.
+Le scénario `SYNTHETIQUE_S5` est une compatibilité explicite de tests de frontière,
+indisponible dans la CLI. Aucun résultat de cette commande ne qualifie C04/C10.
