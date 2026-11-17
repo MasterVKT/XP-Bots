@@ -1,10 +1,12 @@
-"""Segment minimal S7 du squelette : rejeu de bout en bout d'un fichier de ticks.
+"""Compatibilité S7 des fixtures : rejeu synthétique de bout en bout.
 
-Segment minimal du squelette, remplacé en phase 11 par l'artefact `points-entree`. Contrat de la couture :
+Le point d'entrée physique de phase 11 est `python -m xpbots.app`. Cette composition
+reste compatible pour les fixtures historiques. Contrat de la couture :
 mcl/squelette/COUTURES.md. Point de composition : il charge la configuration figée par le chargeur de production
 du noyau (empreintes contrôlées contre la preuve de conservation), lit les ticks par l'infrastructure, en déduit
 l'hypothèse de marché du squelette (horaires et couverture sur l'étendue du fichier, `xpbots.rejeu.squelette`),
-injecte la stratégie dans le moteur minimal (D-18), rejoue, puis écrit le journal canonique du noyau.
+injecte la stratégie dans le moteur commun (D-18), rejoue, puis écrit le journal canonique
+par le writer physique commun. Elle ne qualifie aucun environnement natif.
 
 Usage (depuis la racine du dépôt, `PYTHONPATH` désignant `src`) :
     python -m xpbots.app.rejeu_squelette --ticks <fichier.csv> --sortie <dossier> --tick-size EURUSD=0.00001 --contrat-papier EURUSD=1000,0.1,1,0.1 --scenario TECHNICAL_CONTROL_NEUTRAL [--racine-depot <dossier>]

@@ -92,7 +92,7 @@ ordre réel par erreur.
 | `terminal_info()` | `connected`, `trade_allowed`, `tradeapi_disabled`, `commondata_path`, `build` | Connexion, droits, dossier commun (§3, §4, §10) |
 | `account_info()` | `trade_mode`, `leverage`, `margin_mode`, `currency`, `balance`, `equity`, `margin`, `margin_free`, `margin_level`, `margin_so_mode`, `margin_so_call`, `margin_so_so`, `trade_allowed`, `trade_expert`, `limit_orders`, `company`, `server` ; `login` jamais journalisé | Profil de compte, fonds propres, marge (C04, C07) |
 | `symbol_info()` | `trade_tick_size`, `point`, `digits`, `trade_contract_size`, `trade_tick_value`, `volume_min`, `volume_max`, `volume_step`, `volume_limit`, `trade_stops_level`, `trade_freeze_level`, `filling_mode`, `order_mode`, `trade_mode`, `trade_exemode`, `trade_calc_mode`, `currency_base`, `currency_profit`, `currency_margin`, `chart_mode`, `margin_initial`, `margin_maintenance`, `spread_float` | Profil d'instrument (C04) |
-| Ticks (`copy_ticks_*`) | `time_msc`, `bid`, `ask`, `flags` ; `time`, `last`, `volume`, `volume_real` ignorés | Événements tick (C03) ; heure convertie par la table du §5 |
+| Ticks (`copy_ticks_*`, `symbol_info_tick`) | `time_msc`, `bid`, `ask`, `flags` ; `time`, `last`, `volume`, `volume_real` ignorés | Événements tick C03 ; dates aware UTC ; convention_ticks qualifiée S-01 : UTC documenté par le SDK, ou SERVEUR_S01 selon preuve explicite, distincte des exports D12 |
 | Positions et ordres | `ticket`, `identifier`, `type`, `magic`, `comment`, `symbol`, `volume`, `price_open`, `sl`, `tp`, `time_msc`, `reason` | Rapprochement, propriété (C08) |
 | Transactions (`history_deals_get`) | `ticket`, `order`, `position_id`, `type`, `entry`, `reason`, `magic`, `comment`, `volume`, `price`, `commission`, `swap`, `fee`, `profit`, `time_msc` | Remplissages, sorties SL/TP natives, frais réels |
 
@@ -246,8 +246,14 @@ importance, révision) et conserve toutes les versions (C05).
 ## 5. Table de conversion heure du serveur → UTC
 
 Établie par la sonde S-01, versionnée et datée : `schema` = `xp-heure-serveur-v1` ; nom du serveur ; liste de
-segments `debut_utc`, `fin_utc`, `decalage_secondes` (décalage entier, éventuellement nul si les ticks sont déjà en
-UTC) ; mesures qui la justifient. Un instant hors de tout segment est refusé (`ENVIRONMENT_NOT_READY`).
+segments `debut_utc`, `fin_utc`, `decalage_secondes` (décalage entier de l'heure serveur) ; mesures qui la
+justifient. Un instant serveur hors de tout segment est refusé (`ENVIRONMENT_NOT_READY`).
+
+La qualification externe `xp-qualification-mt5-v1` porte séparément le champ obligatoire
+`convention_ticks`, texte `UTC` ou `SERVEUR_S01`, établi par S-01 sous ses bornes de connaissance et de
+validité. UTC garde les epochs SDK documentés ; SERVEUR_S01 applique la table qualifiée à la source.
+Ce choix s'applique aux ticks collectés et à la dernière cotation SDK de clôture, indépendamment des textes
+et séances MQL5 D12. Une convention absente ou inconnue refuse ; aucun offset n'est inféré des prix.
 
 ## 6. Fichiers de ticks
 
@@ -292,8 +298,9 @@ Esquisse finalisée avec la couche `depot_sqlite` : table `meta` (version du sch
 empreintes) ; table `etat` (espace, clé, valeur JSON canonique, instant de mise à jour) pour les espaces du
 [document 01](01_architecture.md), §7.1 ; table `intentions` (clé d'intention unique, état, contenu, instant) ;
 table `reservations` (clé d'intention, risque réservé, volume, instant) ; table `arrets` (bras, type, actif,
-depuis, décision qui l'a levé). Transactions `BEGIN IMMEDIATE`, journal WAL, une écriture par événement avant
-toute commande (§7.2 du document 01). Le registre de budget du service IA a sa propre base (A09, A10).
+depuis, décision qui l'a levé). Transactions `BEGIN IMMEDIATE`, journal WAL, une écriture par événement et
+validation obligatoire avant toute entrée (§7.2 du document 01). Les clôtures et protections immédiates C08
+ne dépendent pas de cette preuve. Le registre de budget du service IA a sa propre base (A09, A10).
 
 ## 9. Rapport de qualification et registre de déploiement
 

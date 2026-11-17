@@ -95,7 +95,7 @@ paramètres des [exports techniques](../../../config/parametres_figes_v3.json) e
 | `local_inference_allowed`, `synchronous_llm_on_entry_allowed` | Faux exigé ; imports réseau interdits dans le cœur | `noyau` 0c ; cartes MCL | A14-1, A14-15 |
 | `shared_service_across_strategies` | Service unique pour les deux méthodes, coûts alloués une fois | `service-ia` 3 ; `journal-rejeu` 3 | A14-11 |
 | `snapshot_heartbeat_seconds`, `snapshot_write_retry_seconds` | Écriture du snapshot par le service | `service-ia` 2c | A14-16 |
-| `ea_snapshot_poll_seconds` | Lecture par le robot | `points-entree` 1a ; `infrastructure` 0e | A14-1 |
+| `ea_snapshot_poll_seconds` | Lecture par le robot | `points-entree` 2 ; `infrastructure` 0e | A14-1 |
 | `snapshot_max_age_seconds`, `snapshot_max_bytes`, `snapshot_minimum_accepted_sequence` | Acceptation du snapshot | `contexte-ia` 1 | A14-16 |
 | `providers` | Liste autorisée : identifiants vérifiés par le lecteur, routes du service | `contexte-ia` 1 ; `service-ia` 1d, 2b | A14-15 |
 | `feeds` | Flux officiels et devises | `service-ia` 2a | Contrat RSS |
@@ -141,7 +141,7 @@ paramètres des [exports techniques](../../../config/parametres_figes_v3.json) e
 | C04-2 | Lire et enregistrer avant démarrage, recontrôler avant ordre toutes les caractéristiques listées (compte, symbole, contrat, tick, volumes, distances, gel, modes, frais, marge, stop-out, calendrier de cotation, pauses, fermetures) | `noyau` 1b ; `infrastructure` 2a, 3 ; D-12 (séances, fermetures exceptionnelles) | Contrat MT5, 13.1 |
 | C04-3 | Fonctions de calcul du courtier ; marge isolée de `OrderCalcMargin` complétée ; règle inconnue → `ENVIRONMENT_NOT_READY` ; levier publicitaire ignoré | `infrastructure` 2c ; `execution-coordinateur` 3 ; sonde S-07 | C11.7 |
 | C04-4 | Compte standard ≠ contrat standard ; disponibilité des micro non établie | Sous-étape 13.1 | Qualification |
-| C04-5 | Un seul symbole par sous-jacent : plus petite exposition minimale vérifiée, puis coût aller-retour, puis ordre lexical ; choix conservé ; aucune bascule | `points-entree` 1c ; registre de déploiement | Sous-étape 13.1 |
+| C04-5 | Un seul symbole par sous-jacent : plus petite exposition minimale vérifiée, puis coût aller-retour, puis ordre lexical ; choix conservé ; aucune bascule | `points-entree` 1d ; registre de déploiement | Sous-étape 13.1 |
 | C04-6 | Jamais d'indice synthétique ; jamais d'arrondi du volume à la hausse | `execution-coordinateur` 3 ; registre | C11.6 |
 | C05-1 | Fondamental produit ailleurs ; aucun substitut DXY ou macro | `controles-fondamentaux` (consommation seule) | — |
 | C05-2 | Schéma `fundamental-permission-v1`, directions et états de risque | `controles-fondamentaux` 1a ; D-11 | C11.8 |
@@ -176,7 +176,7 @@ paramètres des [exports techniques](../../../config/parametres_figes_v3.json) e
 | C07-8 | Positions externes dans fonds propres et marge ; blocage des entrées faute de coordination ; jamais de clôture d'un autre propriétaire | `execution-coordinateur` 3, 5b ; document 01, §8 | C11.7, C11.11 |
 | C07-9 | Après remplissage : risque recalculé avec le prix réel et la seule réserve de sortie ; réduction ou clôture | `execution-coordinateur` 4 | C11.11 |
 | C07-10 | Garde quotidienne à 00:00 UTC, seuil de 98 %, clôture, annulation et blocage jusqu'au jour UTC suivant | `execution-coordinateur` 1b, 5a ; P-12 | C11.13 |
-| C07-11 | Garde globale à 90 % du pic, arrêt persistant, levée par décision tracée seulement | `execution-coordinateur` 1b ; `points-entree` 1a | C11.13 |
+| C07-11 | Garde globale à 90 % du pic, arrêt persistant, levée par décision tracée seulement | `execution-coordinateur` 1b ; `points-entree` 1b, 2 | C11.13 |
 | C07-12 | Aucun apport ni retrait en simulation ; flux réels identifiés et neutralisés | `journal-rejeu` 1b ; `execution-coordinateur` 1b | Rapport |
 | C08-1 | Méthodes indépendantes ; priorités ; réévaluation après chaque réservation ; ni score ni couverture opposée | `execution-coordinateur` 2b ; D-18 | C11.10 |
 | C08-2 | Clé d'intention persistante ; intention et réservation enregistrées avant envoi ; jamais de seconde entrée | `execution-coordinateur` 1c, 4 ; document 01, §7 | C11.11 |
@@ -187,7 +187,7 @@ paramètres des [exports techniques](../../../config/parametres_figes_v3.json) e
 | C08-7 | Ajustement du TP sans retirer le SL ; trois tentatives et échéance ; SL absent → clôture d'urgence ; TP non rétabli ou dépassé → clôture | `execution-coordinateur` 4 | C11.11 |
 | C08-8 | Première échéance de sortie parmi les six listées | `execution-coordinateur` 0e, 5a | L-14 |
 | C08-9 | Heures de sortie = instants d'envoi ; sans cotation, demande prioritaire et réessai chaque seconde ; aucune entrée rétroactive | `execution-coordinateur` 5a | C11.12 |
-| C08-10 | Redémarrage : journal, rapprochement, compteurs et risques restaurés avant toute décision ; verrou de propriété en netting | `execution-coordinateur` 5b ; `points-entree` 1a ; document 01, §7.3 | C11.11, C11.13 |
+| C08-10 | Redémarrage : journal, rapprochement, compteurs et risques restaurés avant toute décision ; verrou de propriété en netting | `execution-coordinateur` 5b ; `points-entree` 1b, 1f, 2 ; document 01, §7.3 | C11.11, C11.13 |
 | C09-1 | Enregistrer à chaque clôture et pour chaque intention les champs listés | `noyau` 2 ; `execution-coordinateur` 6 ; `orchestration` 2 | Enregistrements complets |
 | C09-2 | Motifs minimaux (20 codes) | Document 01, §9.3 | Contrôle mécanique |
 | C09-3 | Mesurer séparément configurations, signaux négociables, refus, entrées remplies, positions closes, résultats nets, drawdown de fonds propres | `journal-rejeu` 1c, 3 | Rapport C10 |
@@ -224,7 +224,7 @@ paramètres des [exports techniques](../../../config/parametres_figes_v3.json) e
 | A02-3 | Variables d'environnement des clés, `XPBOTS_PAID_FALLBACK_ENABLED`, `XPBOTS_COMMON_FILES_DIR` ; secrets jamais affichés | `service-ia` 4 ; document 01, §2 et §11 | Garde des secrets |
 | A02-4 | Pas de vote de modèles ; secours qualifié à part ; identifiants, versions et empreintes conservés | `service-ia` 2b ; journal du service | Rapport A13 |
 | A03-1 | Chaîne RSS et calendrier → service → API → validateur et cache → snapshot → lecture en mémoire | Document 01, §2 ; `contexte-ia` ; `orchestration` | A14-2 |
-| A03-2 | Aucun appel ni attente entre signal et entrée ; snapshot rechargé chaque seconde ; copie mémoire consultée à la décision **et juste avant l'ordre** ; réponse tardive sans effet | Document 01, principe 2 et §4.3 ; `execution-coordinateur` 6 ; `points-entree` 1a | A14-1, A14-2 |
+| A03-2 | Aucun appel ni attente entre signal et entrée ; snapshot rechargé chaque seconde ; copie mémoire consultée à la décision **et juste avant l'ordre** ; réponse tardive sans effet | Document 01, principe 2 et §4.3 ; `execution-coordinateur` 6 ; `points-entree` 2 | A14-1, A14-2 |
 | A03-3 | Heartbeat indépendant, travailleur d'inférence unique, file bornée, collecteur séparé | `service-ia` 4 | Test du service |
 | A04-1 | Prix et statistiques calculés par le moteur ; dossier du classificateur sans prix, portefeuille ni signal | `service-ia` 1d (contenu du dossier) | A14-15 |
 | A04-2 | Calendrier natif MT5 converti depuis l'heure du serveur ; exports versionnés rejoués ; flux Fed, BCE, BoE | D-12 ; document 01, §2.2 ; `service-ia` 2a | Contrat de l'export |
@@ -266,7 +266,7 @@ paramètres des [exports techniques](../../../config/parametres_figes_v3.json) e
 | A11-2 | Prompts exacts, schéma informatif, bornes du validateur, journal séparé | `service-ia` 0c, 3 | Oracle `parse_advisory_output` |
 | A11-3 | Rapport London par W/ATR_H1, heure de première cassure, sens, stop local, coût, nouveau signal après veto | `journal-rejeu` 3 ; document 05, §1.3 | Rapport A11 |
 | A11-4 | Trois hypothèses par mois au plus, tickets versionnés, aucune modification automatique, jamais le test réservé | Document 05, §1 ; `journal-rejeu` 2 (verrou) | Revue mensuelle |
-| A11-5 | Alertes opérationnelles déterministes affichées localement ; aucune messagerie par défaut | `points-entree` 1a ; `infrastructure` | Procédure d'exploitation |
+| A11-5 | Alertes opérationnelles déterministes affichées localement ; aucune messagerie par défaut | `points-entree` 2, 3 ; `infrastructure` | Procédure d'exploitation |
 | A12 | Effets exacts de chaque panne ; `NEUTRAL` n'est jamais `ALLOW` | `contexte-ia` 3 ; `execution-coordinateur` 0b, 6 | A14-8 |
 | A13 | Contrats, sémantique, gratuit contre payant, PAPER_AB, collecte, critères financiers, incertitude, coût équitable, mémoire des modèles, dérive | Sous-étapes 13.6 et 13.7 ; `journal-rejeu` 1d, 2, 3 ; `service-ia` 3 (dérive) | Rapports A13 |
 | A14 | Dix-huit cas d'acceptation IA | Document 03, §5.3 | Contrôle mécanique |

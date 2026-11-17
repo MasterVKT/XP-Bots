@@ -44,7 +44,7 @@ Poste Windows de l'utilisateur
 
 | Échange | Producteur | Consommateur | Emplacement | Règles |
 |---|---|---|---|---|
-| Snapshot IA | Service IA | Robot | `XPBots/ai/v1/context_latest.json` sous le chemin réel `terminal_info().commondata_path` (jamais déduit du nom d'utilisateur) | Écriture atomique, au plus `snapshot_max_bytes`, lecture toutes les `ea_snapshot_poll_seconds` (A10) |
+| Snapshot IA | Service IA | Robot | `XPBots/ai/v1/context_latest.json` sous `Path(terminal_info().commondata_path) / "Files"` (jamais déduit du nom d'utilisateur) | Écriture atomique, au plus `snapshot_max_bytes`, lecture toutes les `ea_snapshot_poll_seconds` (A10) |
 | Permissions fondamentales | Module externe | Robot | `XPBots/fondamental/v1/permission_<SYMBOLE>.json` sous le dossier commun | Schéma `fundamental-permission-v1`, heartbeat attendu `fundamental_expected_heartbeat_seconds` (C05) ; contrat au §2.1 |
 | Calendrier HIGH, horaires de séance | Service MQL5 `XPBotsExport` | Robot, service IA (A06) | `XPBots/export/v1/calendrier.json`, `XPBots/export/v1/seances_<symbole>.json` | Versions et heures de connaissance conservées (C05, C04) ; contrat au §2.2 |
 | Fermetures exceptionnelles | Humain, d'après les avis du courtier | Robot | `XPBots/export/v1/fermetures_exceptionnelles.json` | Fichier versionné obligatoire, liste éventuellement vide avec date de relevé (C04) |
@@ -57,14 +57,14 @@ Les emplacements du dépôt sont déjà exclus par `.gitignore` (`runtime/`, `lo
 échanges vivent hors du dépôt, dans le dossier commun du terminal.
 
 **Contrôle du dossier commun au démarrage** : le service IA écrit sous `XPBOTS_COMMON_FILES_DIR` (A02) et le robot
-lit sous `terminal_info().commondata_path`. Si la variable est définie dans l'environnement du robot, elle doit
+lit sous `Path(terminal_info().commondata_path) / "Files"`. Si la variable est définie dans l'environnement du robot, elle doit
 désigner le même dossier ; sinon, alerte locale déterministe. Dans tous les cas, un snapshot absent ou périmé
 laisse le complément IA `NEUTRAL` (A12) et déclenche une alerte, sans effet sur les règles du socle.
 
 ### 2.1 Dossier d'échange des permissions fondamentales (D-11)
 
 - **Emplacement** : `XPBots/fondamental/v1/` sous le dossier commun réel du terminal
-  (`terminal_info().commondata_path`), même racine que le snapshot IA ; chemin effectif consigné au registre de
+  (`Path(terminal_info().commondata_path) / "Files"`), même racine que le snapshot IA ; chemin effectif consigné au registre de
   déploiement, jamais déduit du nom d'utilisateur.
 - **Fichiers** : un par symbole canonique (`permission_EURUSD.json`, `permission_GBPUSD.json`,
   `permission_XAUUSD.json`) ; chacun contient exactement **un** message `fundamental-permission-v1` (C05), en
@@ -137,8 +137,9 @@ contrôle technique isolé explicitement nommé (C05).
 
 ### 4.1 Événements d'entrée du cœur
 
-- **Tick reçu** : symbole canonique, symbole du courtier, heure fournisseur convertie en UTC (milliseconde, par
-  la table de conversion qualifiée), heure de réception UTC, numéro de réception, Bid, Ask, drapeaux natifs.
+- **Tick reçu** : symbole canonique, symbole du courtier, heure fournisseur normalisée en UTC selon la
+  convention SDK qualifiée par S-01 (`UTC` ou `SERVEUR_S01`, distincte du décalage D12), heure de réception UTC,
+  numéro de réception, Bid, Ask, drapeaux natifs.
 - **État de connexion** : terminal ou symbole, connecté ou non, instant.
 - **Minuterie** : instant ; émise chaque seconde et aux instants que le cœur a demandés (fin de TTL, délais de
   correction des protections, échéances de sortie, scrutations de rapprochement).
@@ -318,9 +319,11 @@ testés avec l'arithmétique du robot (document 03, §1).
 
 ### 7.2 Règle d'écriture
 
-La coquille valide en base l'état produit par un événement **avant** d'exécuter les commandes de cet événement.
-Pour une entrée, la transaction contenant l'intention et sa réservation doit réussir avant l'envoi ; un échec
-d'écriture interdit l'envoi et déclenche une alerte.
+La coquille persiste l'état produit par chaque événement. Pour une **entrée**, la transaction contenant
+l'intention et sa réservation doit réussir avant l'envoi ; un échec d'écriture interdit cette entrée et
+déclenche une alerte. Les clôtures et protections immédiates autorisées par C08 restent prioritaires et ne
+dépendent d'aucune preuve de journalisation, conformément au contrat gelé du coordinateur ; une panne de
+stockage ne doit pas les bloquer. Leur état et leurs traces sont conservés dès que le stockage le permet.
 
 ### 7.3 Redémarrage (C08)
 
@@ -435,7 +438,7 @@ seules leurs preuves sont conservées dans le rapport de qualification.
 
 | Sonde | Point | Constat de recherche | Conséquence si la sonde échoue |
 |---|---|---|---|
-| S-01 | Base horaire des ticks (`time`, `time_msc`) | Les sources du forum MQL5 se contredisent (UTC ou heure du serveur) | Table de conversion versionnée heure serveur → UTC, tenant compte des changements d'heure du serveur ; flux refusé tant que l'écart n'est pas qualifié |
+| S-01 | Base horaire des ticks (`time`, `time_msc`), distinguée des exports MQL5 | Le SDK documente UTC ; les sources du forum se contredisent (UTC ou heure du serveur) | Qualifier explicitement convention_ticks=UTC ou SERVEUR_S01 ; cette dernière emploie la table versionnée et ses changements d'heure. Ne pas déduire la convention SDK du décalage D12 ; flux refusé tant que la preuve est absente |
 | S-02 | SL et TP attachés à l'ordre de marché (`TRADE_ACTION_DEAL`) | Généralement admis, refus possible par le serveur | Profil « non prêt pour V3 » (C06) ; **jamais** de pose différée du SL |
 | S-03 | Déclenchement SL/TP | Consensus : achat sur Bid, vente sur Ask, à vérifier | Adaptateur de preuve d'équivalence avant admissibilité (C06) |
 | S-04 | Modes de remplissage et remplissages partiels | FOK, IOC, RETURN selon le symbole ; en exécution au marché, prix et déviation sont ignorés | Choix du mode qui annule le reliquat ; annulation explicite en RETURN (C08) |
@@ -447,7 +450,11 @@ seules leurs preuves sont conservées dans le rapport de qualification.
 | S-10 | Export de la source tierce de ticks (D-14) | Format à relever (colonnes, fuseau, précision) sur un fichier réel avant conversion | Description et conversion dédiées dans `donnees-historiques` ; la source reste déclarée contrefactuelle |
 
 Le paquet Python ne fournit ni le calendrier économique ni les horaires de séance : D-12 retient le service MQL5
-d'export du §2.2. Le chemin du dossier commun vient de `terminal_info().commondata_path`. Les aides `Buy`, `Sell`
+d'export du §2.2. Le dossier des échanges est `Path(terminal_info().commondata_path) / "Files"` :
+`commondata_path` désigne `Terminal/Common`, alors que `FILE_COMMON` désigne `Terminal/Common/Files`.
+Ce suffixe est établi par les références officielles [terminal_info](https://www.mql5.com/en/docs/python_metatrader5/mt5terminalinfo_py)
+et [FileOpen](https://www.mql5.com/en/docs/files/fileopen), consultées sans terminal le 10/11/2026.
+Les aides `Buy`, `Sell`
 et `Close` du paquet sont interdites : elles renvoient d'elles-mêmes un ordre refusé, ce que C08 exclut. Les
 commissions ne figurent pas dans les caractéristiques du symbole ; elles se lisent dans les transactions
 (`commission`, `fee`) et se comparent à la fiche publiée du compte. Le type de compte est contrôlé au démarrage

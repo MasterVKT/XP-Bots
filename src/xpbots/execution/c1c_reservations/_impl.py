@@ -73,6 +73,20 @@ class RegistreReservations:
         if refus is not None: return refus
         self._etat=replace(self._etat,version=self._etat.version+1,reservations=self._etat.reservations+(reservation,))
         return self._etat
+    def annuler_tentative(self,cle,version_attendue):
+        if not isinstance(cle,CleIntention):raise ErreurExecution('clé attendue')
+        if type(version_attendue) is not int or version_attendue!=self._etat.version:
+            return RefusExecution(Motif.ENVIRONMENT_NOT_READY,'version_reservations')
+        if cle in self._etat.terminees:return RefusExecution(Motif.ENVIRONMENT_NOT_READY,'cle_terminee')
+        r=next((v for v in self._etat.reservations if v.cle==cle),None)
+        if r is None:return self._etat
+        if r.remplie:raise ErreurExecution('une réserve remplie exige une clôture confirmée')
+        if cle.symbole in self._etat.verrous or r.sous_jacent in self._etat.verrous:
+            return RefusExecution(Motif.SYMBOL_BUSY,'ETAT_ORDRE_INCONNU')
+        self._etat=replace(self._etat,version=self._etat.version+1,
+            reservations=tuple(v for v in self._etat.reservations if v.cle!=cle))
+        return self._etat
+
     def sur_issue(self,issue):
         if not isinstance(issue,Issue): raise ErreurExecution('issue attendue')
         r=next((r for r in self._etat.reservations if r.cle==issue.cle),None)

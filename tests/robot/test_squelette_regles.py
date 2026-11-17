@@ -22,6 +22,15 @@ NOMBRES_AUTORISES_PAR_FICHIER = {
     ('donnees_temps/c1c_indicateurs.py', 100): 'bornes de la définition du RSI (C03 point 9)',
 }
 NOMBRES_AUTORISES_PAR_FONCTION = {
+    ('infra/c2a_specifications/_impl.py', '_valider_export', 7): 'cardinalite des sept jours de la semaine native, hors seuil de strategie',
+    ('infra/c2a_specifications/_impl.py', '_horaires', 7): 'conversion ISO lundi=1 vers dimanche=0, hors horaire de strategie',
+    ('orchestration/c2_moteur/_impl.py', '_intervalles_marche', 2): 'cardinalité d’un intervalle UTC reçu, pas un seuil de stratégie',
+    ('infra/c1_session/_impl.py', 'actualiser', 3): 'trois champs du tuple version natif : version, build et date',
+    ('infra/c0a_types/_impl.py', 'utc_de_serveur', 1000): 'conversion exacte de l’offset secondes vers millisecondes',
+    ('infra/c0a_types/_impl.py', 'serveur_de_utc', 1000): 'conversion exacte de l’offset secondes vers millisecondes',
+    ('infra/c0b_horloge/_impl.py', 'attendre_ms', 1000): 'conversion exacte de millisecondes vers secondes pour sleep',
+    ('orchestration/c3_codec/_impl.py', '_registre', 2): 'cardinalité d’un couple (nom public, classe), hors règle de trading',
+    ('orchestration/c3_codec/_impl.py', '_decoder', 2): 'cardinalité d’une paire clé-valeur, hors règle de trading',
     ('execution/c4_cycle/_impl.py', '_ms', 1000): 'conversion exacte des secondes en millisecondes',
     ('execution/c4_cycle/_impl.py', 'identifier_courtier', 8): 'huit octets du SHA-256 pour un magic entier sur 63 bits (D-08)',
 }
@@ -43,6 +52,12 @@ TEXTES_AUTORISES_PAR_AFFECTATION = {
 }  # C05 et plan London §6.5 : table de devises explicitement codée, pas un paramètre recopié.
 TEXTES_AUTORISES_PAR_AFFECTATION.update(
     ('rejeu/c2_executeur/_impl.py', '_FOREX_C09', valeur) for valeur in ('EURUSD', 'GBPUSD'))
+TEXTES_AUTORISES_PAR_AFFECTATION.add(
+    ('orchestration/c3_codec/_impl.py', '_ZONES_SUPPORTEES', 'Europe/London'))  # variantes du codec, pas fuseau de décision
+TEXTES_AUTORISES_PAR_AFFECTATION.add(
+    ('infra/c1_session/_impl.py', '_MODES', 'PAPER_AB'))  # modes pris en charge ; aucun choix de défaut
+TEXTES_AUTORISES_PAR_AFFECTATION.add(
+    ('infra/c0d_journal/_impl.py', '_MODE_DOUBLE_COMPTE', 'PAPER_AB'))  # variante C09 des deux livres, aucun défaut
 NOMBRES_AUTORISES_PAR_AFFECTATION = {
     ('rejeu/c0b_protocole/_impl.py', nom, valeur)
     for nom, valeurs in {
@@ -56,11 +71,22 @@ NOMBRES_AUTORISES_PAR_AFFECTATION = {
 }  # Plan London §6.8 : constantes exclusivement textuelles C10, hors exports.
 NOMBRES_AUTORISES_PAR_AFFECTATION.add(
     ('rejeu/c1d_bootstrap/_impl.py', '_CENT_POUR_CENT', 100))  # définition du percentile
+NOMBRES_AUTORISES_PAR_AFFECTATION.add(
+    ('infra/c2c_calculs/_impl.py', '_CENT_POUR_CENT', 100))  # Conversion mathematique d'un ratio en pourcentage.
 APPELS_D_HORLOGE = {('datetime', 'now'), ('datetime', 'utcnow'), ('datetime', 'today'), ('date', 'today'),
                     ('time', 'time'), ('time', 'time_ns'), ('time', 'monotonic'), ('time', 'monotonic_ns'),
                     ('time', 'perf_counter'), ('time', 'perf_counter_ns')}
-BIBLIOTHEQUES_DE_FRONTIERE = {'MetaTrader5', 'sqlite3', 'urllib', 'http', 'ssl', 'socket', 'time'}
+BIBLIOTHEQUES_DE_FRONTIERE = {'MetaTrader5', 'sqlite3', 'urllib', 'http', 'ssl', 'socket', 'time', 'msvcrt', 'fcntl'}
 INFRASTRUCTURE = SRC / 'xpbots' / 'infrastructure'
+INFRA_COMMUNE = SRC / 'xpbots' / 'infra'
+
+
+def horloge_autorisee(chemin):
+    return INFRASTRUCTURE / 'horloge' in chemin.parents or INFRA_COMMUNE / 'c0b_horloge' in chemin.parents
+
+
+def frontiere_autorisee(chemin):
+    return INFRASTRUCTURE in chemin.parents or INFRA_COMMUNE in chemin.parents
 
 
 def feuilles(valeur):
@@ -123,6 +149,34 @@ def litteraux_interdits(source, relatif, nombres, textes):
 
 
 class TestReglesTransverses(unittest.TestCase):
+    def test_mode_double_compte_borne_a_la_variante_du_journal(self):
+        source="_MODE_DOUBLE_COMPTE='PAPER_AB'\n_AUTRE='PAPER_AB'\ndef risque():\n    return 'PAPER_AB'\n"
+        self.assertEqual(len(litteraux_interdits(source,'infra/c0d_journal/_impl.py',set(),{'PAPER_AB'})),2)
+        self.assertEqual(len(litteraux_interdits(source,'autre.py',set(),{'PAPER_AB'})),3)
+
+    def test_exceptions_natives_bornees_aux_jours_et_au_pourcentage(self):
+        source = 'def _valider_export():\n    return 7\ndef _horaires():\n    return 7\ndef risque():\n    return 7\n'
+        self.assertEqual(len(litteraux_interdits(source, 'infra/c2a_specifications/_impl.py', {7}, set())), 1)
+        self.assertEqual(len(litteraux_interdits(source, 'autre.py', {7}, set())), 3)
+        source = '_CENT_POUR_CENT=100\n_AUTRE=100\ndef risque():\n    return 100\n'
+        self.assertEqual(len(litteraux_interdits(source, 'infra/c2c_calculs/_impl.py', {100}, set())), 2)
+        self.assertEqual(len(litteraux_interdits(source, 'autre.py', {100}, set())), 3)
+
+    def test_frontieres_communes_et_horloge_restant_bornees(self):
+        self.assertTrue(frontiere_autorisee(INFRA_COMMUNE/'c0c_sqlite'/'_impl.py'))
+        self.assertTrue(horloge_autorisee(INFRA_COMMUNE/'c0b_horloge'/'_impl.py'))
+        self.assertFalse(horloge_autorisee(INFRA_COMMUNE/'c2b_flux'/'_impl.py'))
+        self.assertFalse(frontiere_autorisee(SRC/'xpbots'/'app'/'direct.py'))
+        self.assertFalse(horloge_autorisee(SRC/'xpbots'/'app'/'horloge'/'_impl.py'))
+
+    def test_exceptions_codec_bornees_aux_paires_et_zones(self):
+        chemin = 'orchestration/c3_codec/_impl.py'
+        source = ("_ZONES_SUPPORTEES = ('Europe/London',)\n"
+                  "def _registre():\n    return 2\n"
+                  "def risque():\n    return 2, 'Europe/London'\n")
+        self.assertEqual(len(litteraux_interdits(source, chemin, {2}, {'Europe/London'})), 2)
+        self.assertEqual(len(litteraux_interdits(source, 'autre.py', {2}, {'Europe/London'})), 4)
+
     def test_table_forex_c09_bornee_au_denommateur_du_module(self):
         source = "_FOREX_C09 = {'EURUSD', 'GBPUSD'}\n_AUTRE = 'EURUSD'\n"
         fichier = 'rejeu/c2_executeur/_impl.py'
@@ -168,7 +222,7 @@ class TestReglesTransverses(unittest.TestCase):
     def test_aucune_horloge_hors_infrastructure(self):
         violations = []
         for chemin in fichiers_source():
-            if INFRASTRUCTURE / 'horloge' in chemin.parents:
+            if horloge_autorisee(chemin):
                 continue
             for noeud in ast.walk(ast.parse(chemin.read_text(encoding='utf-8'))):
                 if isinstance(noeud, ast.Attribute):
@@ -180,7 +234,7 @@ class TestReglesTransverses(unittest.TestCase):
     def test_bibliotheques_de_frontiere_confinees_a_l_infrastructure(self):
         violations = []
         for chemin in fichiers_source():
-            if INFRASTRUCTURE in chemin.parents:
+            if frontiere_autorisee(chemin):
                 continue
             for noeud in ast.walk(ast.parse(chemin.read_text(encoding='utf-8'))):
                 noms = []

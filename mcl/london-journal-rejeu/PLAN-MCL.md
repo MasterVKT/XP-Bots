@@ -305,3 +305,19 @@ appel LLM ou courtier ni qualification de rentabilité n’est inclus. Les quinz
 modifications initiales sont conservées hors du commit. La clôture comprend
 l’audit bidirectionnel, un commit français et le contrôle du même arbre sur
 origin/master avant l’arrêt.
+
+### Phase 11 — consommation physique du livre C10 (17/11/2026)
+
+L’[extension du profil courant](EXTENSION-PHASE11-PROFIL.md) expose
+`actualiser_profil` sans renouveler les preuves ni modifier les liaisons ou la
+géométrie du contrat. La [correction de devise de marge FOREX](CORRECTION-PHASE11-DEVISE-MARGE.md)
+permet la devise de base qualifiée, avec le calcul confronté au port réel
+`CalculsMT5` servi par FauxMT5. Les défigeages de 1b, la cascade 2 puis 3 et
+leurs gates et nouveaux gels sont tracés. Aucun second simulateur n’est créé.
+
+Les huit unités sont figées et comptent 132 tests. La répétition PAPER et les
+deux livres PAPER_AB du direct réutilisent ce simulateur ; les archives et
+incidents se rejouent à l’identique sans backend. Les CP4 de phase 11 passent
+sur 1 403 tests, dont 14 contrats physiques différés ; la mutation M11-32 détecte
+la perte de mise à jour du profil. Les fixtures restent NON_VALIDE et ne
+qualifient aucun résultat financier ou compte externe.

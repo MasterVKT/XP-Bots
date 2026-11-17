@@ -1,0 +1,94 @@
+{
+  "schema": "xp-export-seances-v1",
+  "version": 1,
+  "export_serveur": "2026.11.10 10:00:00",
+  "export_gmt": "2026.11.10 09:00:00",
+  "symbole": "EURUSD.micro",
+  "jours": [
+    {
+      "jour": 0,
+      "cotation": [],
+      "negociation": []
+    },
+    {
+      "jour": 1,
+      "cotation": [
+        {
+          "debut": "00:00:00",
+          "fin": "24:00:00"
+        }
+      ],
+      "negociation": [
+        {
+          "debut": "00:00:00",
+          "fin": "23:00:00"
+        }
+      ]
+    },
+    {
+      "jour": 2,
+      "cotation": [
+        {
+          "debut": "00:00:00",
+          "fin": "24:00:00"
+        }
+      ],
+      "negociation": [
+        {
+          "debut": "00:00:00",
+          "fin": "23:00:00"
+        }
+      ]
+    },
+    {
+      "jour": 3,
+      "cotation": [
+        {
+          "debut": "00:00:00",
+          "fin": "24:00:00"
+        }
+      ],
+      "negociation": [
+        {
+          "debut": "00:00:00",
+          "fin": "23:00:00"
+        }
+      ]
+    },
+    {
+      "jour": 4,
+      "cotation": [
+        {
+          "debut": "00:00:00",
+          "fin": "24:00:00"
+        }
+      ],
+      "negociation": [
+        {
+          "debut": "00:00:00",
+          "fin": "23:00:00"
+        }
+      ]
+    },
+    {
+      "jour": 5,
+      "cotation": [
+        {
+          "debut": "00:00:00",
+          "fin": "24:00:00"
+        }
+      ],
+      "negociation": [
+        {
+          "debut": "00:00:00",
+          "fin": "23:00:00"
+        }
+      ]
+    },
+    {
+      "jour": 6,
+      "cotation": [],
+      "negociation": []
+    }
+  ]
+}

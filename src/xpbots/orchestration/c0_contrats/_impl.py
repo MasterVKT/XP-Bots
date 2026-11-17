@@ -101,11 +101,11 @@ class ReceptionExterne:
     symbole:str|None=None
     table:TableImportance|None=None
     def __post_init__(self):
-        if self.nature not in ('PERMISSION','CALENDRIER','INTERRUPTION','SNAPSHOT'):
+        if self.nature not in ('PERMISSION','CALENDRIER','INTERRUPTION','SNAPSHOT','MARCHE'):
             raise ErreurOrchestration('nature de réception inconnue')
         if not (type(self.octets) is bytes or self.nature=='SNAPSHOT' and self.octets is None):
             raise ErreurOrchestration('octets externes requis')
-        if self.nature in ('PERMISSION','INTERRUPTION'):
+        if self.nature in ('PERMISSION','INTERRUPTION','MARCHE'):
             texte(self.symbole)
             if self.table is not None or self.nature=='INTERRUPTION' and self.octets:
                 raise ErreurOrchestration('permission ou interruption incohérente')

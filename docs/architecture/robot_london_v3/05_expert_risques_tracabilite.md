@@ -67,7 +67,7 @@ logique de martingale, de revanche ou d'augmentation du risque après pertes n'e
 
 | Id | Risque | Effet | Traitement | Phase |
 |---|---|---|---|---|
-| R-01 | Base horaire des ticks MT5 ambiguë (UTC ou heure du serveur) | Bougies et sessions décalées, décisions fausses | Table de conversion versionnée (document 08, §5) dès la phase 11 ; sonde S-01 ; refus du flux non qualifié | 11, 13.1 |
+| R-01 | Base horaire des ticks MT5 ambiguë (UTC ou heure du serveur) | Bougies et sessions décalées, décisions fausses | Convention des ticks SDK qualifiée S-01 (`UTC` ou `SERVEUR_S01`), distincte de D12 ; table versionnée pour les sources serveur (document 08, §5) ; refus sans preuve | 11, 13.1 |
 | R-02 | `order_send` bloquant, appels concurrents non garantis | Accusé ambigu, rapprochement retardé | Exécutant dédié avec délai dès la phase 11 ; sonde S-06 ; repli documenté | 11, 13.1 |
 | R-03 | Paquet Python sans calendrier ni horaires de séance | Garde d'annonces et garde de fermeture native impossibles | D-12 : service MQL5 d'export ; risque résiduel : code MQL5 non compilable dans le conteneur, contrôlé par revue en phase 11, puis compilation et test de contrat sur le poste en 13.1 | 7, 11, 13.1 |
 | R-04 | SL non attachable à l'entrée chez le courtier | Profil non prêt pour V3 (C06) | Sonde S-02 ; aucun contournement par pose différée ; décision humaine | 13.1 |
@@ -114,7 +114,7 @@ confronte chaque consigne de la skill d'expert à un choix de conception (71 con
 | C03.3 | Europe/London, jours locaux, jour UTC de perte | `london-donnees-temps` 0b ; `execution-coordinateur` 1b | 3, 5 | C11.4 |
 | C03.4–C03.7 | Bougies closes, validité, trous, préchargement, reprise | `london-donnees-temps` 1c, 2a, 2b, 3 | 3 | C11.1, P-01 à P-03, P-10 |
 | C03.8–C03.12 | Récurrences, A_t, précision, arrondis | `london-donnees-temps` 1b ; `noyau` 0b ; `execution-coordinateur` 0d | 2, 3, 5 | Oracles `wilder`, `rounded_levels` |
-| C04 | Instruments, compte, fonctions du courtier, liaison des symboles | `noyau` 1b ; `infrastructure` 2a, 2c ; `points-entree` 1c | 2, 11, 13.1 | C11.7 |
+| C04 | Instruments, compte, fonctions du courtier, liaison des symboles | `noyau` 1b ; `infrastructure` 2a, 2c ; `points-entree` 1d | 2, 11, 13.1 | C11.7 |
 | C05 | Permissions externes et annonces | `controles-fondamentaux` 0 à 3 ; `execution-coordinateur` 0b, 5a ; `infrastructure` 0g ; service MQL5 | 5, 7, 11 | C11.8, C11.9 |
 | C06 | Entrée, spread, stop et objectif exécutables | `execution-coordinateur` 0c, 0d | 5 | C11.2, C11.5, S02.6-6 |
 | C07 | Dimensionnement, réserves, gardes | `execution-coordinateur` 1b, 1c, 2a, 3 | 5 | C11.6, C11.7, C11.13 |

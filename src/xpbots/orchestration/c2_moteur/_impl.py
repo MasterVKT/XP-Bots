@@ -14,9 +14,12 @@ from xpbots.donnees.c0a_types import BougieEnrichie,ChangementTrou,UniteTemps
 from xpbots.donnees.c1c_couverture import RegistreCouverture
 from xpbots.donnees.c3_flux import FluxBougies
 from xpbots.execution.c0b_controles import ControleTechniqueNeutre
+from xpbots.execution.c6_coordinateur import EtatCoordinateur
 from xpbots.fondamental.c3_permissions import PermissionsFondamentales
+from xpbots.fondamental.c2_etat_permissions import PermissionRecue
 from xpbots.contexte_ia.c3_contexte import LecteurContexte
 from xpbots.noyau.c1a_marche import Cotation
+from xpbots.noyau.c1b_instrument import HorairesCotation, Intervalle
 from xpbots.noyau.c1c_domaine import SignalTechnique
 
 
@@ -36,6 +39,59 @@ def _sceau(v):
         ensure_ascii=False,allow_nan=False).encode('utf-8')).hexdigest()
 
 
+def _empreinte_journal(entrees):
+    empreinte=hashlib.sha256(b'').hexdigest()
+    for j in entrees:
+        if not isinstance(j,EntreeJournalisee):raise ErreurOrchestration('journal de checkpoint mal typé')
+        empreinte=_sceau((empreinte,j))
+    return empreinte
+
+
+def _paires_json_marche(paires):
+    resultat={}
+    for k,v in paires:
+        if k in resultat:raise ErreurOrchestration('clé JSON de marché en double')
+        resultat[k]=v
+    return resultat
+
+
+def _json_marche(octets):
+    def interdit(_):raise ErreurOrchestration('nombre de marché non fini')
+    try:
+        return json.loads(octets.decode('utf-8'),object_pairs_hook=_paires_json_marche,parse_constant=interdit)
+    except (ValueError,UnicodeError,TypeError) as e:
+        raise ErreurOrchestration('document de marché invalide') from e
+
+
+def _intervalles_marche(valeurs):
+    if type(valeurs) is not list:raise ErreurOrchestration('liste d’intervalles requise')
+    resultat=[]
+    for v in valeurs:
+        if type(v) is not list or len(v)!=2:raise ErreurOrchestration('couple de bornes requis')
+        resultat.append(Intervalle(*v))
+    if resultat!=sorted(resultat):raise ErreurOrchestration('intervalles non ordonnés')
+    return tuple(resultat)
+
+
+def _horaires_marche(h):
+    if type(h) is not dict or set(h)!={'seances','fermetures','debut_validite_ms','fin_validite_ms'}:
+        raise ErreurOrchestration('champs des horaires invalides')
+    return HorairesCotation(_intervalles_marche(h['seances']),_intervalles_marche(h['fermetures']),
+                            h['debut_validite_ms'],h['fin_validite_ms'])
+
+
+def _horaires_document(h):
+    return dict(seances=[[i.debut_ms,i.fin_ms] for i in h.seances],
+                fermetures=[[i.debut_ms,i.fin_ms] for i in h.fermetures],
+                debut_validite_ms=h.debut_validite_ms,fin_validite_ms=h.fin_validite_ms)
+
+
+class _CouvertureCourante:
+    """Port C03 en mémoire ; ses valeurs ne changent que par une réception journalisée."""
+    def __init__(self,periodes):self.registre=RegistreCouverture(periodes)
+    def periodes(self,jusqua_ms):return self.registre.periodes(jusqua_ms)
+
+
 @dataclass(frozen=True)
 class EtatMoteur:
     signature:str
@@ -53,9 +109,92 @@ class EtatMoteur:
             raise ErreurOrchestration('photographie du moteur altérée')
 
 
+@dataclass(frozen=True)
+class CheckpointMoteur:
+    signature:str
+    instant_ms:int
+    numero_entrees:int
+    empreinte_journal:str
+    flux:tuple
+    bras:tuple
+    fondamental:object
+    ia:object
+    empreinte:str
+
+    def __post_init__(self):
+        object.__setattr__(self,'flux',tuple(tuple(v) for v in self.flux))
+        object.__setattr__(self,'bras',tuple(self.bras))
+
+    def verifier(self):
+        instant(self.instant_ms)
+        if type(self.numero_entrees) is not int or self.numero_entrees<0:
+            raise ErreurOrchestration('compteur du checkpoint invalide')
+        for h in (self.signature,self.empreinte_journal,self.empreinte):
+            if type(h) is not str or len(h)!=64 or any(c not in '0123456789abcdef' for c in h):
+                raise ErreurOrchestration('empreinte du checkpoint invalide')
+        valeurs=tuple(getattr(self,f.name) for f in fields(self) if f.name!='empreinte')
+        if self.empreinte!=_sceau(valeurs):raise ErreurOrchestration('checkpoint du moteur altéré')
+
+
+@dataclass(frozen=True)
+class CheckpointJournalMoteur:
+    signature:str
+    instant_ms:int
+    numero_entrees:int
+    empreinte_journal:str
+    flux:tuple
+    coordinateurs:tuple
+    fondamental:object
+    ia:object
+    empreinte:str
+
+    def __post_init__(self):
+        object.__setattr__(self,'flux',tuple(tuple(v) for v in self.flux))
+        object.__setattr__(self,'coordinateurs',tuple(tuple(v) for v in self.coordinateurs))
+
+    def verifier(self):
+        instant(self.instant_ms)
+        if type(self.numero_entrees) is not int or self.numero_entrees<0:
+            raise ErreurOrchestration('compteur du checkpoint journal invalide')
+        for h in (self.signature,self.empreinte_journal,self.empreinte):
+            if type(h) is not str or len(h)!=64 or any(c not in '0123456789abcdef' for c in h):
+                raise ErreurOrchestration('empreinte du checkpoint journal invalide')
+        noms=[]
+        for paire in self.coordinateurs:
+            if (len(paire)!=len(('bras','etat')) or paire[0] not in (REFERENCE,IA)
+                    or not isinstance(paire[1],EtatCoordinateur) or paire[1].dernier_ms>self.instant_ms):
+                raise ErreurOrchestration('coordinateur du checkpoint journal invalide')
+            noms.append(paire[0])
+        if not noms or len(set(noms))!=len(noms):
+            raise ErreurOrchestration('bras du checkpoint journal invalides')
+        for valeur,schema,champs in ((self.fondamental,'xp-verification-c05-v1',
+                ('schema','dernier_ms','dernier_permissions_ms','evenements','permissions','curseurs','calendrier')),
+                (self.ia,'xp-verification-ia-v1',('schema','dernier_ms','snapshot','vetos'))):
+            if valeur is not None:
+                if type(valeur) is not tuple or len(valeur)!=len(champs) or valeur[0]!=schema:
+                    raise ErreurOrchestration('engagement de controle du checkpoint journal invalide')
+                instant(valeur[1])
+                if valeur[1]>self.instant_ms:raise ErreurOrchestration('engagement de controle futur')
+        valeurs=tuple(getattr(self,f.name) for f in fields(self) if f.name!='empreinte')
+        if self.empreinte!=_sceau(valeurs):raise ErreurOrchestration('checkpoint journal du moteur altere')
+
+
 class MoteurDecision:
     def __init__(self,configuration,bras,horaires,periodes_couvertes,*,controle_fondamental=None,
-                 lecteur_ia=None,source_fondamentale=None,source_ia=None,scenario_fondamental=None,etat=None):
+                 lecteur_ia=None,source_fondamentale=None,source_ia=None,scenario_fondamental=None,etat=None,
+                 checkpoint=None,entrees=()):
+        try:journal=tuple(entrees)
+        except TypeError as erreur:raise ErreurOrchestration('journal de checkpoint requis') from erreur
+        if checkpoint is not None:
+            if etat is not None or not isinstance(checkpoint,CheckpointMoteur):
+                raise ErreurOrchestration('checkpoint typé exclusif requis')
+            checkpoint.verifier()
+            if len(journal)!=checkpoint.numero_entrees or _empreinte_journal(journal)!=checkpoint.empreinte_journal:
+                raise ErreurOrchestration('journal différent du checkpoint')
+            v=(checkpoint.signature,checkpoint.instant_ms,journal,checkpoint.flux,checkpoint.bras,
+                checkpoint.fondamental,checkpoint.ia)
+            etat=EtatMoteur(*v,_sceau(v))
+        elif journal:raise ErreurOrchestration('journal sans checkpoint')
         bras=tuple(bras)
         if not bras or any(not isinstance(b,Bras) or b.calculs is None for b in bras):
             raise ErreurOrchestration('bras réels avec calculs tracés requis')
@@ -92,7 +231,9 @@ class MoteurDecision:
             raise ErreurOrchestration('contrôle futur au démarrage')
         self._signature=_sceau((configuration.technique.empreinte_canonique,configuration.ia.empreinte_canonique,
             tuple(b.etat.signature for b in bras),horaires,periodes_couvertes,scenario_fondamental))
-        self._flux={s:FluxBougies(s,configuration.technique,horaires[s],RegistreCouverture(periodes_couvertes[s])) for s in horaires}
+        self._horaires=dict(horaires);self._marche={}
+        self._couvertures={s:_CouvertureCourante(periodes_couvertes[s]) for s in horaires}
+        self._flux={s:FluxBougies(s,configuration.technique,horaires[s],self._couvertures[s]) for s in horaires}
         if etat is not None:
             if not isinstance(etat,EtatMoteur):raise ErreurOrchestration('état moteur typé requis')
             etat.verifier()
@@ -105,10 +246,12 @@ class MoteurDecision:
                     for a,b in zip(etat.bras,bras)):
                 raise ErreurOrchestration('bras non restaurés')
             if tuple(s for s,_ in etat.flux)!=tuple(horaires):raise ErreurOrchestration('flux étrangers')
-            self._flux={s:FluxBougies.reprendre(json.loads(v),configuration.technique,horaires[s],RegistreCouverture(periodes_couvertes[s])) for s,v in etat.flux}
+            self._flux={s:self._reprendre_flux(s,json.loads(v),etat.instant_ms) for s,v in etat.flux}
             self._entrees=list(etat.entrees)
             if any(not isinstance(e,EntreeJournalisee) or e.entree.numero!=i+1 or e.entree.instant_ms>self._instant for i,e in enumerate(self._entrees)):
                 raise ErreurOrchestration('journal de reprise incohérent')
+        self._empreinte_entrees=_empreinte_journal(self._entrees)
+        self._cache_verifications={}
 
     @staticmethod
     def _etat_controle(c):return None if c is None else c.etat
@@ -119,6 +262,12 @@ class MoteurDecision:
     @property
     def entrees(self):return tuple(self._entrees)
 
+    def entrees_depuis(self,numero):
+        self._verifier()
+        if type(numero) is not int or not 0<=numero<=len(self._entrees):
+            raise ErreurOrchestration('indice du journal invalide')
+        return tuple(self._entrees[numero:])
+
     @property
     def initialisation_calculs(self):return tuple((n,b.calculs.initialisation) for n,b in self.bras.items())
 
@@ -126,9 +275,107 @@ class MoteurDecision:
     def etat(self):
         self._verifier()
         v=(self._signature,self._instant,self.entrees,
-            tuple((s,json.dumps(f.exporter_etat(),sort_keys=True,separators=(',',':'))) for s,f in self._flux.items()),
+            tuple((s,self._exporter_flux(s,f)) for s,f in self._flux.items()),
             tuple(b.etat for b in self.bras.values()),self._etat_controle(self._fond),self._etat_controle(self._ia))
         return EtatMoteur(*v,_sceau(v))
+
+    def exporter_checkpoint(self):
+        self._verifier()
+        v=(self._signature,self._instant,len(self._entrees),self._empreinte_entrees,
+            tuple((s,self._exporter_flux(s,f)) for s,f in self._flux.items()),
+            tuple(b.etat for b in self.bras.values()),self._etat_controle(self._fond),self._etat_controle(self._ia))
+        return CheckpointMoteur(*v,_sceau(v))
+
+    def exporter_checkpoint_journal(self):
+        self._verifier()
+        fondamental,ia=self._verification_controles()
+        v=(self._signature,self._instant,len(self._entrees),self._empreinte_entrees,
+            tuple((s,self._exporter_flux(s,f)) for s,f in self._flux.items()),
+            tuple((n,b.coordinateur.etat) for n,b in self.bras.items()),
+            fondamental,ia)
+        return CheckpointJournalMoteur(*v,_sceau(v))
+
+    def _verification_controles(self):
+        nouveau={}
+        def empreinte(cle,obj):
+            ancien=self._cache_verifications.get(cle)
+            h=ancien[1] if ancien is not None and ancien[0] is obj else _sceau(obj)
+            nouveau[cle]=(obj,h)
+            return h
+        fondamental=None;ia=None
+        if self._fond is not None:
+            e=self._fond.etat;derniers={};permissions={}
+            for fait in e.permissions.historique:
+                derniers[fait.symbole]=fait
+                if isinstance(fait,PermissionRecue):permissions[fait.symbole]=fait
+            def faits(valeurs,nature):
+                return tuple((s,f.instant_ms,empreinte((nature,s),f)) for s,f in sorted(valeurs.items()))
+            v=e.calendrier.versions[-1] if e.calendrier.versions else None
+            calendrier=None if v is None else (v.version,v.export_ms,v.reception_ms,empreinte(('calendrier',),v))
+            fondamental=('xp-verification-c05-v1',e.dernier_ms,e.permissions.dernier_ms,
+                         faits(derniers,'evenement'),faits(permissions,'permission'),e.permissions.curseurs,calendrier)
+        if self._ia is not None:
+            e=self._ia.etat;r=e.dernier_snapshot
+            dernier=None if r is None else (r.snapshot.sequence,r.snapshot.genere_ms,r.reception_ms,
+                                            r.snapshot.empreinte_integration,r.snapshot.empreinte_payload)
+            vetos=tuple((v.veto.event_id,v.connu_ms,v.veto.valid_from_ms,v.veto.valid_until_ms,
+                         empreinte(('veto',v.veto.event_id),v.veto),v.preuve.snapshot.sequence,
+                         v.preuve.snapshot.empreinte_payload,v.preuve.reception_ms)
+                        for v in sorted(e.scelles,key=lambda v:v.veto.event_id) if v.veto.valid_until_ms>e.dernier_ms)
+            ia=('xp-verification-ia-v1',e.dernier_ms,dernier,vetos)
+        self._cache_verifications=nouveau
+        return fondamental,ia
+
+    def _exporter_flux(self,s,f):
+        v=f.exporter_etat()
+        if s in self._marche:v=dict(schema='xp-flux-moteur-v2',flux=v,marche=self._marche[s])
+        return json.dumps(v,sort_keys=True,separators=(',',':'))
+
+    def _valider_marche(self,s,d,t):
+        if (type(d) is not dict or set(d)!={'schema','version','horaires','periodes_couvertes'}
+                or d['schema']!='xp-etat-marche-v1' or type(d['version']) is not int or d['version']<=0):
+            raise ErreurOrchestration('champs ou version du fait de marché invalides')
+        try:
+            h=self._horaires[s] if d['horaires'] is None else _horaires_marche(d['horaires'])
+            if not h.debut_validite_ms<=t<h.fin_validite_ms:
+                raise ErreurOrchestration('horaires non valides à réception')
+            periodes=_intervalles_marche(d['periodes_couvertes'])
+            if any(p.fin_ms>t for p in periodes):raise ErreurOrchestration('couverture future refusée')
+            return h,RegistreCouverture(periodes)
+        except ValueError as e:
+            raise ErreurOrchestration('valeurs du fait de marché invalides') from e
+
+    def _recevoir_marche(self,p,t):
+        d=_json_marche(p.octets)
+        if type(d) is not dict or type(d.get('version')) is not int:
+            raise ErreurOrchestration('version de marché entière requise')
+        empreinte=hashlib.sha256(p.octets).hexdigest();ancien=self._marche.get(p.symbole)
+        if ancien is not None and d['version']<=ancien['version']:
+            if d['version']==ancien['version'] and empreinte==ancien['empreinte_message']:return False
+            raise ErreurOrchestration('version de marché reculée ou contradictoire')
+        h,registre=self._valider_marche(p.symbole,d,t)
+        self._horaires[p.symbole]=h;self._couvertures[p.symbole].registre=registre
+        self._flux[p.symbole].actualiser_horaires(h)
+        self._marche[p.symbole]=dict(version=d['version'],empreinte_message=empreinte,reception_ms=t,horaires=_horaires_document(h),
+            periodes_couvertes=[[i.debut_ms,i.fin_ms] for i in registre.periodes(t)])
+        return True
+
+    def _reprendre_flux(self,s,v,t):
+        if type(v) is dict and v.get('schema')=='xp-flux-moteur-v2':
+            if set(v)!={'schema','flux','marche'}:raise ErreurOrchestration('enveloppe de flux invalide')
+            d=v['marche']
+            if (type(d) is not dict or set(d)!={'version','empreinte_message','reception_ms','horaires','periodes_couvertes'}
+                    or type(d['empreinte_message']) is not str or len(d['empreinte_message'])!=64
+                    or any(c not in '0123456789abcdef' for c in d['empreinte_message'])):
+                raise ErreurOrchestration('état de marché invalide')
+            instant(d['reception_ms'])
+            if d['reception_ms']>t or type(d['horaires']) is not dict:
+                raise ErreurOrchestration('connaissance de marché future ou incomplète')
+            h,registre=self._valider_marche(s,dict(schema='xp-etat-marche-v1',version=d['version'],
+                horaires=d['horaires'],periodes_couvertes=d['periodes_couvertes']),d['reception_ms'])
+            self._horaires[s]=h;self._couvertures[s].registre=registre;self._marche[s]=d
+            v=v['flux']
+        return FluxBougies.reprendre(v,self.configuration.technique,self._horaires[s],self._couvertures[s])
 
     @property
     def prochaine_echeance_ms(self):
@@ -148,6 +395,9 @@ class MoteurDecision:
     def _recevoir(self,e):
         traces=[];t=e.instant_ms
         for p in e.receptions:
+            if p.nature=='MARCHE':
+                if self._recevoir_marche(p,t):traces.append(dict(code='MARCHE_ACTUALISE',symbole=p.symbole,version=self._marche[p.symbole]['version']))
+                continue
             if p.nature=='SNAPSHOT':r=self._ia.recevoir(p.octets,t)
             elif p.nature=='PERMISSION':r=self._fond.recevoir_permission(p.symbole,p.octets,t)
             elif p.nature=='CALENDRIER':r=self._fond.recevoir_calendrier(p.octets,t,p.table)
@@ -173,7 +423,7 @@ class MoteurDecision:
         if any(t.symbole not in self._flux for t in e.ticks) or any(n not in self.bras for n,_ in e.mises_a_jour):
             raise ErreurOrchestration('entrée étrangère')
         for p in e.receptions:
-            if (p.nature=='SNAPSHOT' and self._ia is None) or (p.nature!='SNAPSHOT' and self._fond is None):
+            if (p.nature=='SNAPSHOT' and self._ia is None) or (p.nature not in ('SNAPSHOT','MARCHE') and self._fond is None):
                 raise ErreurOrchestration('réception sans contrôle réel')
             if p.symbole is not None and p.symbole not in self._flux:raise ErreurOrchestration('réception étrangère')
         return True
@@ -216,7 +466,8 @@ class MoteurDecision:
             calculs=[]
             for n,b in self.bras.items():
                 b.calculs.terminer_rejeu();calculs.append((n,b.calculs.drainer()))
-            self._entrees.append(EntreeJournalisee(e,tuple(calculs)));self._instant=t
+            j=EntreeJournalisee(e,tuple(calculs))
+            self._entrees.append(j);self._empreinte_entrees=_sceau((self._empreinte_entrees,j));self._instant=t
             return SortieEvenement(e.numero,t,tuple((n,SortieMoteur(tuple(lignes[n]),tuple(commandes[n]),lots.get(n))) for n in self.bras))
         except Exception:
             self._valide=False

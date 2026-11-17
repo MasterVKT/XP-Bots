@@ -1,0 +1,556 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "london-infrastructure",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": "Frontières physiques uniques, SDK injecté, sans appel réel dans les contrôles."
+  },
+  "langage": "python",
+  "sources": [
+    "src/xpbots/infra"
+  ],
+  "exclure": [
+    "src/xpbots/infra/squelette.py"
+  ],
+  "couches": [
+    {
+      "id": "0a",
+      "profondeur": 0,
+      "nom": "types",
+      "chemins": [
+        "src/xpbots/infra/c0a_types"
+      ],
+      "imports": [
+        "xpbots.infra.c0a_types"
+      ],
+      "contrats": [
+        "mcl/london-infrastructure/contrats/couche-0a.md",
+        "src/xpbots/infra/c0a_types/__init__.py",
+        "tests/robot/london_infrastructure/test_cat*_c0a_*.py"
+      ]
+    },
+    {
+      "id": "0b",
+      "profondeur": 0,
+      "nom": "horloge",
+      "chemins": [
+        "src/xpbots/infra/c0b_horloge"
+      ],
+      "imports": [
+        "xpbots.infra.c0b_horloge"
+      ],
+      "contrats": [
+        "mcl/london-infrastructure/contrats/couche-0b.md",
+        "src/xpbots/infra/c0b_horloge/__init__.py",
+        "tests/robot/london_infrastructure/test_cat*_c0b_*.py"
+      ]
+    },
+    {
+      "id": "0c",
+      "profondeur": 0,
+      "nom": "sqlite",
+      "chemins": [
+        "src/xpbots/infra/c0c_sqlite"
+      ],
+      "imports": [
+        "xpbots.infra.c0c_sqlite"
+      ],
+      "contrats": [
+        "mcl/london-infrastructure/contrats/couche-0c.md",
+        "src/xpbots/infra/c0c_sqlite/__init__.py",
+        "tests/robot/london_infrastructure/test_cat*_c0c_*.py"
+      ]
+    },
+    {
+      "id": "0d",
+      "profondeur": 0,
+      "nom": "journal",
+      "chemins": [
+        "src/xpbots/infra/c0d_journal"
+      ],
+      "imports": [
+        "xpbots.infra.c0d_journal"
+      ],
+      "contrats": [
+        "mcl/london-infrastructure/contrats/couche-0d.md",
+        "src/xpbots/infra/c0d_journal/__init__.py",
+        "tests/robot/london_infrastructure/test_cat*_c0d_*.py"
+      ]
+    },
+    {
+      "id": "0e",
+      "profondeur": 0,
+      "nom": "snapshot",
+      "chemins": [
+        "src/xpbots/infra/c0e_snapshot"
+      ],
+      "imports": [
+        "xpbots.infra.c0e_snapshot"
+      ],
+      "contrats": [
+        "mcl/london-infrastructure/contrats/couche-0e.md",
+        "src/xpbots/infra/c0e_snapshot/__init__.py",
+        "tests/robot/london_infrastructure/test_cat*_c0e_*.py"
+      ]
+    },
+    {
+      "id": "0f",
+      "profondeur": 0,
+      "nom": "ticks",
+      "chemins": [
+        "src/xpbots/infra/c0f_ticks"
+      ],
+      "imports": [
+        "xpbots.infra.c0f_ticks"
+      ],
+      "contrats": [
+        "mcl/london-infrastructure/contrats/couche-0f.md",
+        "src/xpbots/infra/c0f_ticks/__init__.py",
+        "tests/robot/london_infrastructure/test_cat*_c0f_*.py"
+      ]
+    },
+    {
+      "id": "0g",
+      "profondeur": 0,
+      "nom": "controles",
+      "chemins": [
+        "src/xpbots/infra/c0g_controles"
+      ],
+      "imports": [
+        "xpbots.infra.c0g_controles"
+      ],
+      "contrats": [
+        "mcl/london-infrastructure/contrats/couche-0g.md",
+        "src/xpbots/infra/c0g_controles/__init__.py",
+        "tests/robot/london_infrastructure/test_cat*_c0g_*.py"
+      ]
+    },
+    {
+      "id": "0h",
+      "profondeur": 0,
+      "nom": "verrou",
+      "chemins": [
+        "src/xpbots/infra/c0h_verrou"
+      ],
+      "imports": [
+        "xpbots.infra.c0h_verrou"
+      ],
+      "contrats": [
+        "mcl/london-infrastructure/contrats/couche-0h.md",
+        "src/xpbots/infra/c0h_verrou/__init__.py",
+        "tests/robot/london_infrastructure/test_cat*_c0h_*.py"
+      ]
+    },
+    {
+      "id": "1",
+      "profondeur": 1,
+      "nom": "session",
+      "chemins": [
+        "src/xpbots/infra/c1_session"
+      ],
+      "imports": [
+        "xpbots.infra.c1_session"
+      ],
+      "contrats": [
+        "mcl/london-infrastructure/contrats/couche-1.md",
+        "src/xpbots/infra/c1_session/__init__.py",
+        "tests/robot/london_infrastructure/test_cat*_c1_*.py"
+      ]
+    },
+    {
+      "id": "2a",
+      "profondeur": 2,
+      "nom": "specifications",
+      "chemins": [
+        "src/xpbots/infra/c2a_specifications"
+      ],
+      "imports": [
+        "xpbots.infra.c2a_specifications"
+      ],
+      "contrats": [
+        "mcl/london-infrastructure/contrats/couche-2a.md",
+        "src/xpbots/infra/c2a_specifications/__init__.py",
+        "tests/robot/london_infrastructure/test_cat*_c2a_*.py",
+        "tests/robot/outils/qualification_mt5.py"
+      ]
+    },
+    {
+      "id": "2b",
+      "profondeur": 2,
+      "nom": "flux",
+      "chemins": [
+        "src/xpbots/infra/c2b_flux"
+      ],
+      "imports": [
+        "xpbots.infra.c2b_flux"
+      ],
+      "contrats": [
+        "mcl/london-infrastructure/contrats/couche-2b.md",
+        "src/xpbots/infra/c2b_flux/__init__.py",
+        "tests/robot/london_infrastructure/test_cat*_c2b_*.py"
+      ]
+    },
+    {
+      "id": "2c",
+      "profondeur": 2,
+      "nom": "calculs",
+      "chemins": [
+        "src/xpbots/infra/c2c_calculs"
+      ],
+      "imports": [
+        "xpbots.infra.c2c_calculs"
+      ],
+      "contrats": [
+        "mcl/london-infrastructure/contrats/couche-2c.md",
+        "src/xpbots/infra/c2c_calculs/__init__.py",
+        "tests/robot/london_infrastructure/test_cat*_c2c_*.py"
+      ]
+    },
+    {
+      "id": "2d",
+      "profondeur": 2,
+      "nom": "execution_mt5",
+      "chemins": [
+        "src/xpbots/infra/c2d_execution_mt5"
+      ],
+      "imports": [
+        "xpbots.infra.c2d_execution_mt5"
+      ],
+      "contrats": [
+        "mcl/london-infrastructure/contrats/couche-2d.md",
+        "src/xpbots/infra/c2d_execution_mt5/__init__.py",
+        "tests/robot/london_infrastructure/test_cat*_c2d_*.py"
+      ]
+    },
+    {
+      "id": "3",
+      "profondeur": 3,
+      "nom": "courtier",
+      "chemins": [
+        "src/xpbots/infra/c3_courtier"
+      ],
+      "imports": [
+        "xpbots.infra.c3_courtier"
+      ],
+      "contrats": [
+        "mcl/london-infrastructure/contrats/couche-3.md",
+        "src/xpbots/infra/c3_courtier/__init__.py",
+        "tests/robot/london_infrastructure/test_cat*_c3_*.py"
+      ]
+    },
+    {
+      "id": "4",
+      "profondeur": 4,
+      "nom": "assemblage",
+      "chemins": [
+        "src/xpbots/infra/c4_assemblage"
+      ],
+      "imports": [
+        "xpbots.infra.c4_assemblage"
+      ],
+      "contrats": [
+        "mcl/london-infrastructure/contrats/couche-4.md",
+        "src/xpbots/infra/c4_assemblage/__init__.py",
+        "tests/robot/london_infrastructure/test_cat*_c4_*.py",
+        "mql5/Services/XPBotsExport.mq5",
+        "mql5/Services/XPBotsExport/*.mqh",
+        "tests/robot/fixtures/mql5_exports/*",
+        "requirements-windows.txt",
+        "tests/robot/outils/assemblage_mt5.py"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "types",
+      "responsabilite": "types",
+      "depend_de": [
+        "noyau",
+        "execution"
+      ],
+      "couche": "0a"
+    },
+    {
+      "id": "horloge",
+      "responsabilite": "horloge",
+      "depend_de": [
+        "temps-physique"
+      ],
+      "couche": "0b"
+    },
+    {
+      "id": "sqlite",
+      "responsabilite": "sqlite",
+      "depend_de": [
+        "base-physique",
+        "fichiers"
+      ],
+      "couche": "0c"
+    },
+    {
+      "id": "journal",
+      "responsabilite": "journal",
+      "depend_de": [
+        "fichiers",
+        "noyau"
+      ],
+      "couche": "0d"
+    },
+    {
+      "id": "snapshot",
+      "responsabilite": "snapshot",
+      "depend_de": [
+        "fichiers"
+      ],
+      "couche": "0e"
+    },
+    {
+      "id": "ticks",
+      "responsabilite": "ticks",
+      "depend_de": [
+        "fichiers"
+      ],
+      "couche": "0f"
+    },
+    {
+      "id": "controles",
+      "responsabilite": "controles",
+      "depend_de": [
+        "fichiers"
+      ],
+      "couche": "0g"
+    },
+    {
+      "id": "session",
+      "responsabilite": "session",
+      "depend_de": [
+        "types",
+        "fichiers"
+      ],
+      "couche": "1"
+    },
+    {
+      "id": "specifications",
+      "responsabilite": "specifications",
+      "depend_de": [
+        "session",
+        "types",
+        "noyau",
+        "execution"
+      ],
+      "couche": "2a"
+    },
+    {
+      "id": "flux",
+      "responsabilite": "flux",
+      "depend_de": [
+        "session",
+        "types",
+        "noyau"
+      ],
+      "couche": "2b"
+    },
+    {
+      "id": "calculs",
+      "responsabilite": "calculs",
+      "depend_de": [
+        "session",
+        "types",
+        "noyau",
+        "execution"
+      ],
+      "couche": "2c"
+    },
+    {
+      "id": "execution_mt5",
+      "responsabilite": "execution_mt5",
+      "depend_de": [
+        "session",
+        "types",
+        "noyau",
+        "execution",
+        "taches",
+        "horloge"
+      ],
+      "couche": "2d"
+    },
+    {
+      "id": "courtier",
+      "responsabilite": "courtier",
+      "depend_de": [
+        "specifications",
+        "flux",
+        "calculs",
+        "execution_mt5",
+        "noyau",
+        "execution",
+        "session",
+        "types",
+        "horloge"
+      ],
+      "couche": "3"
+    },
+    {
+      "id": "assemblage",
+      "responsabilite": "assemblage",
+      "depend_de": [
+        "horloge",
+        "sqlite",
+        "journal",
+        "snapshot",
+        "ticks",
+        "controles",
+        "courtier",
+        "session",
+        "types",
+        "sdk",
+        "fichiers",
+        "verrou",
+        "noyau"
+      ],
+      "couche": "4"
+    },
+    {
+      "id": "verrou",
+      "responsabilite": "Exclure un second processus par un verrou systeme, sans decision de compte.",
+      "depend_de": [
+        "fichiers",
+        "verrou-systeme"
+      ],
+      "couche": "0h"
+    }
+  ],
+  "externes": [
+    {
+      "id": "noyau",
+      "imports": [
+        "xpbots.noyau.c0a_temps",
+        "xpbots.noyau.c0c_configuration",
+        "xpbots.noyau.c1a_marche",
+        "xpbots.noyau.c1b_instrument",
+        "xpbots.noyau.c1c_domaine",
+        "xpbots.noyau.c2_journal"
+      ],
+      "couches_autorisees": [
+        "0a",
+        "0d",
+        "2a",
+        "2b",
+        "2c",
+        "2d",
+        "3",
+        "4"
+      ]
+    },
+    {
+      "id": "execution",
+      "imports": [
+        "xpbots.execution"
+      ],
+      "couches_autorisees": [
+        "0a",
+        "2a",
+        "2c",
+        "2d",
+        "3"
+      ]
+    },
+    {
+      "id": "temps-physique",
+      "imports": [
+        "time"
+      ],
+      "couches_autorisees": [
+        "0b"
+      ]
+    },
+    {
+      "id": "base-physique",
+      "imports": [
+        "sqlite3"
+      ],
+      "couches_autorisees": [
+        "0c"
+      ]
+    },
+    {
+      "id": "fichiers",
+      "imports": [
+        "pathlib",
+        "os",
+        "io",
+        "gzip",
+        "csv"
+      ],
+      "couches_autorisees": [
+        "0c",
+        "0d",
+        "0e",
+        "0f",
+        "0g",
+        "1",
+        "4",
+        "0h"
+      ]
+    },
+    {
+      "id": "taches",
+      "imports": [
+        "threading",
+        "queue",
+        "concurrent"
+      ],
+      "couches_autorisees": [
+        "2d"
+      ]
+    },
+    {
+      "id": "sdk",
+      "imports": [
+        "MetaTrader5"
+      ],
+      "couches_autorisees": [
+        "4"
+      ]
+    },
+    {
+      "id": "interdits",
+      "imports": [
+        "xpbots.app",
+        "xpbots.donnees",
+        "xpbots.donnees_temps",
+        "xpbots.london",
+        "xpbots.moteur_ema",
+        "xpbots.rejeu",
+        "xpbots.orchestration",
+        "xpbots.service_ia",
+        "reference",
+        "socket",
+        "http",
+        "urllib",
+        "subprocess"
+      ],
+      "couches_autorisees": []
+    },
+    {
+      "id": "verrou-systeme",
+      "imports": [
+        "msvcrt",
+        "fcntl"
+      ],
+      "couches_autorisees": [
+        "0h"
+      ]
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "strict",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}

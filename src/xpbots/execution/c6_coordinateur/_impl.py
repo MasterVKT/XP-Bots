@@ -15,7 +15,7 @@ from xpbots.execution.c1c_reservations import RegistreReservations
 from xpbots.execution.c2a_risque import verifier_profil
 from xpbots.execution.c2b_arbitrage import candidats_admission
 from xpbots.execution.c3_dimensionnement import PlanDimensionnement, dimensionner, revalider_avant_envoi
-from xpbots.execution.c4_cycle import (CycleOrdre, CommandeExecution, NatureCommande, ReponseCourtier,
+from xpbots.execution.c4_cycle import (CycleOrdre, EtatCycle, CommandeExecution, NatureCommande, ReponseCourtier,
     NatureReponse, PreuvePersistance, TraceCycle)
 from xpbots.execution.c5a_sorties import evaluer_sorties
 from xpbots.execution.c5b_reprise import CyclePersiste, EtatReprise, ObservationNative, restaurer, rapprocher
@@ -154,9 +154,12 @@ class CoordinateurCompte:
         if any(v.etat.cle.deploiement!=deploiement for v in sauvegarde.reprise.cycles) or any(v.cle.deploiement!=deploiement for v in sauvegarde.intentions):
             raise ErreurExecution('état d’un autre déploiement')
         dossiers={d.cle:d for d in sauvegarde.intentions}
-        if any(v.etat.cle not in dossiers or dossiers[v.etat.cle].signal!=v.signal or dossiers[v.etat.cle].statut!=v.etat.statut
-               for v in sauvegarde.reprise.cycles):
-            raise ErreurExecution('cycle sans intention concordante')
+        for v in sauvegarde.reprise.cycles:
+            d=dossiers.get(v.etat.cle)
+            attente_prix=(d is not None and d.statut is EtatIntention.EN_ATTENTE_COTATION and d.issue is None
+                and CycleOrdre(self._p,v.signal,v.plan,v.profil,self._longueur,v.etat).refus_reessayable_ms is not None)
+            if d is None or d.signal!=v.signal or d.statut!=v.etat.statut and not attente_prix:
+                raise ErreurExecution('cycle sans intention concordante')
         self._intentions={d.cle:d for d in sauvegarde.intentions}
         self._preparations={}
         self._transmises=set(sauvegarde.transmises)
@@ -216,9 +219,12 @@ class CoordinateurCompte:
     def _actualiser_dossier(self,k,issue=None):
         d=self._intentions.get(k)
         if d is not None:
-            self._intentions[k]=replace(d,statut=self._cycles[k].etat.statut,issue=issue or d.issue)
+            finale=issue or d.issue
+            c=self._cycles[k]
+            statut=EtatIntention.EN_ATTENTE_COTATION if finale is None and c.refus_reessayable_ms is not None else c.etat.statut
+            self._intentions[k]=replace(d,statut=statut,issue=finale)
 
-    def _accumuler(self,k,effets,commandes,issues,traces):
+    def _accumuler(self,k,effets,commandes,issues,traces,*,ancien_inconnu=False):
         for c in effets.commandes:
             if c.nature is NatureCommande.ENTREE: self._preparations[c.reference]=c
             else: commandes.append(c)
@@ -228,6 +234,13 @@ class CoordinateurCompte:
             self._actualiser_dossier(k,i)
         self._actualiser_dossier(k)
         e=self._cycles[k].etat
+        if self._cycles[k].refus_reessayable_ms is not None and any(r.cle==k for r in self._registre.etat.reservations):
+            sous_jacent=self._fiches[k].profil.sous_jacent
+            if ancien_inconnu and not any(j!=k and c.etat.inconnu_ms is not None
+                    and self._fiches[j].profil.sous_jacent==sous_jacent for j,c in self._cycles.items()):
+                self._registre.deverrouiller(sous_jacent)
+            refus=self._registre.annuler_tentative(k,self._registre.etat.version)
+            if isinstance(refus,RefusExecution): self._refus_reprise=refus
         if e.inconnu_ms is not None: self._registre.verrouiller(self._fiches[k].profil.sous_jacent)
         if e.accuse_recu:
             self._transmises.update(ref for ref,c in self._preparations.items() if c.cle==k)
@@ -366,14 +379,29 @@ class CoordinateurCompte:
                 continue
             if 'execution_ms' in r.donnees and r.donnees['execution_ms']<c.etat.envoi_ms:
                 raise ErreurExecution('exécution antérieure à cet envoi')
-            self._accumuler(r.cle,c.sur_reponse(replace(r,instant_ms=instant_ms),self._cotations.get(r.cle.symbole)),commandes,issues,traces)
+            ancien_inconnu=c.etat.inconnu_ms is not None
+            self._accumuler(r.cle,c.sur_reponse(replace(r,instant_ms=instant_ms),self._cotations.get(r.cle.symbole)),
+                commandes,issues,traces,ancien_inconnu=ancien_inconnu)
         if observation is not None: self._appliquer_observation(observation,base_utc,commandes,issues,traces)
         else: self._rafraichir_compte(base_utc)
         for ref,preparation in tuple(self._preparations.items()):
             if instant_ms>=preparation.donnees['expire_ms']:
                 d=self._intentions[preparation.cle]
                 self._refuser(d.cle,RefusExecution(Motif.SIGNAL_EXPIRED,d.derniere_cause or 'COTATION_INVALIDE'),issues,expire=True)
-        sortie=evaluer_sorties(tuple(self._cycles.values()),self._technique,self._profils,self._gardes,self._fondamental,instant_ms)
+        profils_sorties=dict(self._profils)
+        for symbole in sorted({c.etat.cle.symbole for c in self._cycles.values() if c.etat.volume_ouvert}):
+            profil=appeler_calcul(self._port,'specifications',symbole)
+            ancien=self._profils.get(symbole)
+            if (isinstance(profil,RefusExecution) or verifier_profil(profil,self._p) is not None
+                    or ancien is None or profil.releve_ms>instant_ms
+                    or (profil.symbole,profil.symbole_courtier,profil.sous_jacent,profil.tick_size)!=
+                       (ancien.symbole,ancien.symbole_courtier,ancien.sous_jacent,ancien.tick_size)):
+                # Le vrai planificateur 5a traite l’horaire inconnu en protection.
+                # Le dernier profil connu sert seulement à tenter la sortie possédée.
+                profils_sorties[symbole]=None
+            else:
+                self._profils[symbole]=profil;profils_sorties[symbole]=profil
+        sortie=evaluer_sorties(tuple(self._cycles.values()),self._technique,profils_sorties,self._gardes,self._fondamental,instant_ms)
         self._echeance_sortie=sortie.prochaine_echeance_ms
         self._refus_sorties=sortie.refus
         for demande in sortie.demandes:
@@ -411,6 +439,9 @@ class CoordinateurCompte:
                 refus=self._refus_avant_prix(s)
                 if refus is not None: self._refuser(k,refus,issues); continue
                 if k not in nouveaux_signaux and s.symbole not in nouveaux: continue
+                precedent=self._cycles.get(k)
+                refus_ms=precedent.refus_reessayable_ms if precedent is not None else None
+                if refus_ms is not None and (q is None or q.instant_reception_ms<=refus_ms): continue
                 v=evaluer_cotation(s,q,instant_ms,self._p,d.derniere_cause)
                 essai=TentativeCotation(instant_ms,v.derniere_cause,*(
                     (q.bid,q.ask,q.instant_fournisseur_ms,q.instant_reception_ms) if q is not None else (None,None,None,None)))
@@ -424,7 +455,10 @@ class CoordinateurCompte:
                 if not isinstance(plan,PlanDimensionnement): self._refuser(k,plan,issues); continue
                 reserve=self._registre.reserver(plan.reservation,self._compte,plan.version_reservations)
                 if isinstance(reserve,RefusExecution): self._refuser(k,reserve,issues); continue
-                c=CycleOrdre(self._p,s,plan,profil,self._longueur)
+                nouvel_etat=None if precedent is None else EtatCycle(k,dernier_ms=instant_ms,
+                    numero_commande=precedent.etat.numero_commande,numero_entree=precedent.etat.numero_entree,
+                    reponses_recues=precedent.etat.reponses_recues)
+                c=CycleOrdre(self._p,s,plan,profil,self._longueur,nouvel_etat)
                 self._cycles[k]=c; self._fiches[k]=CyclePersiste(s,plan,profil,c.etat)
                 self._accumuler(k,c.preparer_envoi(instant_ms),commandes,issues,traces)
         return self._lot(commandes,issues,traces)

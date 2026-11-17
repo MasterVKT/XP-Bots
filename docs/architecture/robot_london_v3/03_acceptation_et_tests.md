@@ -102,7 +102,7 @@ python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossie
 | C11.10 | Signaux simultanés de deux robots : réservations atomiques, priorité, symbole unique, pas de fusion | `execution-coordinateur` 2b, 6 ; `orchestration` 2 | 1, 2 | Signaux construits avec les vrais types des deux noyaux ; adaptation EMA explicite et même registre de compte en phase 5 ; les deux moteurs purs existent |
 | C11.11 | Remplissage partiel, accusé ambigu, redémarrage après envoi, position préexistante inconnue, échec de protection : aucun doublon | `execution-coordinateur` 4, 5b, 6 ; `infrastructure` 2d | 1, 2, contrat | Chaque scénario du courtier scénarisé, puis sur compte démo en sous-étape 13.2 |
 | C11.12 | Gap au stop, SL et TP à la même milliseconde avec séquence connue, flux absent à l'heure de sortie : résultat causal | `journal-rejeu` 1b ; `execution-coordinateur` 5a | 1, 2 | Exécution au premier prix disponible après le gap ; aucune exécution reconstruite à un prix disparu |
-| C11.13 | Arrêts quotidien et global et durée maximale sur fonds propres, frais et flottant compris ; un redémarrage ne réinitialise pas l'arrêt | `execution-coordinateur` 1b, 5a, 5b ; `points-entree` 1a | 1, 2 | Seuils exactement atteints ; arrêt persistant après redémarrage |
+| C11.13 | Arrêts quotidien et global et durée maximale sur fonds propres, frais et flottant compris ; un redémarrage ne réinitialise pas l'arrêt | `execution-coordinateur` 1b, 5a, 5b ; `points-entree` 1b, 2 | 1, 2 | Seuils exactement atteints ; arrêt persistant après redémarrage |
 | C11.14 | Égalité des décisions entre moteur de référence et robot de plateforme | `orchestration` 2 ; `points-entree` ; phase 13.2 | 2, contrat | Rejeu du journal d'entrées d'une séance PAPER ou DEMO : commandes et enregistrements identiques |
 
 ### 5.2 S02.6 — cas London
@@ -122,7 +122,7 @@ python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossie
 
 | Cas | Énoncé abrégé | Artefact et couche | Cat. |
 |---|---|---|---|
-| A14-1 | Un appel API de 20 s ne bloque ni le TTL, ni les protections, ni les sorties | Cœur sans réseau (cartes) ; `orchestration` 2 ; `points-entree` 1a (service lent simulé) | 2 |
+| A14-1 | Un appel API de 20 s ne bloque ni le TTL, ni les protections, ni les sorties | Cœur sans réseau (cartes) ; `orchestration` 2 ; `points-entree` 2 (service lent simulé) | 2 |
 | A14-2 | Une réponse arrivée après une bougie ne change pas la décision prise avant | `contexte-ia` 3 ; `orchestration` 2 | 1, 2 |
 | A14-3 | Une décision conditionnelle ou historique n'est pas une décision actuelle | `service-ia` 1b | 1 |
 | A14-4 | Citation inventée, `item_id` étranger, clés en trop, doublons JSON, mauvais enums, sortie tronquée : aucun veto | `service-ia` 0c (oracle `parse_model_output`) | 1 |
@@ -137,7 +137,7 @@ python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossie
 | A14-13 | Une requête de coût inconnu conserve sa réserve ; un projet Gemini payant n'est pas appelé comme gratuit | `service-ia` 1c, 2b | 1 |
 | A14-14 | Plafonds de tentatives, de tokens, d'API payante et global testés aux bornes | `service-ia` 1c, 2b (valeurs lues dans la configuration IA) | 1 |
 | A14-15 | Aucun modèle local, appel d'outil, ordre, changement de taille ou appel facturé hors liste autorisée | `service-ia` 1d ; cartes (imports interdits) | 1 |
-| A14-16 | Snapshot incomplet, corrompu, futur ou en recul refusé ; reprise sans réinférence | `contexte-ia` 1, 2 ; `service-ia` 2c ; `points-entree` 1a | 1, 2 |
+| A14-16 | Snapshot incomplet, corrompu, futur ou en recul refusé ; reprise sans réinférence | `contexte-ia` 1, 2 ; `service-ia` 2c ; `points-entree` 1b, 2 | 1, 2 |
 | A14-17 | Les comptes A/B évoluent séparément à 100 USD ; performances et coûts rapprochés | `orchestration` 2 ; `journal-rejeu` 2, 3 | 2 |
 | A14-18 | Une précision JSON de 100 % n'est jamais présentée comme un taux de réussite de trades | `journal-rejeu` 3 | 1 |
 

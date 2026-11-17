@@ -123,7 +123,9 @@
         "mcl/london-execution-coordinateur/contrats/couche-1b.md",
         "src/xpbots/execution/c1b_gardes/__init__.py",
         "tests/robot/london_execution_coordinateur/test_cat1_c1b_gardes_compte.py",
-        "tests/robot/london_execution_coordinateur/test_cat2_c1b_gardes_compte.py"
+        "tests/robot/london_execution_coordinateur/test_cat2_c1b_gardes_compte.py",
+        "tests/robot/london_execution_coordinateur/test_cat1_c1b_flux_courants.py",
+        "tests/robot/london_execution_coordinateur/test_cat2_c1b_flux_courants.py"
       ]
     },
     {
@@ -140,7 +142,9 @@
         "mcl/london-execution-coordinateur/contrats/couche-1c.md",
         "src/xpbots/execution/c1c_reservations/__init__.py",
         "tests/robot/london_execution_coordinateur/test_cat1_c1c_registre_reservations.py",
-        "tests/robot/london_execution_coordinateur/test_cat2_c1c_registre_reservations.py"
+        "tests/robot/london_execution_coordinateur/test_cat2_c1c_registre_reservations.py",
+        "tests/robot/london_execution_coordinateur/test_cat1_c1c_tentative.py",
+        "tests/robot/london_execution_coordinateur/test_cat2_c1c_tentative.py"
       ]
     },
     {
@@ -208,7 +212,8 @@
         "mcl/london-execution-coordinateur/contrats/couche-4.md",
         "src/xpbots/execution/c4_cycle/__init__.py",
         "tests/robot/london_execution_coordinateur/test_cat1_c4_cycle_ordre.py",
-        "tests/robot/london_execution_coordinateur/test_cat2_c4_cycle_ordre.py"
+        "tests/robot/london_execution_coordinateur/test_cat2_c4_cycle_ordre.py",
+        "tests/robot/london_execution_coordinateur/test_cat1_c4_refus_prix.py"
       ]
     },
     {
@@ -259,7 +264,10 @@
         "mcl/london-execution-coordinateur/contrats/couche-6.md",
         "src/xpbots/execution/c6_coordinateur/__init__.py",
         "tests/robot/london_execution_coordinateur/test_cat1_c6_coordinateur.py",
-        "tests/robot/london_execution_coordinateur/test_cat2_c6_coordinateur.py"
+        "tests/robot/london_execution_coordinateur/test_cat2_c6_coordinateur.py",
+        "tests/robot/london_execution_coordinateur/test_cat1_c6_horaires_courants.py",
+        "tests/robot/london_execution_coordinateur/test_cat2_c6_horaires_courants.py",
+        "tests/robot/london_execution_coordinateur/test_cat2_c6_refus_prix.py"
       ]
     }
   ],

@@ -7,14 +7,15 @@ from typing import Mapping
 from xpbots.noyau.c0a_temps import instant_vers_datetime
 from xpbots.noyau.c0c_configuration import ConfigurationFigee
 from xpbots.noyau.c1a_marche import Tick
-from xpbots.noyau.c1b_instrument import Intervalle,ProfilCompte
+from xpbots.noyau.c1b_instrument import (Intervalle,ProfilCompte,ProfilInstrument,
+    construire_profil_instrument,CHAMPS_INSTRUMENT,ErreurInstrument)
 from xpbots.noyau.c1c_domaine import CauseCloture,Sens
 from xpbots.execution.c0a_types import EtatCompte,PositionCompte,ControleNatif
 from xpbots.execution.c1b_gardes import MouvementCompte,reconstituer_base_utc
 from xpbots.execution.c4_cycle import (CommandeExecution,NatureCommande,ReponseCourtier,
     NatureReponse,StatutAccuse,PreuveAbsence)
 from xpbots.execution.c5b_reprise import ObservationNative,PositionNative,OrdreNatif
-from xpbots.rejeu.c0a_types import (ErreurRejeu,ConditionContrat,PointCompte,Trade,instant,
+from xpbots.rejeu.c0a_types import (ErreurRejeu,ConditionContrat,TarifCommission,PointCompte,Trade,instant,
     entier,montant)
 from xpbots.rejeu.c0b_protocole import ScenarioExecution
 
@@ -93,7 +94,8 @@ class SimulateurExecution:
         devise=configuration.technique.commun.account_currency
         for c in sorted(conditions,key=lambda c:(c.profil.symbole,c.debut_ms)):
             p=c.profil
-            if p.devise_cotation!=devise or p.devise_marge!=devise or p.devise_frais!=devise:
+            marge_base_forex=p.mode_calcul=='FOREX' and p.devise_marge==p.devise_base
+            if p.devise_cotation!=devise or (p.devise_marge!=devise and not marge_base_forex) or p.devise_frais!=devise:
                 raise ErreurRejeu('modèle de calcul réservé aux contrats cotés dans la devise du compte')
             serie=self._conditions.setdefault(p.symbole,[])
             if serie and (serie[-1].fin_ms>c.debut_ms or serie[-1].profil.symbole_courtier!=p.symbole_courtier
@@ -157,6 +159,25 @@ class SimulateurExecution:
         self.instant_ms=t
 
     def specifications(self,symbole):return self._condition(symbole).profil
+
+    def actualiser_profil(self,profil,tarif,instant_ms):
+        instant(instant_ms)
+        if instant_ms!=self.instant_ms or not isinstance(profil,ProfilInstrument) or not isinstance(tarif,TarifCommission):
+            raise ErreurRejeu('profil courant et tarif types requis a l instant du livre')
+        resultat=construire_profil_instrument({n:getattr(profil,n) for n in CHAMPS_INSTRUMENT},
+                                             self.configuration.technique.commun)
+        if resultat.profil is None or profil.releve_ms>instant_ms:
+            raise ErreurRejeu('profil courant non qualifie ou futur')
+        try:profil.horaires.ouvert_a(instant_ms)
+        except ErreurInstrument as erreur:raise ErreurRejeu('horaires courants non qualifies') from erreur
+        ancienne=self._condition(profil.symbole)
+        stables=('symbole','symbole_courtier','sous_jacent','devise_base','devise_cotation',
+                 'devise_marge','devise_frais','mode_calcul','taille_contrat','tick_size','point')
+        if any(getattr(profil,n)!=getattr(ancienne.profil,n) for n in stables):
+            raise ErreurRejeu('liaison ou geometrie economique modifiee')
+        nouvelle=replace(ancienne,connu_ms=instant_ms,profil=profil,tarif=tarif)
+        serie=self._conditions[profil.symbole]
+        serie[serie.index(ancienne)]=nouvelle
 
     def profit(self,profil,sens,volume,entree,sortie):
         with localcontext(Context(prec=48)):

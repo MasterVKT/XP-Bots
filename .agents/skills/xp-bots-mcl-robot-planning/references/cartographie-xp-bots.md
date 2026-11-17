@@ -150,3 +150,17 @@ sert au rejeu et à la plateforme.
 - Régression intégrale : toute la suite du robot, puis `python tools/verify_project.py`.
 - Commande : `python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossier mcl/<artefact> gate --couche <id> --unitaire "<cat. 1>" --integration "<cat. 2>" --regression "<suite intégrale>"`,
   puis `figer --couche <id>` sans rien modifier entre les deux.
+
+
+## Disponibilité vérifiée après construction de l’infrastructure London
+
+Les tables candidates ci-dessus restent des hypothèses de conception. Depuis
+la phase 11 London, consulter les cartes actives `mcl/london-infrastructure/`
+(quinze unités) et `mcl/points-entree/` (neuf unités), ainsi que la couche codec 3
+ajoutée à `mcl/orchestration/`. Les livres utilisent le même simulateur C10 ;
+SQLite, journaux, contrôles de fichiers et verrou ont leurs implémentations
+réelles. Le direct London et le rejeu d’incident partagent leur composition.
+Les anciennes esquisses EMA restent historiques et son intégration de plateforme
+n’est pas déclarée achevée. La confrontation au terminal, la compilation MQL5
+et les quatorze contrats physiques différés se font en 13.1. Le service IA est
+une phase distincte qui ne commence que sur demande.

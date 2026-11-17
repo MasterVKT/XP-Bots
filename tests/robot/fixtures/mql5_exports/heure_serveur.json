@@ -1,0 +1,16 @@
+{
+  "schema": "xp-heure-serveur-v1",
+  "serveur": "SERVEUR_FIXTURE",
+  "version": 1,
+  "date_releve": "2026-11-10T08:59:59.000Z",
+  "mesures": [
+    "FIXTURE_S01_SYNTHETIQUE_SANS_QUALIFICATION_REELLE"
+  ],
+  "segments": [
+    {
+      "debut_utc": "2026-11-01T00:00:00.000Z",
+      "fin_utc": "2026-12-01T00:00:00.000Z",
+      "decalage_secondes": 3600
+    }
+  ]
+}

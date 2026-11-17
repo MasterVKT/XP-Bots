@@ -49,7 +49,7 @@ La clé est réelle, la référence non vide, l'instant UTC entier et la corresp
 | CLOTURE | `ticket`, `volume_restant`, `prix`, `execution_ms`, `frais_sortie`, `cause` |
 | ANNULATION | `ordre`, `confirmee` |
 
-L'exécution ne peut être postérieure à la réception. Volume cumulé d'entrée et volume encore ouvert sont distincts. Une exécution positive tardive fait foi. Les réponses identiques sont idempotentes ; aucune ne recrée ordre ou quota. Tout refus natif confirmé consomme le signal, sans renvoi automatique.
+L'exécution ne peut être postérieure à la réception. Volume cumulé d'entrée et volume encore ouvert sont distincts. Une exécution positive tardive fait foi. Les réponses identiques sont idempotentes ; aucune ne recrée ordre ou quota. Tout refus natif définitif consomme le signal, sans renvoi automatique. Les refus de prix non permanents suivent la correction C06/C08 ci-dessous.
 
 ## État persistant pur
 
@@ -82,3 +82,41 @@ Partiel : annuler tout reliquat non déjà confirmé annulé, jamais compléter.
 Catégorie 1 : cycle minimal vivant, refus, partiel, inconnu/rapprochement, protections, réduction ; bornes exactes, idempotence, état mal formé, D-08 et paramètres modifiés. Contrôle catégorie 1 après chaque transition ajoutée, puis catégorie 2 et régression intégrale avant gel.
 
 Catégorie 2 : vrais types, prix, réservations, gardes et dimensionnement ; seules réponses et fonctions du courtier sont scénarisées. Issues appliquées au vrai moteur London pour L-12 ; aucune doublure d'une couche interne.
+
+
+## Modification tracée du 10/11/2026 — classification native
+
+Finalisé le 10/11/2026 avant code, après l’extension du registre 1c.
+Erreur constatée : la phrase « tout refus confirmé consomme » était plus large
+que C06/C08 ; la remplacer par « tout refus définitif consomme ».
+
+Propriété additive refus_reessayable_ms -> int|None. Pour l’entrée courante :
+ACK REFUSE, definitif=False, code TRADE_RETCODE_REQUOTE/PRICE_CHANGED/PRICE_OFF/
+TOO_MANY_REQUESTS, volume_cumule=0. La tentative devient REFUSEE sans Issue finale.
+La propriété donne la réception de ce refus ; elle n’avance pas aux minuteries.
+C6 est le seul consommateur qui peut préparer une nouvelle tentative complète,
+sur une nouvelle cotation avant TTL. Aucun renvoi automatique depuis le cycle.
+Un indicateur non définitif avec code inconnu, ou une classification contradictoire,
+est INCONNU : rapprochement et verrou, aucune nouvelle tentative.
+
+Refus permanents explicitement classés : INVALID_VOLUME/LIMIT_VOLUME ->
+MIN_VOLUME_OR_RISK_REJECT ; NO_MONEY -> MARGIN_REJECT/CONTROLE_NATIF ;
+INVALID_STOPS -> PROTECTION_ERROR/CONTRAINTE_NATIVE_AVANT_ORDRE ; LIMIT_POSITIONS/
+LIMIT_ORDERS -> ACCOUNT_RISK_CAP/NOMBRE_POSITIONS ; droits/calendrier/remplissage
+refusés -> ENVIRONMENT_NOT_READY/REFUS_COURTIER. Les anciens codes synthétiques
+définitifs non natifs gardent le refus générique. Les erreurs/retcodes inconnus
+du SDK sont toujours classés INCONNU par l’adaptateur physique.
+
+EtatCycle ajoute numero_entree:int=0 à la fin, entier naturel <= numero_commande.
+preparer_envoi mémorise le numéro courant ENTREE avant la minuterie ; les
+compteurs et réponses reçues se conservent entre tentatives. Un état legacy
+envoyé sans ce champ désigne uniquement l’entrée historique 1. Un ACK d’entrée
+doit nommer l’entrée courante ou une entrée ancienne déjà attestée par un ACK
+conservé, jamais un numéro de TP/minuterie. La répétition d’un refus ancien est
+sans effet sur la tentative courante ; un ACK ancien contradictoire impose un
+rapprochement inconnu. Les fills positifs tardifs continuent à faire foi.
+
+Les inconnus, protections, annulations et clôtures gardent leurs garanties.
+La durée du TTL, le timeout, budgets, risque, frais et quota ne changent pas.
+Ce changement de contrat erroné est tracé comme modification ; 5a/5b gardent
+leurs interfaces, sont contrôlés par la régression intégrale et par la jonction 6.

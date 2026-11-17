@@ -1,6 +1,6 @@
 # Contrat de couche 6 — coordinateur de compte
 
-Statut : finalisé le 07/11/2026 avant construction ; toutes les dépendances sont figées.
+Statut : finalisé le 07/11/2026 ; corrigé le 10/11/2026 par défigeage correction pour les horaires courants C04/C08 ; dépendances figées.
 Unité : coordinateur ; consommateurs : couture S4, orchestration et infrastructure futures.
 Responsabilité : ordonner C08 sur un compte unique partagé par les deux méthodes, préserver intention, ressources et causalité, préparer puis autoriser une seule entrée protégée.
 Signature : `TentativeCotation(instant_ms, cause, bid=None, ask=None, fournisseur_ms=None, reception_ms=None)` ; `DossierIntention(cle, signal, statut=EN_ATTENTE_COTATION, derniere_cause=None, tentatives=(), issue=None)` ; `EtatCoordinateur(reprise=EtatReprise(), intentions=(), preparations=(), transmises=(), revision=0, dernier_ms=0, demarrage_valide=False, exclusivites=())` ; `LotCoordinateur(etat, commandes=(), issues=(), traces=(), compte=None)` avec propriété `preparations` ; `CoordinateurCompte(technique, deploiement, profils, profil_compte, port, fondamental, instant_ms, *, longueur_empreinte, contexte=None, mode=None, etat=None, observation=None, base_utc=None)`.
@@ -36,3 +36,65 @@ Le compte lu par le port appartient au même instant logique que l'événement ;
 `prochaine_echeance_ms` est le minimum des TTL en attente, minuteries 4, échéances 5a et, pour les positions ouvertes, cadence de surveillance chargée `exit_retry_interval_seconds`. Aucun réveil n'invente de cotation. Les dossiers permettent à l'enveloppe C09 de journaliser les intentions et tentatives avec `issue=None` avant une vraie issue ; seul un premier volume positif produit `REMPLIE` et consomme le quota.
 
 Tests catégorie 1 : preuve de persistance, relecture finale, P-08/L-18/L-19, idempotence, C05/IA, profil et compte, gardes, arbitrage L-17 et états mal formés. Catégorie 2 : bloc réel 0–6, compte London/EMA, ordres protégés, réponses natives avant sorties, reprise et réservations ; seules frontières sont scénarisées. Couture S4/S5 après gel.
+
+## Horaires courants des positions ouvertes (correction de phase 11)
+
+Contrat finalisé le 10/11/2026 avant correction, amonts 0..5 figés.
+Avant evaluer_sorties, relire specifications une fois par symbole possédé avec
+volume ouvert. Accepter seulement ProfilInstrument valide, mêmes symbole,
+symbole_courtier, sous_jacent et tick_size, releve_ms <= instant de l’événement.
+Appliquer les horaires courants à la table de profils du coordinateur ; aucune
+nouvelle règle ni heure de sortie. Les appels passent par le port public déjà
+journalisé, sans SDK dans le coordinateur.
+
+Si le profil est absent, invalide, futur ou étranger, la vue de profils remise
+au vrai evaluer_sorties marque ce symbole inconnu : son comportement existant
+produit PROTECTION/ENVIRONMENT_NOT_READY. Le dernier profil connu reste seulement
+disponible pour tenter la clôture de la position possédée avec une cotation fraîche.
+Il ne permet aucune admission et ne remplace pas le relevé natif de protection.
+Ainsi, aucune information future ni aucun horaire périmé ne retarde silencieusement
+la sortie obligatoire. Les sorties et protections restent indépendantes du stockage.
+
+Tests propres additionnels : borne nouvelle de fermeture et garde CF exacte,
+profil futur/absent/étranger, absence de relecture superflue sans position ;
+jonction réelle de 0 à 6 sur position London remplie. Contrats existants inchangés
+hors clarification de cette garantie requise par C04/C08. Défigeage correction tracé.
+
+
+## Modification tracée du 10/11/2026 — nouvelle tentative de prix
+
+Finalisé le 10/11/2026 avant code, après gel des contrats 1c et 4 modifiés.
+Consommer CycleOrdre.refus_reessayable_ms, sans relire de champs privés.
+Une tentative terminale REFUSEE de prix, sans fill et sans Issue finale, garde
+son DossierIntention EN_ATTENTE_COTATION ; cette discordance précise est admise
+à la validation de reprise, seulement si le cycle public prouve le refus de prix.
+
+Retirer la réserve non remplie via annuler_tentative. Un verrou créé seulement
+par cette même entrée auparavant inconnue peut être levé quand ce refus devient
+concluant et qu’aucun autre cycle ambigu du même sous-jacent ne le justifie.
+Ni None, timeout, connexion, code inconnu, fill ni simple historique vide ne
+sont un refus concluant. Aucune Issue finale, aucun quota, aucun signal recomposé.
+
+Attendre une nouvelle cotation du symbole reçue après refus_reessayable_ms.
+Minuterie seule, vieille cotation ou même réception ne re-préparent rien.
+La borne TTL initiale reste exclusive. Tous les contrôles C05/IA/prix/stop/volume/
+risque/marge et ressources sont ceux du chemin normal existant, sans raccourci.
+Plan et budget de la nouvelle tentative sont calculés sur l’instantané courant.
+Créer un CycleOrdre RESERVEE de ce plan en gardant numero_commande,
+numero_entree et reponses_recues de la tentative précédente. La préparation
+produit donc une nouvelle référence unique, pas une retransmission du refus.
+L’entrée demeure dans lot.preparations jusqu’à la nouvelle transaction et à
+une PreuvePersistance exacte de sa révision et de sa nouvelle référence.
+
+À TTL : expiration SIGNAL_EXPIRED sans quota ; refus définitif ou garde courante
+consomme l’intention. Une reprise abandonne l’attente selon C08 et ne doit jamais
+la ressusciter via _appliquer_observation/_actualiser_dossier. Une ancienne
+réponse répétée ne termine pas une nouvelle tentative et ne libère pas sa réserve.
+L’exécution et le premier fill consomment toujours une seule entrée par clé.
+
+Le transport natif devra dédupliquer chaque référence pour toujours et n’admettre
+qu’une référence en cours par intention ; une nouvelle référence issue du vrai
+coordinateur est possible seulement après le refus de prix non permanent connu.
+Ne pas verrouiller définitivement toute la clé après un refus explicite sans fill,
+ni la déverrouiller après un timeout. Cet ajustement du contrat de 6 est tracé
+comme modification pour corriger l’ancien contrat plus large que C06/C08.

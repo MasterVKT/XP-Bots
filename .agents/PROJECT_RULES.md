@@ -19,8 +19,10 @@ sources métier sans les remplacer. Une skill ne recopie pas ces règles : elle 
 | [Preuves conservées](../docs/validation/README.md) | Empreintes, provenance, diagnostics datés | Historique intouchable ; nouveaux rapports dans `.local/reports/` |
 | [Références de contexte](../docs/references/README.md) | Textes historiques | Jamais des instructions normatives |
 
-Le dépôt contient des spécifications, des exports et des fonctions de référence. Les robots de plateforme,
-l'adaptateur courtier, le service HTTP LLM et l'analyse fondamentale externe restent à implémenter. Pour le
+Le dépôt contient les spécifications, exports, fonctions de référence et composants construits décrits
+ci-dessous. Depuis la phase 11 London, l’adaptateur MT5, les lecteurs physiques et les points d’entrée London
+sont construits hors ligne ; leur qualification physique reste en 13.1. Le service HTTP LLM et le producteur
+fondamental externe restent à implémenter ou à fournir, ainsi que l’intégration de plateforme EMA. Pour le
 robot 1 (`EMA_V3`) comme pour le robot London (`LONDON_V3`), Python 3.13 et MT5 sont arrêtés et chaque robot se construit
 selon son propre plan et sa méthode MCL, dans `src/xpbots/` :
 
@@ -29,7 +31,7 @@ selon son propre plan et sa méthode MCL, dans `src/xpbots/` :
 - robot London (`LONDON_V3`) : plan [robot_london_v3](../docs/architecture/robot_london_v3/README.md) (décisions D-01 et D-02 :
   paquet officiel `MetaTrader5`) ; état MCL dans `mcl/robot-london-v3/`, `mcl/noyau/` et `mcl/london-donnees-temps/`.
 
-Depuis la phase 7 London, les cinq couches C05 sont également communes sous `xpbots.fondamental`, dossier actif `mcl/london-controles-fondamentaux/` ; les sources physiques restent futures. Depuis la phase 8 London, les quatre couches du lecteur IA sont communes sous `xpbots.contexte_ia`, dossier actif `mcl/london-contexte-ia/` ; son port BLOCK/NEUTRAL et sa reprise sont purs, les lectures physiques restent futures. Depuis la phase 9 London, trois couches d’orchestration sont communes sous `xpbots.orchestration.c*`, dossier actif `mcl/orchestration/` ; S4 délègue au moteur unique et le squelette London compose PAPER_AB avec comptes indépendants et journal de calculs rejouable. Les deux lignées conservent leurs socles distincts ; depuis les phases 5 et 6 London, les quinze couches du coordinateur de compte (calculs, cycle, sorties et reprise) sont communes (`xpbots.execution.c*`, dossier `mcl/london-execution-coordinateur/`, arbitrage R4/R5 dans le registre de coexistence). `src/xpbots/noyau/` réunit deux familles de modules distinctes, et les dossiers
+Depuis la phase 7 London, les cinq couches C05 sont également communes sous `xpbots.fondamental`, dossier actif `mcl/london-controles-fondamentaux/` ; leurs lecteurs physiques sont construits en phase 11 ; le producteur fondamental externe reste à fournir. Depuis la phase 8 London, les quatre couches du lecteur IA sont communes sous `xpbots.contexte_ia`, dossier actif `mcl/london-contexte-ia/` ; son port BLOCK/NEUTRAL et sa reprise sont purs, son lecteur physique appartient à l’infrastructure de phase 11. Depuis la phase 9 London, trois couches d’orchestration sont communes sous `xpbots.orchestration.c*`, dossier actif `mcl/orchestration/` ; S4 délègue au moteur unique et le squelette London compose PAPER_AB avec comptes indépendants et journal de calculs rejouable. Les deux lignées conservent leurs socles distincts ; depuis les phases 5 et 6 London, les quinze couches du coordinateur de compte (calculs, cycle, sorties et reprise) sont communes (`xpbots.execution.c*`, dossier `mcl/london-execution-coordinateur/`, arbitrage R4/R5 dans le registre de coexistence). `src/xpbots/noyau/` réunit deux familles de modules distinctes, et les dossiers
 MCL et de tests propres au London portent le préfixe `london-` ou `london_` lorsque le robot 1 occupait déjà le nom
 (`donnees-temps`). Ne jamais présenter un composant comme existant sans l'avoir vu dans le code.
 
@@ -79,4 +81,16 @@ MCL et de tests propres au London portent le préfixe `london-` ou `london_` lor
   ni aux journaux de trading ni aux preuves de `docs/validation/`.
 - Un échec préexistant est documenté avec sa preuve ; il n'est jamais masqué.
 
-Depuis la phase 10 London, les huit unités pures de journal et rejeu sont communes sous `xpbots.rejeu.c*`, dossier actif `mcl/london-journal-rejeu/`. S1/S5 sont des façades ; S7 compose les coûts C10 et les rapports. L’esquisse EMA `mcl/journal-rejeu/` reste historique, sans second simulateur. Les données réelles, sources physiques et qualifications restent futures ; les verdicts des fixtures sont NON_VALIDE.
+Depuis la phase 10 London, les huit unités pures de journal et rejeu sont communes sous `xpbots.rejeu.c*`, dossier actif `mcl/london-journal-rejeu/`. S1/S5 sont des façades ; S7 compose les coûts C10 et les rapports. L’esquisse EMA `mcl/journal-rejeu/` reste historique, sans second simulateur. Les données réelles et qualifications restent futures ; les lecteurs physiques sont construits en phase 11 ; les verdicts des fixtures sont NON_VALIDE.
+
+Depuis la phase 11 London, `xpbots.infra.c*` est l’unique infrastructure commune
+(quinze unités gelées dans `mcl/london-infrastructure/`) : SDK tardivement injecté,
+flux causal, qualification, calculs, exécution native, fichiers, SQLite et verrou.
+`xpbots.app.c*` comprend neuf unités gelées dans `mcl/points-entree/`, composant
+actuellement le London ; `python -m xpbots.app` expose les commandes physiques.
+Le même moteur sert au direct et au rejeu d’incident, avec COMMIT avant entrée,
+défenses prioritaires et arrêts persistants. Le squelette EMA garde ses entrées.
+Le [guide d’exploitation](../docs/exploitation/LONDON_M15.md) décrit les commandes
+et les limites. Le faux SDK et les tests hors ligne ne qualifient aucun terminal,
+compte, source externe ou résultat financier ; les contrats physiques et la
+compilation MQL5 sont différés en 13.1. La phase 12 reste une demande distincte.

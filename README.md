@@ -1,6 +1,6 @@
 # XP-Bots — deux robots Forex M15
 
-Ce dépôt contient les spécifications **3.1.0** et les ressources de référence pour construire deux robots indépendants : Triple EMA + RSI + repli et London breakout. Les robots de plateforme, les clients API et l'analyse fondamentale externe restent à implémenter. La rentabilité n'est pas validée.
+Ce dépôt contient les spécifications **3.1.0** et les ressources de référence pour construire deux robots indépendants : Triple EMA + RSI + repli et London breakout. L’infrastructure MT5 et les points d’entrée London sont construits et éprouvés hors ligne avec un faux SDK ; les clients API et l’analyse fondamentale externe restent à implémenter. La qualification physique relève de la phase 13. La rentabilité n'est pas validée.
 
 Le contexte retenu est un compte standard en USD de **100 USD**, avec levier **1:100**. Le risque par entrée reste **0,5 %** ; un volume minimal incompatible entraîne un refus. EURUSD est prioritaire, puis GBPUSD. XAUUSD est spécifié mais sa faisabilité doit être confirmée avec les caractéristiques réelles du compte.
 
@@ -67,9 +67,27 @@ python -m xpbots.app.rejeu --ticks tests/robot/fixtures/squelette_ticks.csv --ma
 
 La même vérification tourne en intégration continue (`.github/workflows/robot-ci.yml`) avec `python tools/verify_project.py` et le contrôle d'architecture des cartes MCL.
 
-Les contrôles C05 communs sont construits depuis la phase 7 London : [bilan et contrats](mcl/london-controles-fondamentaux/PLAN-MCL.md). Le rejeu London utilise leur port réel avec des arrivées scénarisées ; son scénario technique neutre demeure explicite. Cela ne réalise ni les sources physiques, ni l’intégration du robot EMA au compte.
+Les contrôles C05 communs sont construits depuis la phase 7 London : [bilan et contrats](mcl/london-controles-fondamentaux/PLAN-MCL.md). Le rejeu London utilise leur port réel avec des arrivées scénarisées ; son scénario technique neutre demeure explicite. Leurs lecteurs de fichiers physiques sont construits depuis la phase 11 London ; le producteur fondamental externe et l’intégration du robot EMA au compte restent à fournir.
 
 Le [lecteur IA commun](mcl/london-contexte-ia/PLAN-MCL.md) est construit depuis la phase 8 London : quatre couches figées, validation complète du snapshot, cache causal exportable et port facultatif BLOCK/NEUTRAL. La couture London reçoit des snapshots synthétiques aux heures déclarées ; elle conserve le complément absent en référence. L’[orchestration A/B commune](mcl/orchestration/PLAN-MCL.md) est figée depuis la phase 9 : moteur unique, comptes distincts et journal d’entrées avec calculs rejouables sans backend. Le squelette accepte `--mode PAPER_AB`. Le [rejeu commun C10](mcl/london-journal-rejeu/PLAN-MCL.md) est figé depuis la phase 10 : huit unités, coûts de référence/stress, métriques, bootstrap et rapports ; les coutures S1/S5 délèguent au bloc et la CLI expose `--couts STRESS`. Le service externe reste futur. Aucune fixture ne valide une rentabilité.
+
+## Robot London : commandes et exploitation
+
+L’[infrastructure commune](mcl/london-infrastructure/PLAN-MCL.md) et les
+[points d’entrée London](mcl/points-entree/PLAN-MCL.md) comprennent le flux MT5,
+les lecteurs C05/IA, le stockage SQLite, les journaux quotidiens et le même moteur
+de décision pour direct et rejeu. La [procédure d’exploitation](docs/exploitation/LONDON_M15.md)
+décrit les huit commandes, les fichiers attendus et la conduite des incidents.
+Les sources du service d’export sont dans `mql5/Services/XPBotsExport.mq5`.
+La compilation, la confrontation au terminal et les quatorze contrats physiques
+différés se font en 13.1 ; aucun appel au SDK réel n’est effectué par les contrôles
+hors ligne. Le service IA distant reste la phase 12, non commencée.
+
+Depuis la racine, définir `PYTHONPATH=src`, puis exécuter
+`python -m xpbots.app --help`. Le mode provient du registre et les sorties
+refusent l’écrasement sans option explicite. Le gel du réservé est conservé entre
+processus. Les fixtures C10 restent NON_VALIDE et les rapports d’incident ne
+constituent aucune autorisation de déploiement.
 
 ## Agents AI de développement
 

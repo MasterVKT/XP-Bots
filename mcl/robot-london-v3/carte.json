@@ -119,7 +119,7 @@
         "xpbots.infra"
       ],
       "contrats": [
-        "mcl/infrastructure/contrats/*.md"
+        "mcl/london-infrastructure/contrats/*.md"
       ]
     },
     {

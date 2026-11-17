@@ -1,0 +1,515 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "points-entree",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": "Coquille London : configuration, livres PAPER durables, direct, qualification, rejeu et rapports ; aucun moteur metier duplique."
+  },
+  "langage": "python",
+  "sources": [
+    "src/xpbots/app"
+  ],
+  "exclure": [
+    "src/xpbots/app/rejeu.py",
+    "src/xpbots/app/segments_minimaux.py",
+    "src/xpbots/app/rejeu_squelette.py"
+  ],
+  "couches": [
+    {
+      "id": "0",
+      "profondeur": 0,
+      "nom": "configuration",
+      "chemins": [
+        "src/xpbots/app/c0_configuration"
+      ],
+      "imports": [
+        "xpbots.app.c0_configuration"
+      ],
+      "contrats": [
+        "mcl/points-entree/contrats/couche-0.md",
+        "src/xpbots/app/c0_configuration/__init__.py",
+        "tests/robot/points_entree/test_cat*_c0_*.py",
+        "deploiement/gabarits/registre.json",
+        "deploiement/gabarits/fermetures_exceptionnelles.json"
+      ]
+    },
+    {
+      "id": "1a",
+      "profondeur": 1,
+      "nom": "livre_papier",
+      "chemins": [
+        "src/xpbots/app/c1a_livre_papier"
+      ],
+      "imports": [
+        "xpbots.app.c1a_livre_papier"
+      ],
+      "contrats": [
+        "mcl/points-entree/contrats/couche-1a.md",
+        "src/xpbots/app/c1a_livre_papier/__init__.py",
+        "tests/robot/points_entree/test_cat*_c1a_*.py"
+      ]
+    },
+    {
+      "id": "1b",
+      "profondeur": 1,
+      "nom": "session_durable",
+      "chemins": [
+        "src/xpbots/app/c1b_session_durable"
+      ],
+      "imports": [
+        "xpbots.app.c1b_session_durable"
+      ],
+      "contrats": [
+        "mcl/points-entree/contrats/couche-1b.md",
+        "src/xpbots/app/c1b_session_durable/__init__.py",
+        "tests/robot/points_entree/test_cat*_c1b_*.py"
+      ]
+    },
+    {
+      "id": "1c",
+      "profondeur": 1,
+      "nom": "cli_rejeu",
+      "chemins": [
+        "src/xpbots/app/c1c_cli_rejeu"
+      ],
+      "imports": [
+        "xpbots.app.c1c_cli_rejeu"
+      ],
+      "contrats": [
+        "mcl/points-entree/contrats/couche-1c.md",
+        "src/xpbots/app/c1c_cli_rejeu/__init__.py",
+        "tests/robot/points_entree/test_cat*_c1c_*.py"
+      ]
+    },
+    {
+      "id": "1d",
+      "profondeur": 1,
+      "nom": "cli_qualification",
+      "chemins": [
+        "src/xpbots/app/c1d_cli_qualification"
+      ],
+      "imports": [
+        "xpbots.app.c1d_cli_qualification"
+      ],
+      "contrats": [
+        "mcl/points-entree/contrats/couche-1d.md",
+        "src/xpbots/app/c1d_cli_qualification/__init__.py",
+        "tests/robot/points_entree/test_cat*_c1d_*.py"
+      ]
+    },
+    {
+      "id": "1e",
+      "profondeur": 2,
+      "nom": "cli_rapports",
+      "chemins": [
+        "src/xpbots/app/c1e_cli_rapports"
+      ],
+      "imports": [
+        "xpbots.app.c1e_cli_rapports"
+      ],
+      "contrats": [
+        "mcl/points-entree/contrats/couche-1e.md",
+        "src/xpbots/app/c1e_cli_rapports/__init__.py",
+        "tests/robot/points_entree/test_cat*_c1e_*.py"
+      ]
+    },
+    {
+      "id": "1f",
+      "profondeur": 1,
+      "nom": "composition_moteur",
+      "chemins": [
+        "src/xpbots/app/c1f_composition_moteur"
+      ],
+      "imports": [
+        "xpbots.app.c1f_composition_moteur"
+      ],
+      "contrats": [
+        "mcl/points-entree/contrats/couche-1f.md",
+        "src/xpbots/app/c1f_composition_moteur/__init__.py",
+        "tests/robot/points_entree/test_cat*_c1f_*.py"
+      ]
+    },
+    {
+      "id": "2",
+      "profondeur": 2,
+      "nom": "boucle_direct",
+      "chemins": [
+        "src/xpbots/app/c2_boucle_direct"
+      ],
+      "imports": [
+        "xpbots.app.c2_boucle_direct"
+      ],
+      "contrats": [
+        "mcl/points-entree/contrats/couche-2.md",
+        "src/xpbots/app/c2_boucle_direct/__init__.py",
+        "tests/robot/points_entree/test_cat*_c2_*.py",
+        "tests/robot/outils/boucle_directe.py",
+        "tests/robot/outils/scenario_london_direct.py"
+      ]
+    },
+    {
+      "id": "3",
+      "profondeur": 3,
+      "nom": "principal",
+      "chemins": [
+        "src/xpbots/app/c3_principal",
+        "src/xpbots/app/__main__.py"
+      ],
+      "imports": [
+        "xpbots.app.c3_principal",
+        "xpbots.app.__main__"
+      ],
+      "contrats": [
+        "mcl/points-entree/contrats/couche-3.md",
+        "src/xpbots/app/c3_principal/__init__.py",
+        "tests/robot/points_entree/test_cat*_c3_*.py",
+        "src/xpbots/app/__main__.py"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "configuration",
+      "responsabilite": "Valider le registre de deploiement et produire les gabarits et parametres export sans lecture physique.",
+      "depend_de": [
+        "noyau",
+        "infra-types"
+      ],
+      "couche": "0"
+    },
+    {
+      "id": "livre_papier",
+      "responsabilite": "Piloter le simulateur C10 reel par ses seuls ports publics et archiver ses operations incrementales pour la reprise.",
+      "depend_de": [
+        "configuration",
+        "noyau",
+        "rejeu",
+        "execution",
+        "orchestration-codec"
+      ],
+      "couche": "1a"
+    },
+    {
+      "id": "session_durable",
+      "responsabilite": "Archiver atomiquement checkpoints et deltas dans SQLite puis projeter les journaux JSONL sans modifier les decisions.",
+      "depend_de": [
+        "configuration",
+        "noyau",
+        "orchestration",
+        "orchestration-codec",
+        "infra-stockage",
+        "execution"
+      ],
+      "couche": "1b"
+    },
+    {
+      "id": "cli_rejeu",
+      "responsabilite": "Charger les sources et lancer le bloc de rejeu C10 reel avec ses verrous de periode et rapports.",
+      "depend_de": [
+        "configuration",
+        "noyau",
+        "rejeu",
+        "infrastructure",
+        "fondamental",
+        "contexte",
+        "london",
+        "infra-stockage",
+        "infra-types",
+        "orchestration",
+        "orchestration-codec"
+      ],
+      "couche": "1c"
+    },
+    {
+      "id": "cli_qualification",
+      "responsabilite": "Produire la qualification C04 de la frontiere native sans soumettre de commande d ordre.",
+      "depend_de": [
+        "configuration",
+        "noyau",
+        "infrastructure",
+        "infra-types",
+        "execution",
+        "infra-stockage"
+      ],
+      "couche": "1d"
+    },
+    {
+      "id": "cli_rapports",
+      "responsabilite": "Produire les rapports archives et verifier le rejeu des entrees sans backend courtier.",
+      "depend_de": [
+        "configuration",
+        "livre_papier",
+        "cli_rejeu",
+        "composition_moteur",
+        "noyau",
+        "orchestration-codec",
+        "rejeu"
+      ],
+      "couche": "1e"
+    },
+    {
+      "id": "composition_moteur",
+      "responsabilite": "Assembler les vrais bras London et controles pour le direct et le rejeu incident sans dupliquer leur construction.",
+      "depend_de": [
+        "configuration",
+        "noyau",
+        "orchestration",
+        "orchestration-codec",
+        "infra-types",
+        "fondamental",
+        "contexte",
+        "london",
+        "execution"
+      ],
+      "couche": "1f"
+    },
+    {
+      "id": "boucle_direct",
+      "responsabilite": "Composer le moteur London unique, les controles physiques, les comptes et les minuteries avec persistance avant entree.",
+      "depend_de": [
+        "configuration",
+        "livre_papier",
+        "session_durable",
+        "noyau",
+        "orchestration",
+        "orchestration-codec",
+        "infrastructure",
+        "infra-types",
+        "fondamental",
+        "contexte",
+        "london",
+        "execution",
+        "rejeu",
+        "infra-stockage",
+        "composition_moteur"
+      ],
+      "couche": "2"
+    },
+    {
+      "id": "principal",
+      "responsabilite": "Analyser les arguments, charger les ressources et appeler la commande autorisee en rendant son code de sortie.",
+      "depend_de": [
+        "configuration",
+        "boucle_direct",
+        "cli_rejeu",
+        "cli_qualification",
+        "cli_rapports",
+        "noyau",
+        "infrastructure",
+        "infra-types",
+        "infra-stockage",
+        "rejeu"
+      ],
+      "couche": "3"
+    }
+  ],
+  "externes": [
+    {
+      "id": "noyau",
+      "imports": [
+        "xpbots.noyau.c0a_temps",
+        "xpbots.noyau.c0b_nombres",
+        "xpbots.noyau.c0c_configuration",
+        "xpbots.noyau.c1a_marche",
+        "xpbots.noyau.c1b_instrument",
+        "xpbots.noyau.c1c_domaine",
+        "xpbots.noyau.c2_journal"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1a",
+        "1b",
+        "1c",
+        "1d",
+        "1e",
+        "2",
+        "3",
+        "1f"
+      ]
+    },
+    {
+      "id": "infra-types",
+      "imports": [
+        "xpbots.infra.c0a_types"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1d",
+        "2",
+        "3",
+        "1c",
+        "1f"
+      ]
+    },
+    {
+      "id": "infra-stockage",
+      "imports": [
+        "xpbots.infra.c0c_sqlite",
+        "xpbots.infra.c0d_journal"
+      ],
+      "couches_autorisees": [
+        "1b",
+        "1c",
+        "1d",
+        "1e",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "id": "infrastructure",
+      "imports": [
+        "xpbots.infra.c4_assemblage",
+        "xpbots.infra.c0b_horloge",
+        "xpbots.infra.squelette",
+        "xpbots.infra.c0h_verrou"
+      ],
+      "couches_autorisees": [
+        "1c",
+        "1d",
+        "1e",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "id": "orchestration",
+      "imports": [
+        "xpbots.orchestration.c0_contrats",
+        "xpbots.orchestration.c1_bras",
+        "xpbots.orchestration.c2_moteur"
+      ],
+      "couches_autorisees": [
+        "1b",
+        "1e",
+        "2",
+        "1c",
+        "1f"
+      ]
+    },
+    {
+      "id": "orchestration-codec",
+      "imports": [
+        "xpbots.orchestration.c3_codec"
+      ],
+      "couches_autorisees": [
+        "1a",
+        "1b",
+        "1e",
+        "2",
+        "1c",
+        "1f"
+      ]
+    },
+    {
+      "id": "execution",
+      "imports": [
+        "xpbots.execution.c0a_types",
+        "xpbots.execution.c0b_controles",
+        "xpbots.execution.c1b_gardes",
+        "xpbots.execution.c4_cycle",
+        "xpbots.execution.c5b_reprise",
+        "xpbots.execution.c6_coordinateur",
+        "xpbots.execution.c1a_calcul"
+      ],
+      "couches_autorisees": [
+        "1a",
+        "1b",
+        "1d",
+        "2",
+        "1f"
+      ]
+    },
+    {
+      "id": "rejeu",
+      "imports": [
+        "xpbots.rejeu.c0a_types",
+        "xpbots.rejeu.c0b_protocole",
+        "xpbots.rejeu.c1a_ticks",
+        "xpbots.rejeu.c1b_simulateur",
+        "xpbots.rejeu.c1c_metriques",
+        "xpbots.rejeu.c2_executeur",
+        "xpbots.rejeu.c3_rapports"
+      ],
+      "couches_autorisees": [
+        "1a",
+        "1c",
+        "1e",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "id": "fondamental",
+      "imports": [
+        "xpbots.fondamental.c0_types",
+        "xpbots.fondamental.c1b_annonces",
+        "xpbots.fondamental.c3_permissions"
+      ],
+      "couches_autorisees": [
+        "1c",
+        "1e",
+        "2",
+        "1f"
+      ]
+    },
+    {
+      "id": "contexte",
+      "imports": [
+        "xpbots.contexte_ia.c0_types",
+        "xpbots.contexte_ia.c3_contexte"
+      ],
+      "couches_autorisees": [
+        "1c",
+        "1e",
+        "2",
+        "1f"
+      ]
+    },
+    {
+      "id": "london",
+      "imports": [
+        "xpbots.london.c2_moteur"
+      ],
+      "couches_autorisees": [
+        "1c",
+        "1e",
+        "2",
+        "1f"
+      ]
+    },
+    {
+      "id": "frontieres-interdites",
+      "imports": [
+        "MetaTrader5",
+        "time",
+        "os",
+        "pathlib",
+        "io",
+        "sqlite3",
+        "threading",
+        "socket",
+        "http",
+        "urllib",
+        "subprocess",
+        "importlib",
+        "reference",
+        "xpbots.service_ia",
+        "xpbots.donnees",
+        "xpbots.moteur_ema",
+        "xpbots.donnees_temps"
+      ],
+      "couches_autorisees": []
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "strict",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}

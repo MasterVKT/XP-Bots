@@ -1,0 +1,22 @@
+{
+  "schema": "xp-export-calendrier-v1",
+  "version": 2,
+  "export_serveur": "2026.11.10 10:00:00",
+  "export_gmt": "2026.11.10 09:00:00",
+  "fenetre_debut_serveur": "2026.11.09 01:00:00",
+  "fenetre_fin_serveur": "2026.11.13 10:01:00",
+  "evenements": [
+    {
+      "id_valeur": 1,
+      "id_evenement": 2,
+      "code": "FIXTURE_HIGH_USD",
+      "nom": "Annonce synthetique « sans valeur réelle »",
+      "devise": "USD",
+      "importance": "CALENDAR_IMPORTANCE_HIGH",
+      "type": "CALENDAR_TYPE_EVENT",
+      "secteur": "CALENDAR_SECTOR_MONEY",
+      "heure_serveur": "2026.11.10 10:15:00",
+      "revision": 0
+    }
+  ]
+}

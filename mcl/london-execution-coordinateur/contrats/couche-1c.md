@@ -27,3 +27,20 @@ REMPLIE marque la réserve sans la libérer. Une REFUSEE/EXPIREE ne termine qu�
 ## Comportements documentés (loi de Hyrum)
 
 Les valeurs exposées sont immuables. Les messages d'exception ne sont pas contractuels. Les détails de refus sont ceux du noyau, sans nouveau motif métier. Les seuils viennent des paramètres chargés. Les calculs décimaux n'altèrent jamais le contexte global.
+
+
+## Extension additive du 10/11/2026 — tentative refusée avant tout fill
+
+Défigeage extension tracé, consommateur 6 :
+annuler_tentative(cle,version_attendue) -> EtatReservations | RefusExecution.
+La coquille de décision 6 doit d’abord constater un refus natif explicite non
+permanent sans aucun fill ; un timeout/None ou statut inconnu n’est jamais cette preuve.
+L’opération est pure et atomique : version exacte, clé non terminale, réserve non
+remplie et aucun verrou de son symbole/sous-jacent. Elle retire la réserve et
+incrémente la version, sans inscrire la clé aux terminees. Répétition au numéro
+de version courant d’une clé déjà retirée non terminale : état inchangé.
+Version périmée, clé terminale ou verrou : RefusExecution ; réserve remplie :
+ErreurExecution, jamais de libération. Aucun changement du comportement des
+méthodes existantes. Les nouvelles tentatives doivent être complètement
+dimensionnées, réservées et persistées par le coordinateur, avant toute entrée.
+Décision et cas : [CORRECTION-REFUS-PRIX-PHASE11.md](../CORRECTION-REFUS-PRIX-PHASE11.md).

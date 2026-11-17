@@ -6,9 +6,16 @@ implémente les sept calculs du port courtier et le transport des commandes C08.
 conditions est une collection de ConditionContrat non chevauchants par symbole,
 avec frais connus et symboles natifs stables. À chaque instant, seules les
 conditions effectives dont connu_ms et profil.releve_ms ne dépassent pas cet
-instant sont disponibles. Absence, chevauchement, devise non USD et coût inconnu
+instant sont disponibles. Absence, chevauchement, devise de cotation/frais non USD et coût inconnu
 sont des erreurs ; aucun tarif nul n'est déduit d'une absence. Le compte commence
 au capital de la configuration, sans apport, retrait ni réinitialisation.
+
+Le contrat Forex peut déclarer sa marge en devise de base, comme le profil
+natif EURUSD en EUR sur compte USD. Le montant en devise de base est converti
+en USD au prix de l'ordre : volume × contrat × prix / levier configuré. Cette
+conversion est déjà celle de la formule de marge. Elle ne justifie aucune
+conversion de frais ou de profit hors USD. Les autres devises de marge restent
+refusées ; l'admission de cette forme est limitée au mode de calcul FOREX.
 
 specifications, profit, frais_aller_retour, frais_sortie, marge, etat_compte,
 controler utilisent les objets canoniques. Profit = sens × volume × contrat ×
@@ -66,3 +73,15 @@ incréments, stress Bid inchangé, TP limite, gap et séquence SL/TP, absence de
 cotation, frais minima/partiels et coûts datés, flottant et marge, idempotence,
 accusés inconnus/différés, protections et blackout. Jonctions : commandes, cycle,
 dimensionnement et gardes réels, sans second moteur d'admission dans le simulateur.
+
+Extension phase 11 : actualiser_profil(profil, tarif, instant_ms) reçoit un
+ProfilInstrument canonique et un TarifCommission qualifiés par l'appelant. Cet
+instant doit être exactement l'horloge du livre ; le relevé et les horaires
+doivent être connus et valides à cet instant. La condition actuellement connue
+est remplacée, sans prolonger sa période de validité. Liaison canonique/native,
+sous-jacent, devises, mode de calcul, taille du contrat, tick_size et point sont
+stables ; leur changement est refusé. Les nouvelles contraintes natives,
+horaires et commissions s'appliquent aux calculs et commandes suivants.
+L'opération ne produit ni réponse, ni mouvement, ni remplissage, et ne change
+ni position, ni compte, ni courbe. Un refus est atomique. Le pilote archive
+cette réception au moment où elle arrive, jamais comme connaissance antérieure.

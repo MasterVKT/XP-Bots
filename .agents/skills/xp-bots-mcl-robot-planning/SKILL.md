@@ -64,3 +64,18 @@ d'acceptation propres au projet. La cartographie proposée est une **hypothèse*
 - `mcl.py` n'analyse pas les imports MQL5 : sur MT5, encoder la carte par convention de modules, revue de code
   et `mcl.py verifier` sur les langages supportés seulement ; le signaler dans le plan.
 - Les deux méthodes restent deux artefacts distincts ; seul le coordinateur de compte est partagé.
+
+
+## Composants disponibles depuis la phase 11 London
+
+L’infrastructure commune se trouve dans `src/xpbots/infra/c*` et son dossier actif
+est `mcl/london-infrastructure/` : quinze unités gelées, SDK réel importé seulement
+à l’assemblage et remplacé par FauxMT5 dans les tests. Les neuf unités applicatives
+de `mcl/points-entree/` composent le London dans `src/xpbots/app/c*`, avec le même
+moteur pour direct et rejeu d’incident. Le livre reste le simulateur C10 existant ;
+le dépôt SQLite et les journaux sont réels dans des dossiers temporaires.
+Les cartes actives, contrats et bilans priment sur les tables candidates de la
+référence de ce skill. Ne pas reconstruire ces composants pour EMA ni modifier
+ses anciens squelettes sans la phase d’intégration correspondante. Le service IA
+reste la phase 12 ; les quatorze contrats physiques et la compilation MQL5 sont
+différés en 13.1. La procédure est `docs/exploitation/LONDON_M15.md`.

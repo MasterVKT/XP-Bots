@@ -202,3 +202,39 @@ par 0d a été retirée par défigeage formel et cascade intégrale, sans change
 arrondis de protections ni C06/C10. Voir
 [l’ADR](../../mcl/london-execution-coordinateur/DEFIGEAGE-0d-PHASE10.md).
 Le squelette EMA reste distinct et l’ancienne esquisse journal-rejeu est intacte.
+
+
+### Arbitrage R4/R5 du 10/11/2026 — phase 11 London
+
+L’infrastructure EMA reste une esquisse sans code sous xpbots.infrastructure.
+La phase 11 construit une seule infrastructure commune sous xpbots.infra.c*,
+dossier actif mcl/london-infrastructure. L’esquisse mcl/infrastructure est
+conservée, sans deuxième adaptateur courtier. Les deux composites contrôlent
+ce même bloc ; aucune phase EMA de plateforme n’est déclarée réalisée.
+Les valeurs échangées sont celles du noyau canonique et du coordinateur commun ;
+l’adaptation EMA reste à sa frontière 0a existante. Aucun noyau n’est défigé.
+Les fichiers physiques ne sont jamais lus par le cœur : la coquille fournit des
+réceptions datées à des sources en mémoire. Les points d’entrée London portent
+des noms c* dans le paquet app partagé ; le squelette EMA reste distinct.
+La source MQL5 exporte seulement le calendrier et les séances : aucune stratégie,
+aucun ordre et aucun accès aux dossiers de permission ou de snapshot IA.
+Cette décision relève de la demande explicite d’achever intégralement la phase 11.
+
+### Résultat de l’arbitrage de phase 11 — 17/11/2026
+
+Le bloc unique `xpbots.infra.c*` comporte quinze unités figées et
+`xpbots.app.c*` neuf unités figées composant actuellement le London. Les cartes
+composites contrôlent la même infrastructure ; aucun second adaptateur n’a été
+créé dans l’esquisse EMA. Ses points d’entrée historiques restent distincts et
+aucune phase de plateforme EMA n’est déclarée terminée par cette réalisation.
+Les corrections requises par les vrais consommateurs ont été apportées aux
+couches communes d’exécution, d’orchestration et de rejeu avec défigeages,
+gates et nouveaux gels tracés dans leurs dossiers actifs. Les 140 fichiers de
+tests des cinq artefacts construits ou modifiés appartiennent chacun à un seul
+contrat MCL ; les 70 tests du squelette
+restent présents dans la suite de 1 403 cas, dont 14 contrats physiques différés.
+Les 38 mutations sont détectées sur copie jetable. Le SDK réel, les sources
+MQL5 compilées et les comptes ne sont pas qualifiés par ces preuves hors ligne.
+Voir les bilans de [l’infrastructure](../../mcl/london-infrastructure/PLAN-MCL.md)
+et des [points d’entrée](../../mcl/points-entree/PLAN-MCL.md). La phase 12 n’est
+pas commencée.

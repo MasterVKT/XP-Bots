@@ -1,0 +1,14 @@
+{
+  "schema": "xp-fermetures-v1",
+  "version": 1,
+  "date_releve": "2026-11-10T09:00:00.000Z",
+  "fermetures": [
+    {
+      "symbole": "EURUSD.micro",
+      "debut_utc": "2026-11-10T09:30:00.000Z",
+      "fin_utc": "2026-11-10T10:00:00.000Z",
+      "nature": "SEANCE_REDUITE",
+      "source": "AVIS_SYNTHETIQUE_NON_QUALIFIE"
+    }
+  ]
+}

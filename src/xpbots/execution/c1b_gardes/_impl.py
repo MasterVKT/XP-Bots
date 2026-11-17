@@ -39,14 +39,19 @@ class BaseReconstituee:
         flux=tuple(self.flux_identifies)
         if any(not isinstance(m,MouvementCompte) or not m.flux_externe for m in flux) or tuple(m.reference for m in flux)!=refs:
             raise ErreurExecution('flux identifiés incohérents')
+        if any(m.instant_ms>self.instant_ms for m in flux):raise ErreurExecution('flux reconstitue futur')
         object.__setattr__(self,'flux_identifies',flux)
 
-def reconstituer_base_utc(compte,mouvements,couverture,*,aucune_position_minuit):
+def reconstituer_base_utc(compte,mouvements,couverture,*,aucune_position_minuit,depuis_flux_ms=None):
     if not isinstance(compte,EtatCompte) or type(aucune_position_minuit) is not bool: raise ErreurExecution('compte et preuve de minuit attendus')
     moment=instant_vers_datetime(compte.instant_ms)
     borne=instant_depuis_datetime(moment.replace(hour=0,minute=0,second=0,microsecond=0))
+    if depuis_flux_ms is not None:
+        instant(depuis_flux_ms)
+        if depuis_flux_ms>compte.instant_ms:raise ErreurExecution('depart de flux futur')
+    debut_flux=borne if depuis_flux_ms is None else min(borne,depuis_flux_ms)
     if (not aucune_position_minuit or not isinstance(couverture,Intervalle)
-            or couverture.debut_ms>borne or couverture.fin_ms<=compte.instant_ms):
+            or couverture.debut_ms>debut_flux or couverture.fin_ms<=compte.instant_ms):
         return RefusExecution(Motif.ENVIRONMENT_NOT_READY,'historique_minuit')
     mouvements=tuple(mouvements)
     if any(not isinstance(m,MouvementCompte) for m in mouvements): raise ErreurExecution('mouvement attendu')
@@ -57,12 +62,15 @@ def reconstituer_base_utc(compte,mouvements,couverture,*,aucune_position_minuit)
         base=compte.solde-sum((m.variation_solde for m in retenus),Decimal(0))
         externes=sum((m.variation_solde for m in retenus if m.flux_externe),Decimal(0))
         neutralisee=base+externes
-        cumul=Decimal(0);pic=neutralisee
-        for m in retenus:
+        pour_pic=sorted((m for m in mouvements if m.instant_ms>=debut_flux),key=lambda m:m.instant_ms)
+        solde_depart=compte.solde-sum((m.variation_solde for m in pour_pic),Decimal(0))
+        capital_depart=solde_depart+sum((m.variation_solde for m in pour_pic if m.flux_externe),Decimal(0))
+        cumul=Decimal(0);pic=capital_depart
+        for m in pour_pic:
             if not m.flux_externe: cumul+=m.variation_solde
-            pic=max(pic,neutralisee+cumul)
+            pic=max(pic,capital_depart+cumul)
         if base<=0 or neutralisee<=0: return RefusExecution(Motif.ENVIRONMENT_NOT_READY,'base_quotidienne')
-        flux=tuple(m for m in retenus if m.flux_externe)
+        flux=tuple(sorted((m for m in mouvements if m.flux_externe and m.instant_ms>=debut_flux),key=lambda m:m.instant_ms))
         return BaseReconstituee(moment.date(),compte.instant_ms,base,neutralisee,pic,tuple(m.reference for m in flux),flux)
 
 class GardesCompte:
@@ -84,22 +92,32 @@ class GardesCompte:
         moment=instant_vers_datetime(compte.instant_ms);jour=moment.date()
         ancien=self._etat
         ajustement_pic=Decimal(0)
+        preuve=isinstance(reconstitution,BaseReconstituee)
+        if preuve and (reconstitution.jour_utc!=jour or reconstitution.instant_ms!=compte.instant_ms):
+            return RefusExecution(Motif.ENVIRONMENT_NOT_READY,'base_quotidienne')
+        nouveaux_flux=tuple(m for m in reconstitution.flux_identifies if ancien is not None and m.reference not in ancien.references) if preuve else ()
+        with localcontext(Context(prec=48)):
+            ajustement_pic=sum((m.variation_solde for m in nouveaux_flux),Decimal(0))
         nouveau=ancien is None or ancien.jour_utc!=jour
         if nouveau:
             minuit=moment.hour==moment.minute==moment.second==moment.microsecond==0
             if minuit:
-                base=compte.fonds_propres;pic_reconstruit=compte.fonds_propres;refs=()
+                base=compte.fonds_propres
+                pic_reconstruit=max(compte.fonds_propres,reconstitution.pic_solde_neutralise) if preuve else compte.fonds_propres
+                refs=reconstitution.references_flux if preuve else ()
             else:
-                if not isinstance(reconstitution,BaseReconstituee) or reconstitution.jour_utc!=jour or reconstitution.instant_ms!=compte.instant_ms:
+                if not preuve:
                     return RefusExecution(Motif.ENVIRONMENT_NOT_READY,'base_quotidienne')
                 base=reconstitution.base_neutralisee;pic_reconstruit=reconstitution.pic_solde_neutralise
                 refs=reconstitution.references_flux
-                if ancien:
-                    with localcontext(Context(prec=48)):
-                        ajustement_pic=sum((m.variation_solde for m in reconstitution.flux_identifies if m.reference not in ancien.references),Decimal(0))
             if base<=0: return RefusExecution(Motif.ENVIRONMENT_NOT_READY,'base_quotidienne')
         else:
-            base=ancien.base_quotidienne;pic_reconstruit=ancien.pic;refs=()
+            with localcontext(Context(prec=48)):
+                base=ancien.base_quotidienne+ajustement_pic
+                pic_reconstruit=ancien.pic+ajustement_pic
+                if preuve:pic_reconstruit=max(pic_reconstruit,reconstitution.pic_solde_neutralise)
+            refs=reconstitution.references_flux if preuve else ()
+        if base<=0:return RefusExecution(Motif.ENVIRONMENT_NOT_READY,'base_quotidienne')
         with localcontext(Context(prec=48)):
             pic=max(compte.fonds_propres,pic_reconstruit,ancien.pic+ajustement_pic if ancien else pic_reconstruit)
             quotidien=(ancien.verrou_quotidien if ancien and not nouveau else False) or compte.fonds_propres<=base*(1-decimal_depuis(self._p.daily_equity_loss_limit_fraction))

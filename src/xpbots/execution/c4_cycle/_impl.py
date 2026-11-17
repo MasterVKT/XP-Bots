@@ -90,6 +90,16 @@ class StatutAccuse(StrEnum):
     REFUSE = 'REFUSE'
     INCONNU = 'INCONNU'
 
+_PRIX_NON_DEFINITIFS = frozenset(('TRADE_RETCODE_REQUOTE','TRADE_RETCODE_PRICE_CHANGED',
+    'TRADE_RETCODE_PRICE_OFF','TRADE_RETCODE_TOO_MANY_REQUESTS'))
+_REFUS_NATIFS = MappingProxyType({
+    'TRADE_RETCODE_INVALID_VOLUME':(Motif.MIN_VOLUME_OR_RISK_REJECT,None),
+    'TRADE_RETCODE_LIMIT_VOLUME':(Motif.MIN_VOLUME_OR_RISK_REJECT,None),
+    'TRADE_RETCODE_NO_MONEY':(Motif.MARGIN_REJECT,'CONTROLE_NATIF'),
+    'TRADE_RETCODE_INVALID_STOPS':(Motif.PROTECTION_ERROR,'CONTRAINTE_NATIVE_AVANT_ORDRE'),
+    'TRADE_RETCODE_LIMIT_POSITIONS':(Motif.ACCOUNT_RISK_CAP,'NOMBRE_POSITIONS'),
+    'TRADE_RETCODE_LIMIT_ORDERS':(Motif.ACCOUNT_RISK_CAP,'NOMBRE_POSITIONS'),
+})
 
 _POSITIF = lambda v: _decimal(v, True)
 _SENS = lambda v: _enum(Sens, v)
@@ -281,6 +291,7 @@ class EtatCycle:
     prochain_reessai_ms: int | None = None
     instant_cloture_ms: int | None = None
     cause_cloture_native: CauseCloture | None = None
+    numero_entree: int = 0
 
     def __post_init__(self):
         if not isinstance(self.cle, CleIntention):
@@ -298,8 +309,10 @@ class EtatCycle:
         for nom in ('accuse_recu', 'quota_compte', 'reliquat_annule', 'annulation_demandee', 'protections_validees',
                     'risque_verifie', 'alerte_inconnue', 'sortie_en_cours'):
             _booleen(getattr(self, nom))
-        for nom in ('numero_commande', 'tentatives_protection'):
+        for nom in ('numero_commande', 'tentatives_protection', 'numero_entree'):
             _entier(getattr(self, nom))
+        if self.numero_entree>self.numero_commande:
+            raise ErreurExecution('numéro d’entrée postérieur aux commandes')
         if self.priorite_sortie is not None:
             _entier(self.priorite_sortie)
         for nom in ('volume_cumule', 'volume_ouvert'):
@@ -401,6 +414,8 @@ class CycleOrdre:
         if etat is not None and not isinstance(etat, EtatCycle):
             raise ErreurExecution('état réel attendu')
         self._etat = etat or EtatCycle(cle, dernier_ms=plan.instantane_ms)
+        if self._etat.numero_entree==0 and self._etat.envoi_ms is not None:
+            self._etat=replace(self._etat,numero_entree=1)
         if self._etat.cle != cle or self._etat.dernier_ms < signal.cloture_ms:
             raise ErreurExecution('état d’une autre intention')
         if self._etat.niveaux_reels is not None and self._etat.niveaux_reels.stop != plan.niveaux.stop:
@@ -411,6 +426,16 @@ class CycleOrdre:
     @property
     def etat(self):
         return self._etat
+
+    @property
+    def refus_reessayable_ms(self):
+        e=self._etat
+        if e.statut is not EtatIntention.REFUSEE or e.volume_cumule or not e.numero_entree:return None
+        commande=f'{e.cle.empreinte(64)}:ENTREE:{e.numero_entree}'
+        r=next((r for r in reversed(e.reponses_recues) if r.nature is NatureReponse.ACCUSE and r.donnees['commande']==commande),None)
+        if (r is not None and r.donnees['statut'] is StatutAccuse.REFUSE and not r.donnees['definitif']
+                and r.donnees['code_natif'] in _PRIX_NON_DEFINITIFS):return r.instant_ms
+        return None
 
     @property
     def prochaine_echeance_ms(self):
@@ -472,6 +497,7 @@ class CycleOrdre:
             deviation_points=deviation, mode_remplissage=mode, magic=self._identite.magic,
             commentaire=self._identite.commentaire, risque_initial=self._plan.risque,
             budget_gele=self._plan.budget_gele, expire_ms=fin)
+        self._mettre(numero_entree=self._etat.numero_commande)
         minuterie = self._commande(NatureCommande.MINUTERIE,
             echeance_ms=instant_ms + _ms(self._commun.request_ack_timeout_seconds))
         return self._effets((entree, minuterie), traces=(self._trace_commande(entree),))
@@ -532,8 +558,17 @@ class CycleOrdre:
                     prochain_reessai_ms=reponse.instant_ms+_ms(self._commun.exit_retry_interval_seconds))
                 return self._effets(self._rapprochement())
             return self._effets()
-        if int(numero) != 1 or self._etat.envoi_ms is None:
+        courant=int(numero)==self._etat.numero_entree
+        ancienne=next((r for r in self._etat.reponses_recues if r.nature is NatureReponse.ACCUSE
+            and r.donnees['commande']==d['commande']),None)
+        if str(int(numero))!=numero or not courant and ancienne is None or self._etat.envoi_ms is None:
             raise ErreurExecution('accusé d’une autre entrée')
+        if not courant:
+            if (ancienne.donnees['statut'],ancienne.donnees['code_natif'],ancienne.donnees['definitif'])==(
+                    d['statut'],d['code_natif'],d['definitif']):return self._effets()
+            if self._etat.statut in (EtatIntention.CLOTUREE,EtatIntention.EXPIREE):return self._effets()
+            self._mettre(statut=EtatIntention.INCONNUE,inconnu_ms=reponse.instant_ms)
+            return self._effets(self._rapprochement())
         if d['statut'] is StatutAccuse.INCONNU:
             if self._etat.statut in (EtatIntention.CLOTUREE, EtatIntention.REFUSEE, EtatIntention.EXPIREE):
                 return self._effets()
@@ -548,10 +583,17 @@ class CycleOrdre:
                 return self._effets(traces=(alerte,))
             if self._etat.statut in (EtatIntention.REFUSEE, EtatIntention.EXPIREE):
                 return self._effets()
+            prix=d['code_natif'] in _PRIX_NON_DEFINITIFS
+            if (prix and d['definitif']) or (not prix and not d['definitif']):
+                self._mettre(statut=EtatIntention.INCONNUE,inconnu_ms=reponse.instant_ms)
+                return self._effets(self._rapprochement())
             self._mettre(statut=EtatIntention.REFUSEE, accuse_recu=True,
-                prochain_rapprochement_ms=None, prochaine_protection_ms=None, prochain_reessai_ms=None)
+                inconnu_ms=None,prochain_rapprochement_ms=None, prochaine_protection_ms=None, prochain_reessai_ms=None,
+                reliquat_annule=True)
+            if prix:return self._effets()
+            motif,detail=_REFUS_NATIFS.get(d['code_natif'],(Motif.ENVIRONMENT_NOT_READY,'REFUS_COURTIER'))
             issue = Issue(self._etat.cle, NatureIssue.REFUSEE, reponse.instant_ms,
-                          Motif.ENVIRONMENT_NOT_READY, 'REFUS_COURTIER')
+                          motif,detail)
             return self._effets(issues=(issue,))
         if self._etat.statut not in (EtatIntention.REFUSEE, EtatIntention.EXPIREE, EtatIntention.CLOTUREE):
             self._mettre(accuse_recu=True, ticket_ordre=d['ordre'] if d['ordre'] is not None else self._etat.ticket_ordre)

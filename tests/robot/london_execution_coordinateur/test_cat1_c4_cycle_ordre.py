@@ -353,20 +353,20 @@ class TestCycleOrdre(unittest.TestCase):
         self.assertFalse(e.etat.quota_compte)
         self.assertFalse(e.issues)
 
-    def test_refus_natif_confirme_ne_retransmet_pas_et_ne_compte_pas_de_quota(self):
-        for definitif in (False, True):
-            with self.subTest(definitif=definitif):
-                b = bloc_cycle()
-                entree = b.cycle.preparer_envoi(b.signal.cloture_ms).commandes[0]
-                r = ReponseCourtier(NatureReponse.ACCUSE, entree.cle, 'refus-1', b.signal.cloture_ms+1,
-                    dict(commande=entree.reference, statut=StatutAccuse.REFUSE, code_natif='10019',
-                         definitif=definitif, ordre=None))
-                e = b.cycle.sur_reponse(r)
-                self.assertEqual(e.etat.statut, EtatIntention.REFUSEE)
-                self.assertEqual([i.nature for i in e.issues], [NatureIssue.REFUSEE])
-                self.assertFalse(e.etat.quota_compte)
-                self.assertFalse(b.cycle.preparer_envoi(b.signal.cloture_ms+2).commandes)
-                self.assertFalse(b.cycle.sur_reponse(replace(r, reference='refus-2', instant_ms=r.instant_ms+1)).issues)
+    def test_refus_natif_definitif_ne_retransmet_pas_et_ne_compte_pas_de_quota(self):
+        # Correction C06/C08 tracée en phase 11 : non définitif ne signifie plus
+        # consommation. Le cas de prix est couvert par test_cat1_c4_refus_prix.
+        b = bloc_cycle()
+        entree = b.cycle.preparer_envoi(b.signal.cloture_ms).commandes[0]
+        r = ReponseCourtier(NatureReponse.ACCUSE, entree.cle, 'refus-1', b.signal.cloture_ms+1,
+            dict(commande=entree.reference, statut=StatutAccuse.REFUSE, code_natif='TRADE_RETCODE_NO_MONEY',
+                 definitif=True, ordre=None))
+        e = b.cycle.sur_reponse(r)
+        self.assertEqual(e.etat.statut, EtatIntention.REFUSEE)
+        self.assertEqual([i.nature for i in e.issues], [NatureIssue.REFUSEE])
+        self.assertFalse(e.etat.quota_compte)
+        self.assertFalse(b.cycle.preparer_envoi(b.signal.cloture_ms+2).commandes)
+        self.assertFalse(b.cycle.sur_reponse(replace(r, reference='refus-2', instant_ms=r.instant_ms+1)).issues)
 
     def test_accuse_d_une_commande_etrangere_refuse_sans_changer_l_etat(self):
         b = bloc_cycle()

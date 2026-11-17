@@ -1,6 +1,7 @@
 # Couche 0 — Contrats d'orchestration
 
-Finalisé avant code le 09/11/2026. Consommateurs : bras 1 et moteur 2.
+Finalisé avant code le 09/11/2026 ; étendu le 10/11/2026 par défigeage extension
+pour les faits de marché physiques de phase 11. Consommateurs : bras 1 et moteur 2.
 
 | Élément | Contrat |
 |---|---|
@@ -21,10 +22,15 @@ finies positives, mode et noms de bras viennent du journal canonique. Pas de val
 recopiée. La longueur est fournie par la composition qualifiée, pas choisie par ce composant.
 
 ReceptionExterne(nature, octets=b'', symbole=None, table=None) porte PERMISSION, CALENDRIER,
-INTERRUPTION ou SNAPSHOT. Calendrier exige la vraie TableImportance ; permission/interruption
+INTERRUPTION, SNAPSHOT ou MARCHE. Calendrier exige la vraie TableImportance ; permission/interruption
 un symbole ; interruption sans octets ; snapshot accepte aussi None pour absence. Ces types
 ne valident pas les formats métier : le moteur 2 passe les octets aux vrais contrôles C05/IA.
 La réception réelle est l'instant du cadre EntreeMoteur, jamais une date inférée du payload.
+MARCHE exige un symbole et des bytes, sans TableImportance. Son document JSON de
+couverture/horaires xp-etat-marche-v1 sera validé par le moteur 2, avant les
+sorties et bougies ; la feuille 0 ne parse aucun payload. Les champs, défauts et
+comportements des quatre natures antérieures sont conservés. La décision est dans
+[EXTENSION-PHASE11-MARCHE.md](../EXTENSION-PHASE11-MARCHE.md).
 
 MiseAJourBras(reponses=(), observation=None, base_utc=None, preuve=None) garde les types réels
 C08, BaseReconstituee ou RefusExecution. EntreeMoteur(instant_ms, numero, nature='MINUTERIE',

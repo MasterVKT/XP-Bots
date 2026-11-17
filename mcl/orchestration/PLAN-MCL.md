@@ -1,5 +1,8 @@
 # Plan MCL — orchestration commune, phase 9 London
 
+> Extension de phase 11 en cours : checkpoint sans duplication du journal en 2,
+> puis codec durable public en 3. Le bilan historique de phase 9 est conservé.
+
 ## 0. Périmètre et applicabilité
 
 Composant pur de l'application composite London, trois unités 0 → 1 → 2. Sa structure est
@@ -224,3 +227,45 @@ la gouvernance sur l’archive exacte de l’index. L’audit de publication exi
 succès, l’identité des arbres testés et publiés et une nouvelle lecture distante.
 Ces preuves courantes sont sous .local/reports/ ; aucune preuve historique n’est
 réécrite. Le compte rendu final ne déclare la phase achevée qu’après ces contrôles.
+
+## 13. Extension de phase 11 — persistance durable
+
+La [décision de checkpoint](EXTENSION-PHASE11-CHECKPOINT.md) expose le besoin du
+consommateur, les mesures et les limites. La couche 2 est défigée en extension
+avant modification de son contrat. Les nouveaux tests ont d’abord échoué sur
+l’API absente, puis passent sur l’extension additive. Les tests historiques ne
+sont pas modifiés. Le gate intégral et le nouveau gel précèdent le codec.
+
+Le checkpoint ne duplique pas le journal : il conserve son compteur et une chaîne
+prolongée à chaque entrée réellement acceptée. La lecture du suffixe alimente
+les écritures en ajout seul. La reprise contrôle une fois le journal complet,
+puis réutilise la reprise publique existante. Les décisions, états C08, profils,
+priorités et seuils ne changent pas. Une répétition ignorée ne prolonge pas la
+chaîne ; un moteur invalidé ne produit aucun checkpoint utilisable.
+
+Le codec constitue depuis la phase 11 une unité 3 figée, au-dessus de 0/1/2
+et des amonts publics gelés. Il est pur et partagé. Son registre fermé rend possible la représentation
+durable des types C03 sans autoriser un import de données dans l’application
+ou dans l’infrastructure. Les protocoles physiques et les qualifications réelles
+restent dans leurs phases respectives.
+
+### Bilan des extensions de phase 11 (17/11/2026)
+
+Les quatre couches sont figées. Les réceptions typées MARCHE transmettent les
+horaires et couvertures causales courantes ; la reprise les restitue sans
+renouveler leur connaissance. Les checkpoints courts engagent le préfixe du
+journal et les faits connus sans recopier les historiques de stratégies,
+permissions ou preuves IA. Le rejeu public reconstruit une fois le checkpoint
+complet, puis les vrais constructeurs C08. Le codec 3 utilise un registre de
+types fermé ; les couches app/infra n’importent pas les modules de données.
+Les décisions [MARCHE](EXTENSION-PHASE11-MARCHE.md),
+[checkpoint journal](EXTENSION-PHASE11-CHECKPOINT-JOURNAL.md) et
+[vérifications](CORRECTION-VERIFICATIONS-CONTROLES.md) précisent les changements.
+
+Le composant compte 95 tests. Les deux CP4 de phase 11 revalident l’ensemble
+sur 1 403 cas, dont 14 contrats physiques différés. Les mutations M11-29 à
+M11-31 détectent les pertes de réception MARCHE, de contrôle de couverture
+et de scellement. Les mesures de checkpoint restent locales et synthétiques ;
+elles ne prouvent pas une latence maximale de plateforme. La durabilité est
+fournie par l’infrastructure SQLite et sa session applicative, sans remplacer
+les contrats purs du moteur. Aucun service IA distant n’est construit ici.

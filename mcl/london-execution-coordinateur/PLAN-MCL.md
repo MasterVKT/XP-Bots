@@ -280,3 +280,25 @@ rouge a précédé le retrait de cette restriction locale. Les couches 0d, 2a, 3
 Les deux fichiers contractuels révisés sont la fiche 0d et son test propre.
 L’interface publique et les protections sur grille restent conservées. Preuves
 et arbitrage : [DEFIGEAGE-0d-PHASE10.md](DEFIGEAGE-0d-PHASE10.md).
+
+### Phase 11 — corrections révélées par les consommateurs physiques (17/11/2026)
+
+Les quinze couches restent figées. Les défigeages et gates sont enregistrés
+dans le journal, avec les arbitrages [de flux de compte](CORRECTION-FLUX-COMPTE-PHASE11.md)
+et [de refus de prix](CORRECTION-REFUS-PRIX-PHASE11.md). La garde 1b neutralise
+une seule fois les apports/retraits qualifiés et conserve les références et les
+pics intermédiaires à la reprise ; un arrêt persistant n’est pas effacé. La
+réservation 1c retire exactement la tentative non remplie autorisée. Le cycle 4
+classe les refus connus de prix sans les confondre avec un accusé inconnu ; le
+coordinateur 6 exige une nouvelle cotation, une référence nouvelle et une preuve
+contemporaine avant toute nouvelle tentative encore dans le TTL. Les horaires
+courants des positions sont relus avant l’évaluation des sorties.
+
+Les nouveaux fichiers de tests sont inclus dans les contrats gelés et leurs
+empreintes, après correction formelle de leur inventaire. Les jonctions
+physiques utilisent le même coordinateur, deux COMMITs avant entrée native et
+les défenses prioritaires même pendant une panne de stockage. Le composant
+compte désormais 206 tests dans la suite globale de 1 403 cas, dont 14 contrats
+physiques différés à 13.1. Les deux gates globaux CP4 de phase 11 revalident
+les consommateurs ; les mutations M11-25 à M11-28 détectent les quatre pertes
+de comportement correspondantes. La qualification réelle reste distincte.

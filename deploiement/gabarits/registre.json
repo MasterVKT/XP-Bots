@@ -1,0 +1,47 @@
+{
+  "schema": "xp-deploiement-v1",
+  "deploiement": null,
+  "mode": "PAPER_AB",
+  "commit": null,
+  "empreintes": {
+    "technique": "2c9ebdec53d88be51fb6019961593754148ac6f55d6044164fbe14a1138a4321",
+    "ia": "4b478bff558c01e843c1099e891764a2deba18e7b32d193f04a2ec3e091ae69d"
+  },
+  "liaisons": {},
+  "justifications_liaisons": {},
+  "chemins": {
+    "racine": ".local",
+    "qualification": ".local/qualification/compte.json",
+    "table_heure": ".local/qualification/heure_serveur.json"
+  },
+  "historique": {
+    "departs_ticks_utc_ms": {},
+    "depuis_compte_utc_ms": null
+  },
+  "ingenierie": {
+    "boucle_ms": 100,
+    "minuterie_ms": 1000,
+    "controles_ms": 1000,
+    "snapshot_ms": 1000,
+    "calendrier_export_ms": 60000,
+    "seances_export_ms": 3600000,
+    "max_octets_echange": 1048576,
+    "taille_lot_ticks": 4096,
+    "max_ticks_lot": 1048576,
+    "max_taches_natives": 4,
+    "longueur_empreinte": 16,
+    "attente_arret_ms": 3000,
+    "seances_max_age_ms": 7200000,
+    "fermetures_max_age_ms": 86400000,
+    "max_jours_horaires": 64,
+    "ecart_horloges_max_ms": 1000
+  },
+  "scenario_fondamental": null,
+  "activation_veto": false,
+  "statut_a13": {
+    "statut": "NON_VALIDE",
+    "rapport": null,
+    "empreinte": null
+  },
+  "decisions": []
+}

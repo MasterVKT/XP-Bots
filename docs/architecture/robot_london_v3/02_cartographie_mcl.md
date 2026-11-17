@@ -497,7 +497,8 @@ sont explicites dans la carte London. Aucun import de moteur dans l’orchestrat
 Les contrats finaux exposent EntreeMoteur, EntreeJournalisee et AppelCalcul : toutes
 les réceptions et tous les calculs normalisés sont rejoués sans consulter le backend.
 La restauration des stratégies rejoue leurs API publiques ; les flux reprennent leur
-export C03 réel. La persistance physique de ces états reste future.
+export C03 réel. La phase 11 ajoute les checkpoints courts, le codec public 3 et les faits MARCHE causaux ;
+la persistance physique et sa reprise sont désormais consommées par points-entree.
 
 Rôle : le moteur de décision événementiel, identique en rejeu et en direct, qui applique l'ordre de C08 à chaque
 événement pour tous les bras. Point d'insertion : remplace l'enchaînement minimal du squelette.
@@ -577,39 +578,62 @@ Esquisses de contrat :
 
 ### 6.9 Artefact `infrastructure` (paquet `xpbots.infra`, phase 11)
 
-Rôle : seules implémentations réelles des frontières externes. Construite en phase 11 dans le conteneur, contre
-les contrats de frontière finalisés tôt du [document 08](08_contrats_frontieres.md) (exception MCL des frontières
-externes), avec un faux module `MetaTrader5` conforme au §2 de ce document (noms, valeurs, signatures et
-structures du paquet 5.0.6231). Aucun module de `xpbots` n'importe `MetaTrader5` au chargement : seule la
-fabrique de l'enveloppe `assemblage` l'importe, à l'exécution sur le poste, et l'injecte dans les couches `mt5_*`,
-qui le typent par un protocole structurel de `types_infra` ; les tests leur injectent le faux module. La suite
-complète s'exécute ainsi sous Linux, où le paquet n'est pas installable (roues Windows seulement). Dans la carte,
-l'externe `MetaTrader5` n'est autorisé qu'à la couche de `assemblage`. Les sondes S-01 à S-08 et les tests de
-contrat s'exécutent ensuite sur le poste, en sous-étape 13.1 ; toute divergence constatée ouvre un défigeage
-formel de nature « correction » de la couche concernée, avec test capturant le cas, puis nouveau gel.
+Réalisé dans le dossier commun
+[`london-infrastructure`](../../../mcl/london-infrastructure/PLAN-MCL.md) : quinze
+unités gelées, de 0a à 4, avec une feuille indépendante 0h pour le verrou de
+processus. Les deux composites pointent cette implémentation unique ; l'esquisse
+EMA reste historique. Le faux SDK, les fichiers et SQLite temporaires réels
+éprouvent les contrats ; quatorze tests supplémentaires restent désactivés
+jusqu'à la qualification du poste en 13.1.
+
+Les instants de réception sont pris au retour des lectures natives ; les
+curseurs gardent les occurrences d'une même milliseconde et refusent les
+préfixes réécrits. Les preuves de complétude et de conversion restent externes.
+Une préparation d'entrée exige un second COMMIT avant autorisation du worker ;
+une commande inconnue n'est pas renvoyée. Les protections et clôtures peuvent
+continuer pendant une panne de stockage. L'assemblage possède session, base et
+verrou, vérifie le lien entre compte natif et chemin d'état et conserve ces
+ressources tant qu'un worker reste actif. L'import réel de MetaTrader5 est
+différé et limité à l'assemblage ; aucun test de phase 11 ne l'effectue.
+
+L’import de MetaTrader5 est exclusivement réalisé par l’assemblage 4, après
+les contrôles de configuration. La session 1 reçoit le SDK injecté ; les quatre
+adaptateurs natifs passent par cette session réelle. Les tests injectent
+FauxMT5 et n’importent aucun SDK réel. Les signatures et structures proviennent
+du contrat du document 08 ; les sondes S-01 à S-08 et les quatorze contrats
+physiques restent à confronter au poste en 13.1. Une divergence constatée alors
+ouvre le défigeage correctif de la couche concernée, avec test et nouveau gel.
+
+Les noms et dépendances ci-dessous sont ceux de la carte active. La colonne des
+dépendances décrit les liens internes à cet artefact ; ses amonts, frontières,
+interfaces et fichiers de contrat figurent dans son dossier MCL.
 
 | Unité | Couche | Responsabilité | Entrée → sortie | Dépend de | Frontière réelle | Sources |
 |---|---|---|---|---|---|---|
-| `types_infra` | 0a | Définir la table versionnée heure serveur → UTC et les correspondances des structures MT5 | — | — | — | C03.1, A04 |
-| `horloge_systeme` | 0b | Fournir l'instant UTC et un temps monotone pour les délais | — → instants | — | `time` | C03 |
-| `depot_sqlite` | 0c | Stocker l'état par transactions exclusives | états → base | — | `sqlite3` | C07, C08 |
-| `journal_fichiers` | 0d | Écrire journal de décisions et journal d'entrées en JSON Lines | enregistrements → fichiers | — | système de fichiers | C09, C11.14 |
-| `lecteur_snapshot` | 0e | Lire les octets du snapshot IA au chemin réel, avec plafond de taille | chemin → octets, heure de lecture | — | système de fichiers | A10 |
-| `lecteur_ticks` | 0f | Lire en flux les fichiers de ticks mensuels et calculer leur empreinte | fichiers → lignes, SHA-256 | — | système de fichiers | C10 |
-| `sources_controles` | 0g | Lire le dossier d'échange des permissions (D-11), les exports MQL5 du calendrier et des séances et le fichier des fermetures exceptionnelles (D-12) | fichiers → octets horodatés à la lecture | — | système de fichiers | C04, C05 |
-| `mt5_session` | 1 | S'attacher au terminal, lire version, état, compte et dossier commun | — → session et informations | `types_infra` | `MetaTrader5` | C04 |
-| `mt5_specifications` | 2a | Lire et contrôler les caractéristiques C04 et produire les profils | symbole → profils, liste `ENVIRONMENT_NOT_READY` | `mt5_session` | `MetaTrader5` | C04 |
-| `mt5_flux` | 2b | Récupérer les ticks incrémentalement, convertir l'heure, signaler la connexion | symbole, curseur → ticks, états de connexion | `mt5_session`, `types_infra` | `MetaTrader5` | C03, S-01, S-08 |
-| `mt5_calculs` | 2c | Implémenter le port de calcul avec les fonctions natives | requêtes → résultats | `mt5_session` | `MetaTrader5` | C04, C07, S-07 |
-| `mt5_execution` | 2d | Exécuter les commandes d'ordre avec délai d'accusé et rapprochement | commandes → réponses | `mt5_session` | `MetaTrader5`, `threading` | C08, S-02 à S-06 |
-| `courtier_mt5` | 3 | Composer les adaptateurs MT5 en exécutant de commandes et en qualification de l'environnement au démarrage et avant ordre | commandes, contrôles → réponses, rapports | 2a, 2b, 2c, 2d | — | C04, C08 |
-| `assemblage` | 4 | Enveloppe : importer `MetaTrader5` sur le poste, l'injecter et fournir à la coquille l'ensemble configuré des adaptateurs réels | configuration d'exécution → adaptateurs prêts | 0b à 0g, 3 | `MetaTrader5` (import et injection seulement) | C08, A10 |
+| `types` | 0a | Définir la table versionnée heure serveur → UTC et les correspondances des structures MT5 | — | — | — | C03.1, A04 |
+| `horloge` | 0b | Fournir l'instant UTC et un temps monotone pour les délais | — → instants | — | `time` | C03 |
+| `sqlite` | 0c | Stocker l'état par transactions exclusives | états → base | — | `sqlite3` | C07, C08 |
+| `journal` | 0d | Écrire journal de décisions et journal d'entrées en JSON Lines | enregistrements → fichiers | — | système de fichiers | C09, C11.14 |
+| `snapshot` | 0e | Lire les octets du snapshot IA au chemin réel, avec plafond de taille | chemin → octets, heure de lecture | — | système de fichiers | A10 |
+| `ticks` | 0f | Lire en flux les fichiers de ticks mensuels et calculer leur empreinte | fichiers → lignes, SHA-256 | — | système de fichiers | C10 |
+| `controles` | 0g | Lire le dossier d'échange des permissions (D-11), les exports MQL5 du calendrier et des séances et le fichier des fermetures exceptionnelles (D-12) | fichiers → octets horodatés à la lecture | — | système de fichiers | C04, C05 |
+| `verrou` | 0h | Conserver un verrou exclusif non bloquant pendant la propriété des ressources, sans effacer son support | chemin → propriétaire ou refus | — | primitives système et fichiers | C07, C08 |
+| `session` | 1 | S'attacher au terminal, lire version, état, compte et dossier commun | — → session et informations | 0a | `MetaTrader5` | C04 |
+| `specifications` | 2a | Valider les caractéristiques C04, leurs preuves datées et la convention qualifiée des ticks | qualification et lectures natives → profils et convention SDK | 0a, 1 | `MetaTrader5` | C04 |
+| `flux` | 2b | Lire les ticks selon la convention C04, conserver occurrences et curseurs, publier la couverture S08 | symbole, curseur → ticks, états de connexion | 0a, 1 | `MetaTrader5` | C03, S-01, S-08 |
+| `calculs` | 2c | Implémenter le port de calcul avec les fonctions natives | requêtes → résultats | 0a, 1 | `MetaTrader5` | C04, C07, S-07 |
+| `execution_mt5` | 2d | Préparer les entrées, exécuter après preuve, dater les retours et rapprocher les commandes ; défenses prioritaires | commandes → réponses | 0a, 0b, 1 | `MetaTrader5`, `threading` | C08, S-02 à S-06 |
+| `courtier` | 3 | Composer les adaptateurs MT5 en exécutant de commandes et en qualification de l'environnement au démarrage et avant ordre | commandes, contrôles → réponses, rapports | 0a, 0b, 1, 2a, 2b, 2c, 2d | — | C04, C08 |
+| `assemblage` | 4 | Enveloppe : importer `MetaTrader5` sur le poste, l'injecter et fournir à la coquille l'ensemble configuré des adaptateurs réels | configuration d'exécution → adaptateurs prêts | 0a à 0h, 1, 3 | `MetaTrader5` (import et injection seulement) | C08, A10 |
 
-Chaque adaptateur feuille déclare sa frontière réelle dans `depend_de` (horloge, SQLite, système de fichiers,
-`MetaTrader5`) : une simulation de cette carte avec `mcl.py analyser` donne alors une racine unique,
-`assemblage`, et aucune unité isolée.
+Les huit feuilles restent indépendantes ; 2a à 2d sont parallèles après la
+session 1. Le courtier 3 compose leurs instances publiques réelles et transmet
+le choix C04 des ticks au flux et au transport. La table serveur des exports
+D12 ne détermine jamais cette convention. L’assemblage 4 possède les ressources,
+le lien durable au compte et le verrou ; il les conserve tant qu’un worker reste
+actif. La carte analysée et les contrôles d’import ne présentent aucune divergence.
 
-Esquisses de contrat : entrée au marché avec `sl` et `tp` dans la même requête, numéro magique et commentaire,
+Contrats réalisés : entrée au marché avec `sl` et `tp` dans la même requête, numéro magique et commentaire,
 mode de remplissage qualifié ; délai d'accusé de `request_ack_timeout_seconds` par un exécutant dédié ;
 ajustement du TP par `TRADE_ACTION_SLTP` ; clôture par transaction opposée sur le ticket ; rapprochement par
 `positions_get`, `orders_get`, `history_orders_get`, `history_deals_get` filtrés ; spécifications relues
@@ -617,14 +641,51 @@ avant chaque ordre (C04) ; aucun secret journalisé.
 
 ### 6.10 Artefact `points-entree` (paquet `xpbots.app`, phase 11)
 
-| Unité | Couche | Responsabilité | Entrée → sortie | Dépend de | Amont | Sources |
-|---|---|---|---|---|---|---|
-| `configuration_application` | 0 | Lire arguments, chemins, mode, identifiant et registre de déploiement | arguments, fichiers → configuration d'exécution | — | noyau | C01, A01 |
-| `boucle_direct` | 1a | Démarrer, rapprocher, scruter, planifier, exécuter les commandes après écriture de l'état, s'arrêter proprement | configuration → exécution continue | `configuration_application` | infrastructure, orchestration, moteur-london (fabrique) | C08, A03, A10 |
-| `cli_rejeu` | 1b | Lancer un rejeu C10 | arguments → résultats et rapports | `configuration_application` | journal-rejeu, infrastructure | C10 |
-| `cli_qualification` | 1c | Qualifier l'environnement C04 et exécuter les contrôles de qualification | arguments → rapport | `configuration_application` | infrastructure | C04 |
-| `cli_rapports` | 1d | Produire les rapports à partir des journaux | journaux → rapports | `configuration_application` | journal-rejeu, infrastructure | C09, A11 |
-| `principal` | 2 | Points d'entrée `python -m` et refus des modes non autorisés | arguments → code de sortie | 1a, 1b, 1c, 1d | — | C01 |
+Les neuf unités sont construites et gelées dans le dossier actif
+[`points-entree`](../../../mcl/points-entree/PLAN-MCL.md). La question-test a
+séparé le livre PAPER de la persistance et identifié une composition commune
+pour le direct et le rejeu d'incident. Les identifiants 1e/1f conservent la
+trace de cette clarification ; leurs profondeurs sont calculées par le DAG.
+
+| Unité | Couche (profondeur) | Responsabilité et entrée → sortie | Dépendances internes | Amonts réels |
+|---|---|---|---|---|
+| `configuration` | 0 (0) | Registre et CF → application validée, gabarits et paramètres TSV | aucune | noyau, types infra |
+| `livre_papier` | 1a (1) | Appels et ticks → vrai simulateur C10, opérations incrémentales et checkpoint | 0 | rejeu, exécution, codec |
+| `session_durable` | 1b (1) | Checkpoint et deltas → COMMIT SQLite, preuves et projections C09 | 0 | orchestration, codec, exécution, stockage infra |
+| `cli_rejeu` | 1c (1) | Demande typée, manifeste et gzip → expérience, archive et rapport C10 | 0 | rejeu, London, C05, IA, orchestration, infrastructure |
+| `cli_qualification` | 1d (1) | Registre et lectures natives → rapport C04 sans autorisation d'ordre | 0 | infrastructure, noyau, exécution |
+| `composition_moteur` | 1f (1) | Initialisation et ports → même moteur London ; reconstruction sans backend | 0 | orchestration, London, C05, IA, exécution, codec, types infra |
+| `cli_rapports` | 1e (2) | Archives → rapports C10 ou comparaison d'incident par les blocs réels | 0, 1a, 1c, 1f | rejeu, codec, noyau |
+| `boucle_direct` | 2 (2) | Configuration → contrôles, ticks, minuteries, défenses et entrées après COMMIT | 0, 1a, 1b, 1f | infrastructure, orchestration, London, C05, IA, exécution, rejeu |
+| `principal` | 3 (3) | Arguments → huit commandes et codes de sortie ; attestation physique du réservé | 0, 1c, 1d, 1e, 2 | infrastructure et verrou, noyau, rapports et autorisation C10 |
+
+Les dépendances exactes et les frontières autorisées figurent dans la carte
+active ; aucune frontière de fichiers ou de SDK n'est importée directement
+dans l'application. Les constantes D-09 sont techniques et les paramètres
+métier proviennent de CF. Le direct possède les ressources, garde le verrou
+si un worker reste actif et conserve arrêts et inconnus au redémarrage.
+
+`python -m xpbots.app` expose gabarits, parametres-export, qualifier, direct,
+rejeu, rapports, incident et geler-code. L'aide et les commandes hors ligne
+ne chargent pas le SDK. Le mode est celui du registre ; la neutralité technique
+est refusée en DEMO/REEL, le réel exige sa décision tracée et les preuves C10,
+le veto natif ses preuves A13. Les dossiers contradictoires sont refusés sans
+recalculer ni modifier les seuils financiers.
+
+Les checkpoints réguliers engagent les faits courants par SHA et métadonnées,
+sans recopier le journal, les historiques C05 ou les preuves IA. La reprise
+rejoue les API publiques, obtient une fois le checkpoint complet et appelle
+les vrais constructeurs C08. Les marqueurs de reprise au préfixe concerné
+permettent au rapport d'incident de reconstruire les mêmes effets.
+
+La commande geler-code inventorie réellement l'arbre Python/MQL5 et ses
+ressources. Le premier gel du réservé est conservé sous verrou entre processus,
+avec consultations et refus tracés avant toute lecture de prix, préchargement
+compris. La procédure d'exploitation est dans
+[`docs/exploitation/LONDON_M15.md`](../../exploitation/LONDON_M15.md).
+La séance PAPER complète utilise FauxMT5 et des fichiers/SQLite temporaires ;
+son journal d'entrées, C09, ses livres et son état complet se rejouent à l'identique.
+Cette preuve C11.14 synthétique ne qualifie ni le terminal ni la rentabilité.
 
 ### 6.11 Artefact `service-ia` (paquet `xpbots.service_ia`, phase 12, processus séparé)
 

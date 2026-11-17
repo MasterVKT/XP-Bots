@@ -59,7 +59,24 @@
       "contrats": [
         "mcl/orchestration/contrats/couche-2.md",
         "src/xpbots/orchestration/c2_moteur/__init__.py",
-        "tests/robot/orchestration/test_cat*_c2_*.py"
+        "tests/robot/orchestration/test_cat*_c2_*.py",
+        "tests/robot/outils/checkpoints_controles.py"
+      ]
+    },
+    {
+      "id": "3",
+      "profondeur": 3,
+      "nom": "codec-durable",
+      "chemins": [
+        "src/xpbots/orchestration/c3_codec"
+      ],
+      "imports": [
+        "xpbots.orchestration.c3_codec"
+      ],
+      "contrats": [
+        "mcl/orchestration/contrats/couche-3.md",
+        "src/xpbots/orchestration/c3_codec/__init__.py",
+        "tests/robot/orchestration/test_cat*_c3_*.py"
       ]
     }
   ],
@@ -99,6 +116,21 @@
         "fondamental"
       ],
       "couche": "2"
+    },
+    {
+      "id": "codec",
+      "responsabilite": "Encoder et decoder les valeurs publiques durables avec registre ferme, sans entree-sortie ni import dynamique.",
+      "depend_de": [
+        "contrats",
+        "bras",
+        "moteur",
+        "noyau",
+        "execution",
+        "fondamental",
+        "contexte",
+        "donnees"
+      ],
+      "couche": "3"
     }
   ],
   "externes": [
@@ -115,7 +147,8 @@
       "couches_autorisees": [
         "0",
         "1",
-        "2"
+        "2",
+        "3"
       ]
     },
     {
@@ -126,7 +159,8 @@
       "couches_autorisees": [
         "0",
         "1",
-        "2"
+        "2",
+        "3"
       ]
     },
     {
@@ -136,7 +170,8 @@
       ],
       "couches_autorisees": [
         "1",
-        "2"
+        "2",
+        "3"
       ]
     },
     {
@@ -146,7 +181,8 @@
       ],
       "couches_autorisees": [
         "1",
-        "2"
+        "2",
+        "3"
       ]
     },
     {
@@ -156,7 +192,8 @@
       ],
       "couches_autorisees": [
         "0",
-        "2"
+        "2",
+        "3"
       ]
     },
     {

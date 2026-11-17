@@ -14,11 +14,13 @@
     "src/xpbots/app/rejeu_squelette.py",
     "src/xpbots/donnees/*",
     "src/xpbots/execution/squelette.py",
-    "src/xpbots/infra/*",
     "src/xpbots/london/*",
     "src/xpbots/noyau/c[0-9]*",
     "src/xpbots/orchestration/squelette.py",
-    "src/xpbots/rejeu/squelette.py"
+    "src/xpbots/rejeu/squelette.py",
+    "src/xpbots/infra/squelette.py",
+    "src/xpbots/app/c[0-9]*",
+    "src/xpbots/app/__main__.py"
   ],
   "couches": [
     {
@@ -135,21 +137,21 @@
     },
     {
       "id": "4",
-      "profondeur": 6,
+      "profondeur": 3,
       "nom": "infrastructure",
       "chemins": [
-        "src/xpbots/infrastructure"
+        "src/xpbots/infra"
       ],
       "imports": [
-        "xpbots.infrastructure"
+        "xpbots.infra"
       ],
       "contrats": [
-        "mcl/robot-ema-v3/COUTURES.md"
+        "mcl/london-infrastructure/contrats/*.md"
       ]
     },
     {
       "id": "5",
-      "profondeur": 7,
+      "profondeur": 6,
       "nom": "app",
       "chemins": [
         "src/xpbots/app"
@@ -255,15 +257,9 @@
       "responsabilite": "Implémenter les frontières externes réelles.",
       "depend_de": [
         "noyau",
-        "donnees_temps",
         "execution",
-        "fondamental",
-        "contexte_ia",
-        "journal_rejeu",
-        "service_ia",
         "metatrader5",
         "sqlite",
-        "reseau",
         "horloge-os"
       ],
       "couche": "4"

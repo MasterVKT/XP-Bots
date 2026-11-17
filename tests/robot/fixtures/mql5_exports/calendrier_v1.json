@@ -1,0 +1,9 @@
+{
+  "schema": "xp-export-calendrier-v1",
+  "version": 1,
+  "export_serveur": "2026.11.10 10:00:00",
+  "export_gmt": "2026.11.10 09:00:00",
+  "fenetre_debut_serveur": "2026.11.09 01:00:00",
+  "fenetre_fin_serveur": "2026.11.13 10:01:00",
+  "evenements": []
+}
