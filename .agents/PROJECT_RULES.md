@@ -21,8 +21,8 @@ sources métier sans les remplacer. Une skill ne recopie pas ces règles : elle 
 
 Le dépôt contient les spécifications, exports, fonctions de référence et composants construits décrits
 ci-dessous. Depuis la phase 11 London, l’adaptateur MT5, les lecteurs physiques et les points d’entrée London
-sont construits hors ligne ; leur qualification physique reste en 13.1. Le service HTTP LLM et le producteur
-fondamental externe restent à implémenter ou à fournir, ainsi que l’intégration de plateforme EMA. Pour le
+sont construits hors ligne ; leur qualification physique reste en 13.1. Le service HTTP LLM est construit depuis la phase 12 ; sa qualification réelle reste en 13.6.
+Le producteur fondamental externe reste à fournir, ainsi que l’intégration de plateforme EMA. Pour le
 robot 1 (`EMA_V3`) comme pour le robot London (`LONDON_V3`), Python 3.13 et MT5 sont arrêtés et chaque robot se construit
 selon son propre plan et sa méthode MCL, dans `src/xpbots/` :
 
@@ -93,4 +93,4 @@ défenses prioritaires et arrêts persistants. Le squelette EMA garde ses entré
 Le [guide d’exploitation](../docs/exploitation/LONDON_M15.md) décrit les commandes
 et les limites. Le faux SDK et les tests hors ligne ne qualifient aucun terminal,
 compte, source externe ou résultat financier ; les contrats physiques et la
-compilation MQL5 sont différés en 13.1. La phase 12 reste une demande distincte.
+compilation MQL5 sont différés en 13.1. La phase 12 a figé les douze unités du service IA partagé sous `xpbots.service_ia.c*`, dossier actif `mcl/london-service-ia/`. Il réutilise C05 et l’infrastructure, possède son registre SQLite A10, trois workers et une CLI séparée. Les six contrats API/RSS restent différés en 13.6 ; aucun réseau, secret réel ou qualification A13 ne résulte des tests hors ligne. Le [guide IA](../docs/exploitation/SERVICE_IA.md) décrit l’exploitation. La prochaine demande distincte est la sous-étape 13.1 ; ne pas reconstruire un service EMA parallèle.

@@ -78,6 +78,4 @@ moteur pour direct et rejeu d’incident. Le livre reste le simulateur C10 exist
 le dépôt SQLite et les journaux sont réels dans des dossiers temporaires.
 Les cartes actives, contrats et bilans priment sur les tables candidates de la
 référence de ce skill. Ne pas reconstruire ces composants pour EMA ni modifier
-ses anciens squelettes sans la phase d’intégration correspondante. Le service IA
-reste la phase 12 ; les quatorze contrats physiques et la compilation MQL5 sont
-différés en 13.1. La procédure est `docs/exploitation/LONDON_M15.md`.
+ses anciens squelettes sans la phase d’intégration correspondante. Le service IA partagé est construit depuis la phase 12 dans `mcl/london-service-ia/` : douze unités gelées sous `xpbots.service_ia.c*`, aucune seconde implémentation EMA. Les quatorze contrats MT5 et la compilation MQL5 sont différés en 13.1 ; les six contrats API/RSS et la qualification A13 en 13.6. La CLI séparée est décrite dans `docs/exploitation/SERVICE_IA.md`. La procédure est `docs/exploitation/LONDON_M15.md`.

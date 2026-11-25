@@ -21,7 +21,7 @@ LONDON = (
 )
 
 # Le coordinateur est construit une fois pour les deux méthodes (R4/R5, 06/11/2026).
-COMMUN = ('src/xpbots/infra/c[0-9]*', 'src/xpbots/execution/c[0-9]*', 'src/xpbots/fondamental/*', 'src/xpbots/contexte_ia/*', 'src/xpbots/orchestration/c[0-9]*', 'src/xpbots/rejeu/c[0-9]*')
+COMMUN = ('src/xpbots/service_ia/*', 'src/xpbots/infra/c[0-9]*', 'src/xpbots/execution/c[0-9]*', 'src/xpbots/fondamental/*', 'src/xpbots/contexte_ia/*', 'src/xpbots/orchestration/c[0-9]*', 'src/xpbots/rejeu/c[0-9]*')
 
 
 def appartient(chemin_relatif_au_depot: str, registre: tuple[str, ...]) -> bool:

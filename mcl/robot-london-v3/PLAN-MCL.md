@@ -2,7 +2,7 @@
 
 > Document de travail MCL du **composite** : robot 2 London Breakout M15 (`LONDON_V3`) et composants partagés.
 > La source de vérité est le [plan d'implémentation](../../docs/architecture/robot_london_v3/README.md)
-> (version 1.4.12, validé par l'utilisateur le 05/11/2026). Ce fichier en reprend les sections 0 à 2 et renvoie
+> (version 1.4.13, validé par l'utilisateur le 05/11/2026). Ce fichier en reprend les sections 0 à 2 et renvoie
 > au plan pour le reste ; en cas d'écart, le plan prévaut et l'écart est corrigé ici dans la même modification.
 > Fichiers voisins : `carte.json` (carte au grain des paquets, servant à `analyser` et `verifier`, **jamais à
 > `figer`**) et `journal.jsonl` (traces de l'outil). Chaque artefact de chair a son propre dossier
@@ -103,7 +103,7 @@ chaque artefact au début de sa phase.
 | 3b | `contexte-ia` | `xpbots.contexte_ia` | noyau, execution-coordinateur | 8 |
 | 3c | `infrastructure` | `xpbots.infra` | noyau, execution-coordinateur ; MT5, SQLite, fichiers, horloge, fils d'exécution | 11 |
 | 4a | `orchestration` | `xpbots.orchestration` | noyau, london-donnees-temps, execution-coordinateur, controles-fondamentaux, contexte-ia | 9 |
-| 4b | `service-ia` | `xpbots.service_ia` | noyau, contexte-ia ; SQLite, réseau, fichiers, horloge, fils d'exécution | 12 |
+| 4b | `london-service-ia` | `xpbots.service_ia` | noyau, contexte-ia, C05, infrastructure ; SQLite A10, réseau, fichiers, horloge, fils | 12 |
 | 5 | `journal-rejeu` | `xpbots.rejeu` | noyau, execution-coordinateur, orchestration, moteur-london ; aléa | 10 |
 | 6 | `points-entree` | `xpbots.app` | noyau, orchestration, journal-rejeu, infrastructure, moteur-london | 11 |
 
@@ -188,3 +188,4 @@ chaque artefact au début de sa phase.
 La phase 9 justifie les dépendances directes nouvelles du point de composition S7
 vers execution-coordinateur, controles-fondamentaux et contexte-ia : il construit
 les deux comptes et le lecteur par défaut. Les règles strictes restent inchangées.
+| 12 | Terminée | 25/11/2026 | Douze unités du [service IA commun](../london-service-ia/PLAN-MCL.md) figées, CP1/CP3/CP4 ; collecte, validation, six oracles, budget SQLite concurrent, calendrier D12, notes, trois workers et IPC atomique. Correction CLI, extension A11 et correction A12/A13 avec cascade de tests de 3 vers 4 tracées sans changer les amonts des phases précédentes. Couture réelle lecteur/London PAPER_AB été-hiver et réponse de 20 s. 222 tests propres, 1 629 globaux dont vingt différés, quatorze mutations détectées. Aucun réseau ni secret réel ; phase 13 non commencée. |

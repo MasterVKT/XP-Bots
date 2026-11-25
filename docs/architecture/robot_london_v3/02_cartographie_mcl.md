@@ -103,7 +103,7 @@ suite locale complète (sa « CI », D-10).
 | `infrastructure` | `noyau`, `execution-coordinateur` (protocole du courtier et port de calcul) | 3 |
 | `moteur-london-v1` | `noyau`, `london-donnees-temps` (artefact de comparaison, sous-étape 13.4) | 2 |
 | `orchestration` | `noyau`, `london-donnees-temps`, `execution-coordinateur`, `controles-fondamentaux`, `contexte-ia` ; les stratégies sont **injectées** (D-18) | 4 |
-| `service-ia` | `noyau`, `contexte-ia` (format du snapshot) | 4 |
+| `service-ia` | `noyau`, `contexte-ia`, `controles-fondamentaux` (D12), `infrastructure` (horloge, fichiers, verrou) ; dossier actif `london-service-ia` | 4 |
 | `journal-rejeu` | `noyau`, `execution-coordinateur`, `orchestration`, `moteur-london` (fabrique de stratégie) ; `moteur-london-v1` à partir de 13.4 | 5 |
 | `points-entree` | `noyau`, `orchestration`, `journal-rejeu`, `infrastructure`, `moteur-london` (fabrique de stratégie) | 6 |
 | `donnees-historiques` | `noyau`, `infrastructure` (table de conversion, lecture des fichiers), `journal-rejeu` (analyse des ticks) ; sous-étape 13.3 | 6 |
@@ -689,23 +689,38 @@ Cette preuve C11.14 synthétique ne qualifie ni le terminal ni la rentabilité.
 
 ### 6.11 Artefact `service-ia` (paquet `xpbots.service_ia`, phase 12, processus séparé)
 
-Comparaison : fonctions de [llm_contracts.py](../../../reference/llm_contracts.py). Carte indicative : comme pour
-tout artefact, `mcl.py analyser` fixe les profondeurs définitives avant la première couche.
+Les douze unités sont réalisées et figées dans le dossier actif
+[`london-service-ia`](../../../mcl/london-service-ia/PLAN-MCL.md), commun aux deux
+robots après arbitrage R4/R5. L'esquisse EMA service-ia reste historique. La
+question-test et le DAG réel remplacent la carte indicative initiale : les
+types sont la feuille, six transformations indépendantes composent le niveau 1,
+trois unités le niveau 2, puis le planificateur et l'enveloppe physique.
 
-| Unité | Couche | Responsabilité | Dépend de | Frontière réelle | Sources |
+| Unité | Couche | Responsabilité | Dépend de (interne) | Frontière réelle | Sources |
 |---|---|---|---|---|---|
-| `types_service` | 0a | Définir éléments sources, travaux, résultats, événements, budget et instantané | — | — | A04 à A10 |
-| `borne_tokens` | 0b | Borner les tokens d'entrée et raccourcir un dossier sans couper une négation ni une condition | — | — | A09 |
-| `validateur_sortie` | 0c | Valider strictement les sorties d'extraction et informatives | — | — | A05, A11 |
-| `normalisation_rss` | 1a | Normaliser et dédoublonner les textes officiels, première heure de connaissance conservée | `types_service` | — | A04 |
-| `constructeur_veto` | 1b | Construire un événement `OFFICIAL_UNSCHEDULED_POLICY` si toutes les conditions sont réunies | `types_service`, `validateur_sortie` | — | A06 |
-| `registre_budget` | 1c | Réserver et rapprocher les coûts par transaction exclusive en décimal | `types_service` | `sqlite3` | A09 |
-| `clients_fournisseurs` | 1d | Construire les requêtes Groq, Gemini et OpenAI et lire leurs réponses et leur usage | `types_service` | `urllib` | A08 |
-| `collecteur_rss` | 2a | Interroger les flux officiels (requêtes conditionnelles, délais, plafonds, reprises, redirections bornées) | `normalisation_rss` | `urllib` | A04 |
-| `routeur` | 2b | Choisir la route, appliquer délais, quotas, reprises et échéance | `clients_fournisseurs`, `registre_budget`, `borne_tokens` | — | A08, A09 |
-| `ecrivain_snapshot` | 2c | Écrire le snapshot de façon atomique, séquence persistée | `types_service` | système de fichiers | A10 |
-| `planificateur` | 3 | Planifier briefing, classification, journal, revue et cas de dérive sous les plafonds | `routeur`, `collecteur_rss`, `constructeur_veto` | — | A09, A11, A13 |
-| `service` | 4 | Enveloppe : heartbeat indépendant, travailleur d'inférence unique, collecteur séparé | `planificateur`, `ecrivain_snapshot` | — | A03, A10 |
+| `types` | 0 | Ressources immuables, documents, jobs et ports stricts | — | — | A04–A10 |
+| `tokens` | 1a | Borne de l'enveloppe UTF-8 complète, réduction cohérente | types | — | A09 |
+| `validation` | 1b | Extraction et notes strictes, preuves réellement fournies | types | — | A05, A11 |
+| `normalisation` | 1c | Identité, dates, corrections et première connaissance | types | — | A04 |
+| `budget` | 1d | Réservations Decimal et rapprochement dans le port transactionnel | types | réalisée en 4 | A09 |
+| `fournisseurs` | 1e | Trois codecs d'enveloppes et d'usage A08 sans HTTP | types | — | A08 |
+| `snapshot` | 1f | Snapshot validé et séquence réservée avant publication | types | réalisée en 4 | A10 |
+| `veto` | 2a | Veto causal après appariement D12 et mapping versionné | types, validation | — | A06, C05 |
+| `routeur` | 2b | Ordre, deadlines, réservations, reprises et archives | types, tokens, validation, budget, fournisseurs | réalisée en 4 | A08–A09 |
+| `collecteur` | 2c | Polling conditionnel, redirections bornées et archives causales | types, normalisation | réalisée en 4 | A04 |
+| `planificateur` | 3 | Priorités, notes, métriques, hypothèses et dérive | types, veto, routeur, collecteur, validation, budget | — | A09, A11, A13 |
+| `service` | 4 | SQLite A10, HTTP, D12, fichiers, alertes, agrégats et trois workers | types, snapshot, planificateur, budget, routeur, collecteur, veto | urllib, SQLite, fichiers, fils | A03, A10–A12 |
+
+Les amonts réels sont le noyau, le lecteur IA, C05 et l'infrastructure. Le
+service réutilise l'horloge, les lectures bornées, l'écriture atomique, le verrou
+et la garde de calendrier ; son registre A10 distinct n'est pas un dépôt C08
+copié. Aucun import de stratégie, exécution, orchestration ou rejeu n'est admis.
+Les oracles de [llm_contracts.py](../../../reference/llm_contracts.py) restent
+exclusivement dans les tests. Les six contrats API/RSS sont différés à 13.6.
+La couture réelle écrit le fichier consommé par le lecteur physique et le
+London PAPER_AB ; REFERENCE conserve ComplementAbsent. Une réponse lente ou
+ultérieure ne retarde ni ne réécrit une décision. Voir le
+[guide d'exploitation](../../exploitation/SERVICE_IA.md).
 
 **Dérive d'un fournisseur (A13.10, A12)** : chaque semaine, le planificateur rejoue les `weekly_golden_cases` cas
 fixes ; si plus de `golden_drift_suspend_if_changed_cases_greater_than` classements matériels changent, le service

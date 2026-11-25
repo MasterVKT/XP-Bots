@@ -81,7 +81,7 @@ décrit les huit commandes, les fichiers attendus et la conduite des incidents.
 Les sources du service d’export sont dans `mql5/Services/XPBotsExport.mq5`.
 La compilation, la confrontation au terminal et les quatorze contrats physiques
 différés se font en 13.1 ; aucun appel au SDK réel n’est effectué par les contrôles
-hors ligne. Le service IA distant reste la phase 12, non commencée.
+hors ligne. Le service IA distant est construit et figé depuis la phase 12 dans [mcl/london-service-ia](mcl/london-service-ia/PLAN-MCL.md). Son [guide d’exploitation](docs/exploitation/SERVICE_IA.md) décrit la CLI séparée, le profil non qualifié, les agrégats anonymisés et le rapprochement des coûts. La suite compte 1 629 tests, dont vingt contrats physiques différés ; quatorze mutations du service sont détectées. La couture réelle avec le lecteur et le London PAPER_AB passe hors ligne. Les fournisseurs restent NON_QUALIFIE et aucune API réelle n’est appelée ; la phase 13 n’est pas commencée.
 
 Depuis la racine, définir `PYTHONPATH=src`, puis exécuter
 `python -m xpbots.app --help`. Le mode provient du registre et les sorties

@@ -1,8 +1,8 @@
-# Rapport de passation — robot London (`LONDON_V3`), reprise à la phase 12
+# Rapport de passation — robot London (`LONDON_V3`), reprise à la sous-étape 13.1
 
-> Mis à jour le 17/11/2026 à la fin de la phase 11, à l'intention de l'agent qui reprend l'exécution du plan dans une
+> Mis à jour le 25/11/2026 à la fin de la phase 12, à l'intention de l'agent qui reprend l'exécution du plan dans une
 > autre session, éventuellement avec un autre modèle ou un autre outil. Son but : que la suite soit construite
-> exactement selon la logique, la rigueur et les conventions des phases 0 à 11. Ce rapport est un **contexte de
+> exactement selon la logique, la rigueur et les conventions des phases 0 à 12. Ce rapport est un **contexte de
 > reprise**, pas une source normative : en cas d'écart avec les spécifications, les exports figés, le plan ou le
 > code réel, ce sont eux qui prévalent, et l'écart se signale (plan directeur, §0).
 
@@ -11,12 +11,12 @@
 | Élément | Valeur |
 |---|---|
 | Dépôt | `MasterVKT/XP-Bots` |
-| Branche de travail | `master`, après intégration en coexistence structurée (`5e5e288`) ; les commits `9c39d23` et `70c60d9` sont présents ; phase 4 `85069c0` ; phase 5 `4213a07` ; phase 6 `5b017cc` ; phase 7 `27284c2` ; phase 8 `7f358c8` ; phase 9 `e86a9da` ; phase 10 `cea2481` ; le commit de phase 11 porte cette mise à jour |
-| Plan suivi | [Plan directeur 1.4.12](../../docs/architecture/robot_london_v3/README.md), documents 01 à 08 du même dossier |
-| Phases terminées | 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 et 11 ; état et publication vérifiables dans le journal Git |
-| Prochaine action | **Phase 12 — service IA distant partagé**, seulement sur demande explicite ; infrastructure et points d’entrée figés, CP4 et coutures S1 direct/S6/S7 vérifiés |
-| Suite du robot | 1 403 tests recensés : 1 389 réussis et 14 contrats physiques différés à 13.1 ; infrastructure 183 (158 catégorie 1, 25 catégorie 2), points d’entrée 90 (60 catégorie 1, 30 catégorie 2), squelette 70 |
-| Contrôles | Régression intégrale, ressources métier, plan London, gouvernance, cartes strictes et 38 mutations détectées : bilans [infrastructure](../london-infrastructure/PLAN-MCL.md), [points d’entrée](../points-entree/PLAN-MCL.md) et journaux MCL |
+| Branche de travail | `master`, après intégration en coexistence structurée (`5e5e288`) ; les commits `9c39d23` et `70c60d9` sont présents ; phase 4 `85069c0` ; phase 5 `4213a07` ; phase 6 `5b017cc` ; phase 7 `27284c2` ; phase 8 `7f358c8` ; phase 9 `e86a9da` ; phase 10 `cea2481` ; phase 11 `37787c6` ; le commit de phase 12 porte cette mise à jour |
+| Plan suivi | [Plan directeur 1.4.13](../../docs/architecture/robot_london_v3/README.md), documents 01 à 08 du même dossier |
+| Phases terminées | 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 et 12 ; état et publication vérifiables dans le journal Git |
+| Prochaine action | **Sous-étape 13.1 — qualification physique puis C04**, seulement sur demande explicite ; service IA figé, CP1/CP3/CP4 et couture IPC/PAPER_AB vérifiés ; H-02 à H-07 à traiter selon les procédures |
+| Suite du robot | 1 629 tests recensés : 1 609 réussis et vingt contrats physiques différés (14 MT5 en 13.1, six API/RSS en 13.6) ; service IA 222 (157 catégorie 1 dont six différés, 65 catégorie 2), squelette 70 |
+| Contrôles | Régression intégrale, ressources métier, plan London, gouvernance, 21 cartes strictes et quatorze mutations de phase 12 détectées : [service IA](../london-service-ia/PLAN-MCL.md), bilans [infrastructure](../london-infrastructure/PLAN-MCL.md), [points d’entrée](../points-entree/PLAN-MCL.md) et journaux MCL |
 | Environnement vérifié | Python 3.13 ; `numpy` 2.4.1, `pandas` 3.0.0, `tzdata` 2025.3 (`requirements-dev.txt`, tests seulement) ; aucun accès réseau requis |
 
 ## 1. Résumé exécutif
@@ -39,8 +39,7 @@ rejouent exactement, y compris après panne et accusé inconnu. Les corrections
 amont, les checkpoints courts et la convention qualifiée des ticks SDK sont
 tracés par défigeages et nouveaux gels. Les coutures S1 en direct, S6 et S7 sont
 réalisées. La source MQL5, les quatorze contrats physiques et les comptes
-restent à confronter au terminal en 13.1. Le service IA est la phase suivante,
-non commencée ; aucune rentabilité n’est déduite des fixtures.
+restent à confronter au terminal en 13.1. La phase 12 a construit les douze unités du service IA commun, son budget SQLite concurrent, son calendrier D12, ses notes, ses trois workers et sa CLI indépendante. La couture réelle publie vers le lecteur et le London PAPER_AB sans bloquer une entrée. Les fournisseurs restent NON_QUALIFIE ; aucune rentabilité n’est déduite des fixtures. La phase 13 n’est pas commencée.
 
 ## 2. Mission et règle d'exécution
 
@@ -141,14 +140,15 @@ Lecture obligatoire avant de toucher au code, dans cet ordre :
 | 8 | `7f358c8` | Quatre couches du lecteur IA commun figées dans london-contexte-ia ; CP2 ; snapshot strict, cache causal, preuves de reprise, politique financière et port réel ; couture C09 et L-15 été/hiver ; 10 mutations sur 10 détectées |
 | 9 | `e86a9da` | Trois couches communes orchestration figées, CP2 ; moteur événementiel unique, état pur et reprise par API publiques, calculs journalisés et rejeu exact, comptes A/B indépendants ; 50 tests propres, sept nouvelles coutures et sept mutations détectées |
 | 10 | `cea2481` | Huit unités communes de rejeu figées, checkpoints 1 et 3 ; coûts C10, métriques, bootstrap et rapports ; S1/S5 remplacés, S7 adapté ; 124 tests propres et trois nouvelles coutures ; correctif 0d et garde A13 tracés |
-| 11 | Commit portant ce rapport | Quinze unités physiques et neuf points d’entrée figés ; CP4 après correction C04/D12, sources MQL5 et contrats physiques différés, huit commandes et registre du réservé ; S1 direct/S6/S7, répétition PAPER et incident C11.14 ; 1 403 tests dont 14 différés et 38 mutations détectées |
+| 11 | `37787c6` | Quinze unités physiques et neuf points d’entrée figés ; CP4 après correction C04/D12, sources MQL5 et contrats physiques différés, huit commandes et registre du réservé ; S1 direct/S6/S7, répétition PAPER et incident C11.14 ; 1 403 tests dont 14 différés et 38 mutations détectées |
+| 12 | Commit portant ce rapport | Douze unités communes du service IA figées, CP1/CP3/CP4 ; correction CLI du payant et extension A11 tracées ; budget SQLite concurrent, trois workers et IPC réel ; 222 tests propres, suite de 1 629 cas dont vingt différés, quatorze mutations détectées ; prochaine étape 13.1 |
 
 ### 6.2 Carte composite (`mcl/robot-london-v3/carte.json`, divergence stricte)
 
 Couches au grain des paquets : 0 `noyau` (`xpbots.noyau`) ; 1 `london-donnees-temps` (`xpbots.donnees`) ;
 2a `moteur-london` (`xpbots.london`) ∥ 2b `execution-coordinateur` (`xpbots.execution`) ; 3a
 `controles-fondamentaux` ∥ 3b `contexte-ia` ∥ 3c `infrastructure` ; 4a `orchestration` ∥ 4b `service-ia` ; 5
-`journal-rejeu` ; 6 `points-entree`. Dépendances autorisées : `moteur-london` → noyau, london-donnees-temps ;
+`journal-rejeu` ; 6 `points-entree`. Le service-ia 4b consomme noyau, contexte_ia, fondamental et infra ; il n’importe aucune stratégie ni exécution ou orchestration. Dépendances autorisées : `moteur-london` → noyau, london-donnees-temps ;
 `execution-coordinateur` → noyau, london-donnees-temps ; `orchestration` → noyau, london-donnees-temps, execution,
 fondamental, contexte_ia (**jamais** `xpbots.london`, D-18) ; `journal-rejeu` → noyau, execution, orchestration,
 london, fondamental, contexte_ia ; `points-entree` → noyau, orchestration, journal-rejeu, infrastructure, london, execution, fondamental, contexte_ia. Seule l'orchestration
@@ -447,8 +447,39 @@ Les revues de source et tests Python de formats ne constituent aucune preuve de
 compilation ni de fidélité au terminal. Les quatorze tests de contrat MT5 restent
 désactivés jusqu’à 13.1 ; aucune source réelle, aucun compte, aucune latence
 opérationnelle et aucune rentabilité ne sont qualifiés par les fixtures. Le
-service IA distant reste à construire en phase 12, sur demande distincte.
+service IA distant est construit depuis la phase 12, dans son processus séparé ; ses qualifications API/RSS restent réservées à 13.6.
 
+
+### 6.13 Service IA commun disponible depuis la phase 12
+
+Dossier actif mcl/london-service-ia, douze unités gelées 0, 1a–1f, 2a–2c, 3 et 4.
+L'esquisse EMA mcl/service-ia reste historique. Les deux composites consomment
+le même paquet xpbots.service_ia.c*. Le [bilan](../london-service-ia/PLAN-MCL.md)
+documente contrats, choix, checkpoints, défigeages de 3 et 4 et quatorze mutations.
+
+Le service réutilise les ressources figées, C05, le lecteur IA et les primitives
+physiques existantes. RessourcesIA et DocumentIA sont immuables ; les codecs
+fournisseurs et les calculateurs sont purs. Le budget est réservé avant HTTP
+par RegistreBudget, dans la transaction exclusive de DepotServiceSQLite.
+Un usage inconnu garde sa réserve après reprise, sans réinférence. Le mapping
+issuer/type D12 est explicite et versionné ; la preuve du calendrier est
+archivée avant publication. Une couverture absente ne fabrique aucun veto.
+
+ServiceIA compose trois boucles distinctes, un ouvreur inactif par défaut,
+la base A10 et la publication atomique. Le manifeste et les verrous interdisent
+un second producteur ou la recréation silencieuse de la base. Le heartbeat
+ne prolonge pas les événements. Les notes restent informatives, les métriques
+proviennent du code (port recevoir_metriques ou fichier --agregats), les
+hypothèses deviennent des tickets bornés au plafond mensuel commun. Dérive
+et changement de modèle restent suspendus jusqu'à nouvelle qualification.
+La CLI `python -m xpbots.service_ia` est décrite dans le
+[guide IA](../../docs/exploitation/SERVICE_IA.md). Aucun .env n'est lu par l'agent.
+
+La couture éprouve le vrai service → fichier → lecteur → London PAPER_AB,
+été/hiver et snapshot valide/absent/corrompu ; un autre essai maintient l'appel
+factice vingt secondes pendant l'entrée. Aucun appel synchrone, rattrapage
+après TTL ou filtrage rétrospectif n'est ajouté. Le mode reste PAPER_AB et les
+fournisseurs NON_QUALIFIE. Les six contrats API/RSS attendent 13.6 et H-08.
 
 ## 7. Méthode MCL telle qu'appliquée
 
@@ -557,7 +588,7 @@ nouveau gel, puis nouvelle passe de mutations jusqu'à détection totale. Phase 
    artefact).
 2. Documents : `mcl/<artefact>/PLAN-MCL.md` §5 (bilan : couches, défigeages et leurs motifs, choix de conception
    arrêtés, contrôles dérivés des sources, mutations, couture) ; ligne de la phase dans
-   `mcl/robot-london-v3/PLAN-MCL.md` §7 ; plan directeur : version d'un cran (phase 12 → **1.4.13**), date, phrase
+   `mcl/robot-london-v3/PLAN-MCL.md` §7 ; plan directeur : version d'un cran (état de départ : **1.4.13**), date, phrase
    d'état de l'en-tête, ligne du journal des révisions (§7) ; [guide](../../docs/architecture/GUIDE_IMPLEMENTATION.md) :
    phrase « État du dépôt au … » et numéro de version du plan ; document 02 seulement si une dépendance ou une
    sortie réelle diffère de l'esquisse ; ce rapport de passation : §0 et §6.1 (état), §9 (briefing de la phase
@@ -587,55 +618,54 @@ Le marqueur `[XP-BOTS-AUDIT:BLOQUE]` ne sert qu'à un blocage prouvé et expliqu
 l'humain). Les sous-agents n'émettent jamais de marqueur. Sous Claude Code, le hook de fin refuse une réponse sans
 pied complet ; ailleurs, la règle s'applique sans hook.
 
-## 9. Briefing de la phase 12 — service IA distant partagé
+## 9. Briefing de la sous-étape 13.1 — qualification de l'infrastructure et C04
 
-La phase 11 est achevée par le commit portant ce rapport. Attendre la demande
-explicite « Commence et achève intégralement la phase 12 ». Lire la fiche 12 du
-document 04, le document 02 §6.11, les frontières du document 08, les sections
-A04 à A12 et les cas A14 des spécifications, les exports IA, schémas et prompts.
-Appliquer l’orchestrateur, MCL et la planification, les contrats d’intégration
-LLM, la causalité, la cohérence et l’audit. Inspecter l’esquisse EMA et arbitrer
-la coexistence avant de créer un dossier actif : il ne doit exister qu’un seul
-service partagé, comme pour les autres composants communs.
+La phase 12 est achevée par le commit portant ce rapport. Attendre une demande
+explicite pour commencer 13.1 ; aucune de ses actions physiques n'est engagée
+ici. Lire la fiche 13.1 du document 04, les contrats du document 08, les sondes
+S-01 à S-08, les procédures H-02 à H-07 du document 07 et les guides
+[London](../../docs/exploitation/LONDON_M15.md) et
+[service IA](../../docs/exploitation/SERVICE_IA.md). Appliquer l'orchestrateur,
+la qualification du compte, la causalité, le risque/exécution, la mise en
+service, MCL en cas de correction, et l'audit. Le service IA reste arrêté.
 
-Construire les couches dans l’ordre du DAG réel, avec contrats avant code,
-catégories 1 et 2, régression intégrale, gels et checkpoints. Le service collecte
-les sources officielles, prépare le contexte, extrait et valide les événements,
-applique les budgets transactionnels partagés et publie le snapshot atomique.
-Les règles, schémas, prompts, réservations et plafonds viennent des exports ;
-aucun seuil ni avis de modèle ne remplace le validateur déterministe. Le service
-ne produit jamais une permission fondamentale et n’intervient pas dans le
-chemin synchrone entre signal et ordre. Aucune inférence locale n’est admise.
+Commencer par l'inventaire concret des prérequis disponibles, puis demander
+seulement l'action humaine manquante : poste et dépendances Windows H-02,
+terminal de démonstration et type de compte H-03, compilation et lancement
+du service d'export MQL5 H-04, fermetures H-05, module fondamental H-06 et
+collecte/qualification H-07. Ne lire ni afficher les secrets ou numéros de
+compte ; aucun ordre ne découle de la seule demande de reprise. Les sondes
+qui exigent une manipulation native suivent leur autorisation explicite et
+la procédure humaine correspondante. L'absence du producteur C05 n'est pas
+compensée par un neutre implicite ou par le service IA.
 
-Tous les échanges HTTP et RSS utilisent un ouvreur factice injecté, des réponses
-et des flux XML fabriqués. Aucun appel réseau, API réelle, secret ou installation
-supplémentaire n’est autorisé par cette phase. D-17 reste en vigueur ; H-08 ne
-sera soumis à l’humain qu’au début de 13.6. La route payante reste désactivée
-sans décision explicite. Écrire et recenser les tests de contrat API et RSS,
-ignorés sans leur activation prévue en 13.6.
+Installer seulement requirements-windows.txt si autorisé dans ce contexte,
+rejouer la suite complète et compiler MQL5 sans avertissement. Confronter
+les exports, la table serveur, la convention UTC/SERVEUR_S01, les appels et
+les capacités à S-01–S-08 et aux quatorze contrats MT5. Les lecteurs physiques
+et le SDK réels ne sont pas qualifiés par les faux SDK de phase 11. Une
+divergence impose défigeage correction de la couche source, test exact,
+gate, nouveau gel et cascade des consommateurs affectés. Une entrée non
+protégeable dès l'envoi rend le profil non prêt pour V3 ; aucun risque n'est
+déformé pour rendre le volume minimal négociable.
 
-Comparer les sorties aux oracles `parse_model_output`, `parse_advisory_output`,
-`build_policy_event`, `make_snapshot`, `reserve_cost_usd` et `budget_admits` dans
-les seuls tests. Exécuter les cas A14-3 à A14-6 et A14-11 à A14-16, les bornes,
-la concurrence du budget, les pannes NEUTRAL, la reprise sans réinférence et
-l’appariement avec le calendrier D12. Réutiliser l’infrastructure déjà construite
-quand son contrat convient, sans copier ses lecteurs, horloge ou stockage.
-Tout changement d’un contrat gelé suit le défigeage formel et sa cascade.
+Produire la fiche C04 du compte démo Deriv réellement disponible, sans
+identifiant : devise, levier, mode, contrat et symbole exact par sous-jacent,
+micro-contrats, coûts, marges, stop-out, séances et faisabilité au risque fixé.
+La liste ENVIRONMENT_NOT_READY doit être vide pour les instruments retenus.
+Exécuter ensuite la séance PAPER prévue, journaux complets et rejeu exact
+C11.14 ; mesurer l'écart d'horloge et commencer la collecte prospective des
+versions du calendrier. Consigner les preuves et le verdict, puis s'arrêter.
+Ne pas commencer 13.2 ou transformer une absence de preuve en qualification.
 
-L’essai final lance le vrai service avec son ouvreur factice ; il écrit le
-snapshot dans un dossier temporaire que le lecteur IA réel consomme pendant
-une séance PAPER_AB. Le bras de référence conserve ComplementAbsent. Le bras
-IA bloque exactement les signaux visés par un veto fabriqué valide et demeure
-NEUTRAL sans snapshot. Ce résultat ne qualifie ni un fournisseur ni un bénéfice
-financier et n’autorise aucun veto natif réel.
+Les API réelles restent interdites par D-17. H-08 n'est demandé qu'au début
+de 13.6, avec les six contrats API/RSS, corpus humain H-11 et journée de
+marché PAPER_AB prévue. Les fournisseurs restent NON_QUALIFIE ; le payant
+reste désactivé sans décision distincte. La validation financière A13 et la
+décision H-12 précèdent tout veto réel ou mise en service. Aucune inférence
+sur des textes historiques ne remplace des traces prospectives causales.
 
-Terminer les mutations sur copie jetable, les documents, le plan directeur
-1.4.13, le guide, les contrôles complets, l’audit, le commit et le push en
-français. La passation suivante prépare les sous-étapes de qualification de la
-phase 13 et leurs actions humaines. Puis s’arrêter. Aucun commencement du
-service IA n’est inclus dans la phase 11.
-
-## 10. Leçons et pièges des phases 0 à 11
+## 10. Leçons et pièges des phases 0 à 12
 
 1. **Divergence stricte** : une dépendance réelle oubliée dans la carte fait échouer le gate ; déclarer aussi les
    dépendances vers les couches de types.
@@ -682,10 +712,10 @@ service IA n’est inclus dans la phase 11.
     méthodes bloquées par une fixture séparément de `testsRun`. Une erreur de
     harnais ne constitue pas une détection ; un échec fonctionnel est nécessaire.
 
-## 11. Aperçu des phases 12 à 13 et limites de phase 11
+## 11. Qualification restante et limites de phase 12
 
 - **11 achevée hors ligne** : infrastructure et points d’entrée figés ; sources MQL5 non compilées, quatorze contrats physiques ignorés avant 13.1 ; aucun appel au vrai terminal. Le guide d’exploitation décrit les commandes et les incidents.
-- **12** (`service-ia`) : hors ligne, ouvreur HTTP factice ; aucun appel réseau ; route payante désactivée.
+- **12** est terminée hors ligne ; les fournisseurs restent NON_QUALIFIE, le service réel arrêté et le payant désactivé.
 - **13** : seule phase avec actions humaines (H-02 à H-12, document 07) ; chaque sous-étape s'arrête sur question
   si ses prérequis manquent (marqueur de blocage), et l'autorisation des API est redemandée au début de 13.6.
 
@@ -707,13 +737,13 @@ service IA n’est inclus dans la phase 11.
 ## 13. Contrôle de reprise (à faire avant tout changement)
 
 1. La branche contient `9c39d23`, l’intégration `5e5e288`, ce rapport et le moteur `c2_moteur` ; vérifier
-   le commit de phase 11 dans `git log` (après `cea2481`) et le récupérer depuis la branche publiée si nécessaire. Ne pas repartir
+   les commits de phase 11 (`37787c6`) et de phase 12 dans `git log` et le récupérer depuis la branche publiée si nécessaire. Ne pas repartir
    de la seule ancienne branche de phase 3, qui ne contient ni coexistence ni moteur S02.
 2. `mcl.py statut` indique « Toutes les couches sont figées » pour `mcl/noyau`,
-   `mcl/london-donnees-temps` et `mcl/moteur-london`. Les quinze couches du coordinateur commun dans `mcl/london-execution-coordinateur`, les cinq couches C05 dans `mcl/london-controles-fondamentaux`, les quatre couches du lecteur IA dans `mcl/london-contexte-ia` et les quatre couches d’orchestration dans `mcl/orchestration` sont aussi figées, ainsi que les huit unités de `mcl/london-journal-rejeu`, les quinze unités de `mcl/london-infrastructure` et les neuf unités de `mcl/points-entree`.
-3. `python tools/run_london_tests.py` recense au moins 1 403 tests des deux lignées, dont 1 389 réussis et 14 contrats physiques différés sans activation ; `python tools/verify_project.py` PASS ;
-   `mcl.py --dossier mcl/robot-london-v3 verifier` VERT ; `git status --short` comparé à la fin de phase 11 : quinze modifications préexistantes de gouvernance,
-   de hooks et de leurs tests, de `.gitattributes` et de `tests/robot/fixtures/squelette_ticks.csv` ont été préservées hors des commits des phases 7, 8, 9, 10 et 11 ;
+   `mcl/london-donnees-temps` et `mcl/moteur-london`. Les quinze couches du coordinateur commun dans `mcl/london-execution-coordinateur`, les cinq couches C05 dans `mcl/london-controles-fondamentaux`, les quatre couches du lecteur IA dans `mcl/london-contexte-ia` et les quatre couches d’orchestration dans `mcl/orchestration` sont aussi figées, ainsi que les huit unités de `mcl/london-journal-rejeu`, les quinze unités de `mcl/london-infrastructure` et les neuf unités de `mcl/points-entree` et les douze unités communes de `mcl/london-service-ia`.
+3. `python tools/run_london_tests.py` recense au moins 1 629 tests des deux lignées, dont 1 609 réussis et vingt contrats physiques différés sans activation ; `python tools/verify_project.py` PASS ;
+   `mcl.py --dossier mcl/robot-london-v3 verifier` VERT ; `git status --short` comparé à la fin de phase 12 : quinze modifications préexistantes de gouvernance,
+   de hooks et de leurs tests, de `.gitattributes` et de `tests/robot/fixtures/squelette_ticks.csv` ont été préservées hors des commits des phases 7, 8, 9, 10, 11 et 12 ;
    tout autre écart doit être identifié et expliqué.
 4. Sous Windows, conserver les octets LF de la fixture CSV lors d'un export pour les tests : employer
    `git -c core.autocrlf=false archive` pour obtenir les blobs exacts. Le réglage `core.autocrlf=true` avec

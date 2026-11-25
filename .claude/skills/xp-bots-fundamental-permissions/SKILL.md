@@ -16,7 +16,7 @@ description: "Contrat C05 de XP-Bots : permissions fondamentales externes obliga
 - État réel : cinq couches communes figées sous `xpbots.fondamental`, dossier actif
   `mcl/london-controles-fondamentaux/` (arbitrage R4/R5). Le port `PermissionsFondamentales` compose
   le validateur, le registre causal et la garde d'annonces ; export/import purs, heartbeat et échéances.
-  La couture London utilise ce port avec paquets scénarisés ; les lecteurs physiques restent futurs.
+  La couture London utilise ce port avec paquets scénarisés ; les lecteurs physiques existent depuis la phase 11. Le service IA de phase 12 réutilise la garde D12 et un mapping issuer/type versionné ; il ne produit aucune permission fondamentale. La qualification des sources réelles reste future.
   L'esquisse historique `mcl/controles-fondamentaux/` n'est pas un second composant à construire.
 
 ## Workflow

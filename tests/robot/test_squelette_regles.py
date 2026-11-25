@@ -22,6 +22,7 @@ NOMBRES_AUTORISES_PAR_FICHIER = {
     ('donnees_temps/c1c_indicateurs.py', 100): 'bornes de la définition du RSI (C03 point 9)',
 }
 NOMBRES_AUTORISES_PAR_FONCTION = {
+    ('service_ia/c0_types/_impl.py', '_entetes', 2): 'cardinalité d’une paire nom-valeur HTTP, hors seuil métier',
     ('infra/c2a_specifications/_impl.py', '_valider_export', 7): 'cardinalite des sept jours de la semaine native, hors seuil de strategie',
     ('infra/c2a_specifications/_impl.py', '_horaires', 7): 'conversion ISO lundi=1 vers dimanche=0, hors horaire de strategie',
     ('orchestration/c2_moteur/_impl.py', '_intervalles_marche', 2): 'cardinalité d’un intervalle UTC reçu, pas un seuil de stratégie',
@@ -58,6 +59,11 @@ TEXTES_AUTORISES_PAR_AFFECTATION.add(
     ('infra/c1_session/_impl.py', '_MODES', 'PAPER_AB'))  # modes pris en charge ; aucun choix de défaut
 TEXTES_AUTORISES_PAR_AFFECTATION.add(
     ('infra/c0d_journal/_impl.py', '_MODE_DOUBLE_COMPTE', 'PAPER_AB'))  # variante C09 des deux livres, aucun défaut
+TEXTES_AUTORISES_PAR_AFFECTATION.add(
+    ('service_ia/c1d_budget/_impl.py', '_PROFIL_GRATUIT_VERIFIE', 'FREE_CONFIRMED'))  # variante A08 vérifiée, aucun compte supposé gratuit
+TEXTES_AUTORISES_PAR_AFFECTATION.update(
+    ('service_ia/c1e_fournisseurs/_impl.py','_FORMATS_FOURNISSEURS',v)
+    for v in ('GROQ_FREE','GEMINI_FREE','OPENAI_PAID_OPTIONAL'))  # protocoles explicitement implémentés, modèles lus dans l’export
 NOMBRES_AUTORISES_PAR_AFFECTATION = {
     ('rejeu/c0b_protocole/_impl.py', nom, valeur)
     for nom, valeurs in {
@@ -73,12 +79,21 @@ NOMBRES_AUTORISES_PAR_AFFECTATION.add(
     ('rejeu/c1d_bootstrap/_impl.py', '_CENT_POUR_CENT', 100))  # définition du percentile
 NOMBRES_AUTORISES_PAR_AFFECTATION.add(
     ('infra/c2c_calculs/_impl.py', '_CENT_POUR_CENT', 100))  # Conversion mathematique d'un ratio en pourcentage.
+NOMBRES_AUTORISES_PAR_AFFECTATION.add(
+    ('service_ia/c0_types/_impl.py', '_STATUT_HTTP_MINIMUM', 100))  # Classe de statut HTTP, hors valeur de compte.
+NOMBRES_AUTORISES_PAR_AFFECTATION.add(
+    ('service_ia/c1e_fournisseurs/_impl.py', '_HTTP_SUCCES', 200))  # Statut HTTP, hors effectif financier.
+NOMBRES_AUTORISES_PAR_AFFECTATION.add(
+    ('service_ia/c2c_collecteur/_impl.py', '_HTTP_SUCCES', 200))  # Statut HTTP, hors effectif financier.
+NOMBRES_AUTORISES_PAR_AFFECTATION.add(
+    ('service_ia/c2c_collecteur/_impl.py', '_REDIRECTIONS_RSS_MAXIMUM', 3))  # A04 documentaire, sans champ exporté.
 APPELS_D_HORLOGE = {('datetime', 'now'), ('datetime', 'utcnow'), ('datetime', 'today'), ('date', 'today'),
                     ('time', 'time'), ('time', 'time_ns'), ('time', 'monotonic'), ('time', 'monotonic_ns'),
                     ('time', 'perf_counter'), ('time', 'perf_counter_ns')}
 BIBLIOTHEQUES_DE_FRONTIERE = {'MetaTrader5', 'sqlite3', 'urllib', 'http', 'ssl', 'socket', 'time', 'msvcrt', 'fcntl'}
 INFRASTRUCTURE = SRC / 'xpbots' / 'infrastructure'
 INFRA_COMMUNE = SRC / 'xpbots' / 'infra'
+INFRA_SERVICE_IA = SRC / 'xpbots' / 'service_ia' / 'c4_service'
 
 
 def horloge_autorisee(chemin):
@@ -86,7 +101,14 @@ def horloge_autorisee(chemin):
 
 
 def frontiere_autorisee(chemin):
-    return INFRASTRUCTURE in chemin.parents or INFRA_COMMUNE in chemin.parents
+    return (INFRASTRUCTURE in chemin.parents or INFRA_COMMUNE in chemin.parents
+            or INFRA_SERVICE_IA in chemin.parents)
+
+
+def import_frontiere_autorise(chemin, nom):
+    # urllib.parse ne réalise aucune entrée-sortie ; urllib.request reste physique.
+    return (frontiere_autorisee(chemin) or nom == 'urllib.parse'
+            and SRC/'xpbots'/'service_ia' in chemin.parents)
 
 
 def feuilles(valeur):
@@ -149,6 +171,34 @@ def litteraux_interdits(source, relatif, nombres, textes):
 
 
 class TestReglesTransverses(unittest.TestCase):
+    def test_constantes_http_et_redirections_rss_limitees_aux_affectations(self):
+        s='_HTTP_SUCCES=200\n_REDIRECTIONS_RSS_MAXIMUM=3\n_AUTRE=3\ndef risque():\n    return 200, 3\n'
+        self.assertEqual(len(litteraux_interdits(s,'service_ia/c2c_collecteur/_impl.py',{200,3},set())),3)
+        self.assertEqual(len(litteraux_interdits(s,'autre.py',{200,3},set())),5)
+
+    def test_formats_fournisseurs_et_http_limites_aux_variantes(self):
+        s="_HTTP_SUCCES=200\n_AUTRE=200\n_FORMATS_FOURNISSEURS={'GROQ_FREE':'GROQ'}\ndef risque():\n    return 200, 'GROQ_FREE'\n"
+        self.assertEqual(len(litteraux_interdits(s,'service_ia/c1e_fournisseurs/_impl.py',{200},{'GROQ_FREE'})),3)
+        self.assertEqual(len(litteraux_interdits(s,'autre.py',{200},{'GROQ_FREE'})),5)
+
+    def test_profil_gratuit_limite_a_la_variante_de_facturation(self):
+        s="_PROFIL_GRATUIT_VERIFIE='FREE_CONFIRMED'\n_AUTRE='FREE_CONFIRMED'\ndef budget():\n    return 'FREE_CONFIRMED'\n"
+        self.assertEqual(len(litteraux_interdits(s,'service_ia/c1d_budget/_impl.py',set(),{'FREE_CONFIRMED'})),2)
+        self.assertEqual(len(litteraux_interdits(s,'autre.py',set(),{'FREE_CONFIRMED'})),3)
+
+    def test_exceptions_service_ia_limitees_aux_formats(self):
+        source = ('_STATUT_HTTP_MINIMUM=100\n_AUTRE=100\n'
+                  'def _entetes():\n    return 2\n'
+                  'def risque():\n    return 100, 2\n')
+        self.assertEqual(len(litteraux_interdits(source,'service_ia/c0_types/_impl.py',{100,2},set())),3)
+        self.assertEqual(len(litteraux_interdits(source,'autre.py',{100,2},set())),5)
+        pur=SRC/'xpbots'/'service_ia'/'c0_types'/'_impl.py'
+        self.assertTrue(import_frontiere_autorise(pur,'urllib.parse'))
+        self.assertFalse(import_frontiere_autorise(pur,'urllib.request'))
+        self.assertFalse(import_frontiere_autorise(SRC/'xpbots'/'noyau'/'pur.py','urllib.parse'))
+        self.assertTrue(frontiere_autorisee(INFRA_SERVICE_IA/'_http.py'))
+        self.assertFalse(frontiere_autorisee(pur))
+
     def test_mode_double_compte_borne_a_la_variante_du_journal(self):
         source="_MODE_DOUBLE_COMPTE='PAPER_AB'\n_AUTRE='PAPER_AB'\ndef risque():\n    return 'PAPER_AB'\n"
         self.assertEqual(len(litteraux_interdits(source,'infra/c0d_journal/_impl.py',set(),{'PAPER_AB'})),2)
@@ -243,7 +293,7 @@ class TestReglesTransverses(unittest.TestCase):
                 elif isinstance(noeud, ast.ImportFrom) and noeud.level == 0:
                     noms = [noeud.module or '']
                 for nom in noms:
-                    if nom.split('.')[0] in BIBLIOTHEQUES_DE_FRONTIERE:
+                    if nom.split('.')[0] in BIBLIOTHEQUES_DE_FRONTIERE and not import_frontiere_autorise(chemin,nom):
                         violations.append(f'{chemin.relative_to(RACINE)}:{noeud.lineno} import {nom}')
         self.assertEqual(violations, [])
 

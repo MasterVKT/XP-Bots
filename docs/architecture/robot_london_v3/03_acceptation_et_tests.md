@@ -122,22 +122,22 @@ python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossie
 
 | Cas | Énoncé abrégé | Artefact et couche | Cat. |
 |---|---|---|---|
-| A14-1 | Un appel API de 20 s ne bloque ni le TTL, ni les protections, ni les sorties | Cœur sans réseau (cartes) ; `orchestration` 2 ; `points-entree` 2 (service lent simulé) | 2 |
+| A14-1 | Un appel API de 20 s ne bloque ni le TTL, ni les protections, ni les sorties | Cœur sans réseau (cartes) ; `orchestration` 2 ; `points-entree` 2 ; `london-service-ia` 4 (appel factice de 20 s pendant une séance réelle du moteur) | 2 |
 | A14-2 | Une réponse arrivée après une bougie ne change pas la décision prise avant | `contexte-ia` 3 ; `orchestration` 2 | 1, 2 |
-| A14-3 | Une décision conditionnelle ou historique n'est pas une décision actuelle | `service-ia` 1b | 1 |
-| A14-4 | Citation inventée, `item_id` étranger, clés en trop, doublons JSON, mauvais enums, sortie tronquée : aucun veto | `service-ia` 0c (oracle `parse_model_output`) | 1 |
-| A14-5 | Un discours non programmé ne suffit pas ; acteur égal à la source ; décision monétaire annoncée | `service-ia` 1b (oracle `build_policy_event`) | 1 |
-| A14-6 | Une décision programmée au calendrier n'ajoute pas de veto ; un calendrier invalide reste bloquant pour le socle | `service-ia` 1b ; `controles-fondamentaux` 1b | 1 |
+| A14-3 | Une décision conditionnelle ou historique n'est pas une décision actuelle | `london-service-ia` 1b et 2a | 1, 2 |
+| A14-4 | Citation inventée, `item_id` étranger, clés en trop, doublons JSON, mauvais enums, sortie tronquée : aucun veto | `london-service-ia` 1b (oracle `parse_model_output`) | 1 |
+| A14-5 | Un discours non programmé ne suffit pas ; acteur égal à la source ; décision monétaire annoncée | `london-service-ia` 2a (oracle `build_policy_event`) | 1 |
+| A14-6 | Une décision programmée au calendrier n'ajoute pas de veto ; un calendrier invalide reste bloquant pour le socle | `london-service-ia` 2a et 4 ; `controles-fondamentaux` 1b | 1 |
 | A14-7 | À publication + 900 s exactement, veto expiré ; un heartbeat neuf ne le prolonge pas | `contexte-ia` 2, 3 | 1 |
 | A14-8 | Une panne API est neutre pour le complément ; une panne de C05 reste bloquante | `contexte-ia` 3 ; `execution-coordinateur` 6 ; `orchestration` 2 | 1, 2 |
 | A14-9 | Risque, SL/TP, volumes minimaux, sorties horaires et priorités identiques avec ou sans IA | `orchestration` 2 (bras A/B sur entrées identiques) | 2 |
 | A14-10 | Un veto refuse le signal selon A07, sans rattrapage après le TTL | `moteur-london` 2 ; `execution-coordinateur` 6 ; scénario L-15 | 2 |
-| A14-11 | Les deux robots consomment un même événement sans second appel ni seconde facturation | `service-ia` 3 ; `journal-rejeu` 3 (allocation des coûts) | 2 |
-| A14-12 | Deux requêtes simultanées ne dépassent pas le budget réservé | `service-ia` 1c (deux connexions concurrentes) | 1 |
-| A14-13 | Une requête de coût inconnu conserve sa réserve ; un projet Gemini payant n'est pas appelé comme gratuit | `service-ia` 1c, 2b | 1 |
-| A14-14 | Plafonds de tentatives, de tokens, d'API payante et global testés aux bornes | `service-ia` 1c, 2b (valeurs lues dans la configuration IA) | 1 |
-| A14-15 | Aucun modèle local, appel d'outil, ordre, changement de taille ou appel facturé hors liste autorisée | `service-ia` 1d ; cartes (imports interdits) | 1 |
-| A14-16 | Snapshot incomplet, corrompu, futur ou en recul refusé ; reprise sans réinférence | `contexte-ia` 1, 2 ; `service-ia` 2c ; `points-entree` 1b, 2 | 1, 2 |
+| A14-11 | Les deux robots consomment un même événement sans second appel ni seconde facturation | `london-service-ia` 1f, 3 et 4 (couture réelle) ; `journal-rejeu` 3 (allocation des coûts) | 2 |
+| A14-12 | Deux requêtes simultanées ne dépassent pas le budget réservé | `london-service-ia` 4 (deux connexions SQLite concurrentes) | 1 |
+| A14-13 | Une requête de coût inconnu conserve sa réserve ; un projet Gemini payant n'est pas appelé comme gratuit | `london-service-ia` 1d, 2b | 1 |
+| A14-14 | Plafonds de tentatives, de tokens, d'API payante et global testés aux bornes | `london-service-ia` 1d, 2b (valeurs lues dans la configuration IA) | 1 |
+| A14-15 | Aucun modèle local, appel d'outil, ordre, changement de taille ou appel facturé hors liste autorisée | `london-service-ia` 1e, 2b et 4 ; cartes (imports interdits) | 1 |
+| A14-16 | Snapshot incomplet, corrompu, futur ou en recul refusé ; reprise sans réinférence | `contexte-ia` 1, 2 ; `london-service-ia` 1f et 4 ; `points-entree` 1b, 2 | 1, 2 |
 | A14-17 | Les comptes A/B évoluent séparément à 100 USD ; performances et coûts rapprochés | `orchestration` 2 ; `journal-rejeu` 2, 3 | 2 |
 | A14-18 | Une précision JSON de 100 % n'est jamais présentée comme un taux de réussite de trades | `journal-rejeu` 3 | 1 |
 
@@ -209,3 +209,17 @@ python .agents/skills/mcl-matryoshka-construction-layers/scripts/mcl.py --dossie
   refuse toute valeur différente des exports figés.
 - **Secrets** : aucun motif de clé dans les journaux et rapports produits par les tests ; le contrôle de
   `tools/verify_project.py` couvre déjà `tests/`.
+
+## 9. Preuves de construction de la phase 12
+
+Le dossier actif est mcl/london-service-ia. Ses 222 tests comprennent 157 cas
+de catégorie 1 (six contrats API/RSS différés) et 65 de catégorie 2. La couture
+physique est dans test_cat2_c4_couture_ab.py : six séances été/hiver, snapshot
+valide/absent/corrompu, puis appel lent pendant une entrée. Les trois workers
+réels, la reprise, l'IPC et la concurrence SQLite sont exercés séparément.
+Les bornes et les six oracles sont rattachés dans
+[EXIGENCES.md](../../../mcl/london-service-ia/EXIGENCES.md). Quatorze mutations
+fonctionnelles sont détectées avec une suite entière par mutant hors dépôt.
+La suite complète compte 1 629 tests et vingt différés. Les six contrats de
+test_cat1_c4_contrats_physiques.py demandent XPBOTS_CONTRATS_API=1 et H-08 en
+13.6 ; aucune qualification sémantique ou financière ne résulte des fixtures.

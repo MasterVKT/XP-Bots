@@ -147,7 +147,7 @@
         "xpbots.service_ia"
       ],
       "contrats": [
-        "mcl/service-ia/contrats/*.md"
+        "mcl/london-service-ia/contrats/*.md"
       ]
     },
     {
@@ -266,7 +266,9 @@
         "reseau",
         "fichiers",
         "horloge",
-        "threading"
+        "threading",
+        "infrastructure",
+        "controles-fondamentaux"
       ],
       "couche": "4b"
     },

@@ -238,3 +238,45 @@ MQL5 compilées et les comptes ne sont pas qualifiés par ces preuves hors ligne
 Voir les bilans de [l’infrastructure](../../mcl/london-infrastructure/PLAN-MCL.md)
 et des [points d’entrée](../../mcl/points-entree/PLAN-MCL.md). La phase 12 n’est
 pas commencée.
+
+
+### Arbitrage R4/R5 du 17/11/2026 — phase 12 London
+
+L’inspection de `mcl/service-ia` retrouve une esquisse EMA sans code, test ni gel.
+La phase 12 construit un seul service commun sous `xpbots.service_ia.c*`, suivi
+dans `mcl/london-service-ia`. L’esquisse historique est conservée ; elle ne doit
+pas devenir une seconde implémentation. Les deux cartes composites contrôlent
+ce même paquet et le registre de lignée le déclare COMMUN. Cette réalisation
+ne termine aucune phase d’intégration de plateforme EMA.
+
+Le service emploie la configuration canonique, les primitives et le validateur
+du lecteur IA existant. La coquille réutilise l’horloge, l’écriture atomique,
+les lectures bornées et le verrou de processus de l’infrastructure. Son registre
+transactionnel A09 possède son propre schéma SQLite A10 ; le dépôt C08 ne convient
+pas aux factures et réservations IA et n’est pas copié. Le calendrier D12 est
+validé par la garde C05 existante et apparié à une table explicite versionnée
+d’identifiants issuer/type ; une couverture incomplète ne crée aucun veto.
+
+Les ports HTTP, transaction, publication et temps sont finalisés tôt. Leurs
+implémentations physiques sont confinées à l’enveloppe 4 ; les clients internes
+construisent et décodent les enveloppes A08 sans accès réseau. Les six unités de
+niveau 1 sont indépendantes. Le collecteur, le worker unique et le heartbeat
+sont indépendants à l’exécution, sans appel synchrone dans le moteur du robot.
+Les essais utilisent exclusivement un ouvreur HTTP factice et des dossiers
+temporaires. D-17 reste applicable et aucune route payante n’est activée.
+
+### Résultat de l'arbitrage de phase 12 — 25/11/2026
+
+L'unique service commun xpbots.service_ia.c* est construit et ses douze unités
+sont figées dans mcl/london-service-ia, avec CP1, CP3 et CP4. Les deux composites
+pointent le même paquet. L'esquisse EMA historique n'est pas une implémentation
+à reprendre ; aucune phase de plateforme EMA n'est déclarée terminée.
+Les 222 tests propres, les quatorze mutations et la couture IPC réelle avec le
+lecteur et le London PAPER_AB sont détaillés au
+[bilan](../../mcl/london-service-ia/PLAN-MCL.md). La suite comporte 1 629 tests,
+dont vingt contrats physiques différés. Les 412 fichiers contractuels amont
+et les ressources métier sont intacts. Les corrections CLI du payant et A12/A13,
+l'extension A11 et la cascade de tests de 3 vers 4 sont tracées sans changer
+les amonts des phases précédentes.
+Aucun appel API, RSS ou SDK réel, compte, ordre ou secret n'a été utilisé dans ces essais. Les
+fournisseurs restent NON_QUALIFIE ; la prochaine sous-étape est 13.1.

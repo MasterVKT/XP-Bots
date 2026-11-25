@@ -1,0 +1,484 @@
+{
+  "mcl": 1,
+  "artefact": {
+    "nom": "london-service-ia",
+    "echelle": "composant",
+    "mode": "pur",
+    "description": ""
+  },
+  "langage": "python",
+  "sources": [
+    "src/xpbots/service_ia"
+  ],
+  "exclure": [],
+  "couches": [
+    {
+      "id": "0",
+      "nom": "types",
+      "profondeur": 0,
+      "chemins": [
+        "src/xpbots/service_ia/c0_types"
+      ],
+      "imports": [
+        "xpbots.service_ia.c0_types"
+      ],
+      "contrats": [
+        "mcl/london-service-ia/contrats/couche-0.md",
+        "src/xpbots/service_ia/c0_types/__init__.py",
+        "tests/robot/london_service_ia/test_cat*_c0_*.py"
+      ]
+    },
+    {
+      "id": "1a",
+      "nom": "tokens",
+      "profondeur": 1,
+      "chemins": [
+        "src/xpbots/service_ia/c1a_tokens"
+      ],
+      "imports": [
+        "xpbots.service_ia.c1a_tokens"
+      ],
+      "contrats": [
+        "mcl/london-service-ia/contrats/couche-1a.md",
+        "src/xpbots/service_ia/c1a_tokens/__init__.py",
+        "tests/robot/london_service_ia/test_cat*_c1a_*.py"
+      ]
+    },
+    {
+      "id": "1b",
+      "nom": "validation",
+      "profondeur": 1,
+      "chemins": [
+        "src/xpbots/service_ia/c1b_validation"
+      ],
+      "imports": [
+        "xpbots.service_ia.c1b_validation"
+      ],
+      "contrats": [
+        "mcl/london-service-ia/contrats/couche-1b.md",
+        "src/xpbots/service_ia/c1b_validation/__init__.py",
+        "tests/robot/london_service_ia/test_cat*_c1b_*.py"
+      ]
+    },
+    {
+      "id": "1c",
+      "nom": "normalisation",
+      "profondeur": 1,
+      "chemins": [
+        "src/xpbots/service_ia/c1c_normalisation"
+      ],
+      "imports": [
+        "xpbots.service_ia.c1c_normalisation"
+      ],
+      "contrats": [
+        "mcl/london-service-ia/contrats/couche-1c.md",
+        "src/xpbots/service_ia/c1c_normalisation/__init__.py",
+        "tests/robot/london_service_ia/test_cat*_c1c_*.py"
+      ]
+    },
+    {
+      "id": "1d",
+      "nom": "budget",
+      "profondeur": 1,
+      "chemins": [
+        "src/xpbots/service_ia/c1d_budget"
+      ],
+      "imports": [
+        "xpbots.service_ia.c1d_budget"
+      ],
+      "contrats": [
+        "mcl/london-service-ia/contrats/couche-1d.md",
+        "src/xpbots/service_ia/c1d_budget/__init__.py",
+        "tests/robot/london_service_ia/test_cat*_c1d_*.py"
+      ]
+    },
+    {
+      "id": "1e",
+      "nom": "fournisseurs",
+      "profondeur": 1,
+      "chemins": [
+        "src/xpbots/service_ia/c1e_fournisseurs"
+      ],
+      "imports": [
+        "xpbots.service_ia.c1e_fournisseurs"
+      ],
+      "contrats": [
+        "mcl/london-service-ia/contrats/couche-1e.md",
+        "src/xpbots/service_ia/c1e_fournisseurs/__init__.py",
+        "tests/robot/london_service_ia/test_cat*_c1e_*.py"
+      ]
+    },
+    {
+      "id": "1f",
+      "nom": "snapshot",
+      "profondeur": 1,
+      "chemins": [
+        "src/xpbots/service_ia/c1f_snapshot"
+      ],
+      "imports": [
+        "xpbots.service_ia.c1f_snapshot"
+      ],
+      "contrats": [
+        "mcl/london-service-ia/contrats/couche-1f.md",
+        "src/xpbots/service_ia/c1f_snapshot/__init__.py",
+        "tests/robot/london_service_ia/test_cat*_c1f_*.py"
+      ]
+    },
+    {
+      "id": "2a",
+      "nom": "veto",
+      "profondeur": 2,
+      "chemins": [
+        "src/xpbots/service_ia/c2a_veto"
+      ],
+      "imports": [
+        "xpbots.service_ia.c2a_veto"
+      ],
+      "contrats": [
+        "mcl/london-service-ia/contrats/couche-2a.md",
+        "src/xpbots/service_ia/c2a_veto/__init__.py",
+        "tests/robot/london_service_ia/test_cat*_c2a_*.py"
+      ]
+    },
+    {
+      "id": "2b",
+      "nom": "routeur",
+      "profondeur": 2,
+      "chemins": [
+        "src/xpbots/service_ia/c2b_routeur"
+      ],
+      "imports": [
+        "xpbots.service_ia.c2b_routeur"
+      ],
+      "contrats": [
+        "mcl/london-service-ia/contrats/couche-2b.md",
+        "src/xpbots/service_ia/c2b_routeur/__init__.py",
+        "tests/robot/london_service_ia/test_cat*_c2b_*.py"
+      ]
+    },
+    {
+      "id": "2c",
+      "nom": "collecteur",
+      "profondeur": 2,
+      "chemins": [
+        "src/xpbots/service_ia/c2c_collecteur"
+      ],
+      "imports": [
+        "xpbots.service_ia.c2c_collecteur"
+      ],
+      "contrats": [
+        "mcl/london-service-ia/contrats/couche-2c.md",
+        "src/xpbots/service_ia/c2c_collecteur/__init__.py",
+        "tests/robot/london_service_ia/test_cat*_c2c_*.py"
+      ]
+    },
+    {
+      "id": "3",
+      "nom": "planificateur",
+      "profondeur": 3,
+      "chemins": [
+        "src/xpbots/service_ia/c3_planificateur"
+      ],
+      "imports": [
+        "xpbots.service_ia.c3_planificateur"
+      ],
+      "contrats": [
+        "mcl/london-service-ia/contrats/couche-3.md",
+        "src/xpbots/service_ia/c3_planificateur/__init__.py",
+        "tests/robot/london_service_ia/test_cat*_c3_*.py"
+      ]
+    },
+    {
+      "id": "4",
+      "nom": "service",
+      "profondeur": 4,
+      "chemins": [
+        "src/xpbots/service_ia/c4_service",
+        "src/xpbots/service_ia/__main__.py"
+      ],
+      "imports": [
+        "xpbots.service_ia.c4_service",
+        "xpbots.service_ia.__main__"
+      ],
+      "contrats": [
+        "mcl/london-service-ia/contrats/couche-4.md",
+        "src/xpbots/service_ia/c4_service/__init__.py",
+        "tests/robot/london_service_ia/test_cat*_c4_*.py",
+        "src/xpbots/service_ia/__main__.py"
+      ]
+    }
+  ],
+  "unites": [
+    {
+      "id": "types",
+      "responsabilite": "Définir les ressources IA immuables, documents, jobs, réponses et ports externes.",
+      "depend_de": [
+        "amont-noyau",
+        "amont-contexte"
+      ],
+      "couche": "0"
+    },
+    {
+      "id": "tokens",
+      "responsabilite": "Borner le corps complet hors secret et réduire seulement des passages cohérents.",
+      "depend_de": [
+        "types"
+      ],
+      "couche": "1a"
+    },
+    {
+      "id": "validation",
+      "responsabilite": "Valider strictement extraction et notes selon les schémas exportés.",
+      "depend_de": [
+        "types"
+      ],
+      "couche": "1b"
+    },
+    {
+      "id": "normalisation",
+      "responsabilite": "Nettoyer les flux officiels et préserver identité, provenance et première connaissance.",
+      "depend_de": [
+        "types"
+      ],
+      "couche": "1c"
+    },
+    {
+      "id": "budget",
+      "responsabilite": "Admettre et rapprocher coûts, quotas et réservations dans une transaction injectée.",
+      "depend_de": [
+        "types",
+        "stockage"
+      ],
+      "couche": "1d"
+    },
+    {
+      "id": "fournisseurs",
+      "responsabilite": "Construire les requêtes A08 et décoder leurs réponses sans transport implicite.",
+      "depend_de": [
+        "types"
+      ],
+      "couche": "1e"
+    },
+    {
+      "id": "snapshot",
+      "responsabilite": "Former les snapshots A10 avec séquence persistée et validation du lecteur réel.",
+      "depend_de": [
+        "types",
+        "amont-contexte",
+        "stockage",
+        "fichiers"
+      ],
+      "couche": "1f"
+    },
+    {
+      "id": "veto",
+      "responsabilite": "Construire le seul veto A06 après validation et appariement causal du calendrier.",
+      "depend_de": [
+        "types",
+        "validation",
+        "amont-fondamental",
+        "amont-contexte",
+        "amont-noyau"
+      ],
+      "couche": "2a"
+    },
+    {
+      "id": "routeur",
+      "responsabilite": "Router les jobs dans les délais, quotas et allowlists A08–A09.",
+      "depend_de": [
+        "types",
+        "tokens",
+        "validation",
+        "budget",
+        "fournisseurs",
+        "stockage",
+        "transport",
+        "temps-et-workers"
+      ],
+      "couche": "2b"
+    },
+    {
+      "id": "collecteur",
+      "responsabilite": "Collecter par port HTTP conditionnel, avec redirections et reprises bornées.",
+      "depend_de": [
+        "types",
+        "normalisation",
+        "stockage",
+        "transport",
+        "temps-et-workers"
+      ],
+      "couche": "2c"
+    },
+    {
+      "id": "planificateur",
+      "responsabilite": "Planifier, dédupliquer et archiver extraction, notes et surveillance de dérive.",
+      "depend_de": [
+        "types",
+        "veto",
+        "routeur",
+        "collecteur",
+        "stockage",
+        "temps-et-workers",
+        "validation",
+        "amont-noyau",
+        "budget"
+      ],
+      "couche": "3"
+    },
+    {
+      "id": "service",
+      "responsabilite": "Composer SQLite, HTTP, calendrier, publication et workers indépendants du robot.",
+      "depend_de": [
+        "types",
+        "snapshot",
+        "planificateur",
+        "stockage",
+        "transport",
+        "fichiers",
+        "temps-et-workers",
+        "amont-infrastructure",
+        "amont-fondamental",
+        "budget",
+        "routeur",
+        "collecteur",
+        "veto",
+        "amont-noyau"
+      ],
+      "couche": "4"
+    }
+  ],
+  "externes": [
+    {
+      "id": "amont-noyau",
+      "imports": [
+        "xpbots.noyau"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1a",
+        "1b",
+        "1c",
+        "1d",
+        "1e",
+        "1f",
+        "2a",
+        "2b",
+        "2c",
+        "3",
+        "4"
+      ]
+    },
+    {
+      "id": "amont-contexte",
+      "imports": [
+        "xpbots.contexte_ia"
+      ],
+      "couches_autorisees": [
+        "0",
+        "1a",
+        "1b",
+        "1c",
+        "1d",
+        "1e",
+        "1f",
+        "2a",
+        "2b",
+        "2c",
+        "3",
+        "4"
+      ]
+    },
+    {
+      "id": "amont-fondamental",
+      "imports": [
+        "xpbots.fondamental"
+      ],
+      "couches_autorisees": [
+        "2a",
+        "4"
+      ]
+    },
+    {
+      "id": "amont-infrastructure",
+      "imports": [
+        "xpbots.infra"
+      ],
+      "couches_autorisees": [
+        "4"
+      ]
+    },
+    {
+      "id": "stockage",
+      "imports": [
+        "sqlite3"
+      ],
+      "couches_autorisees": [
+        "4"
+      ]
+    },
+    {
+      "id": "transport",
+      "imports": [
+        "urllib.request",
+        "urllib.error",
+        "http",
+        "ssl",
+        "socket"
+      ],
+      "couches_autorisees": [
+        "4"
+      ]
+    },
+    {
+      "id": "fichiers",
+      "imports": [
+        "os",
+        "pathlib",
+        "io"
+      ],
+      "couches_autorisees": [
+        "4"
+      ]
+    },
+    {
+      "id": "temps-et-workers",
+      "imports": [
+        "time",
+        "threading",
+        "queue",
+        "concurrent"
+      ],
+      "couches_autorisees": [
+        "4"
+      ]
+    },
+    {
+      "id": "interdits",
+      "imports": [
+        "reference",
+        "MetaTrader5",
+        "subprocess",
+        "random",
+        "importlib",
+        "xpbots.app",
+        "xpbots.execution",
+        "xpbots.orchestration",
+        "xpbots.rejeu",
+        "xpbots.london",
+        "xpbots.moteur_ema",
+        "xpbots.donnees",
+        "xpbots.donnees_temps"
+      ],
+      "couches_autorisees": []
+    }
+  ],
+  "regles": {
+    "invariant": "strict",
+    "paralleles": "strict",
+    "externes": "strict",
+    "cycles": "strict",
+    "divergence": "strict",
+    "contrats_figes": "strict"
+  },
+  "checkpoint_tous_les": 2
+}

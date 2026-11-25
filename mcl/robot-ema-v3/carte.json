@@ -118,7 +118,7 @@
         "xpbots.service_ia"
       ],
       "contrats": [
-        "mcl/robot-ema-v3/COUTURES.md"
+        "mcl/london-service-ia/contrats/*.md"
       ]
     },
     {
@@ -235,7 +235,12 @@
       "responsabilite": "Produire le snapshot IA (A04–A11).",
       "depend_de": [
         "noyau",
-        "contexte_ia"
+        "contexte_ia",
+        "infrastructure",
+        "fondamental",
+        "sqlite",
+        "reseau",
+        "horloge-os"
       ],
       "couche": "2d"
     },
@@ -310,7 +315,8 @@
         "sqlite3"
       ],
       "couches_autorisees": [
-        "4"
+        "4",
+        "2d"
       ]
     },
     {
@@ -322,7 +328,8 @@
         "socket"
       ],
       "couches_autorisees": [
-        "4"
+        "4",
+        "2d"
       ]
     },
     {
@@ -332,7 +339,8 @@
       ],
       "couches_autorisees": [
         "4",
-        "5"
+        "5",
+        "2d"
       ]
     },
     {

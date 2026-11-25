@@ -4,7 +4,7 @@ Retour au [plan directeur](README.md). MCL finalise tôt les contrats des fronti
 doublures des couches internes en dépendent (exception de la skill `mcl-matryoshka-construction-layers`, étape 6).
 Ce document fixe ces contrats pour que toute l'implémentation (phases 0 à 12) se fasse dans le conteneur, sans le
 poste Windows. Chaque contrat est ensuite confronté à la réalité par une sonde ou un test de contrat en
-sous-étape 13.1 ; une divergence ouvre un défigeage formel « correction » de la seule couche concernée.
+sous-étape 13.1 (API et RSS en 13.6, après H-08) ; une divergence ouvre un défigeage formel « correction » de la seule couche concernée.
 
 ## 1. Correspondance avec les frontières du document 02
 
@@ -22,7 +22,7 @@ sous-étape 13.1 ; une divergence ouvre un défigeage formel « correction » de
 | Dossier d'échange des permissions (D-11) | §3 | Séance complète avec le vrai module |
 | Export MQL5 du calendrier et des séances (D-12) | §4 | Export réel comparé au terminal |
 | API LLM | §10 | Requêtes de conformité si D-17 est accordée |
-| Flux RSS | §10 | Lecture réelle Fed et BCE |
+| Flux RSS | §10 | Lecture réelle Fed, BCE et BoE en 13.6 ; aucun contournement d’un refus |
 | SQLite du service | §8, §10 | Concurrence des réservations |
 
 ## 2. API Python `MetaTrader5` 5.0.6231
@@ -319,3 +319,33 @@ ne dépendent pas de cette preuve. Le registre de budget du service IA a sa prop
   `prompts/`.
 - **Flux RSS** : collecte et normalisation de A04.
 - **SQLite du service** : tables minimales de A10, transactions de A09.
+
+### 10.1 Réalisation du producteur IA en phase 12
+
+Les ports et leurs contrats sont finalisés dans
+[FRONTIERES.md](../../../mcl/london-service-ia/FRONTIERES.md) et la
+[couche 4](../../../mcl/london-service-ia/contrats/couche-4.md). Les codecs A08
+restent purs ; un seul transport HTTP reçoit l'ouvreur injecté. Sans ouvreur
+de test ou autorisation explicite, il refuse tout accès. Les endpoints et les
+origines HTTPS viennent des exports, les redirections sont manuelles et
+bornées, les réponses plafonnées et fermées. Les clés sont ajoutées seulement
+à Request ; aucune valeur de clé n'entre dans les archives ou les erreurs.
+
+La base unique xp-service-ia-sqlite-v1 comporte les tables A10, des colonnes
+et index causaux, FTS5 et les tables auxiliaires de tentatives, quotas,
+calendrier, jobs et hypothèses. BEGIN IMMEDIATE précède toute admission,
+aucune transaction ne reste ouverte pendant HTTP. WAL et synchronous FULL
+assurent le protocole local. Les réserves inconnues survivent à la reprise.
+La base, son instance et le snapshot sont liés par un manifeste et des verrous ;
+une base perdue ou incompatible est refusée. La séquence est réservée avant
+publication par ecrire_atomique et les délais de reprise exportés.
+
+Le calendrier D12 utilise la conversion serveur qualifiée, la vraie garde
+C05 et un mapping issuer/type versionné. Versions et disponibilités sont
+archivées avant exposition mémoire. L'entrée facultative --agregats reçoit
+un objet fermé xp-code-aggregates-v1 (schema, metriques, decisions) du code
+de calcul ; elle passe au port strict de couche 3 sans recalcul par le LLM.
+Les alertes sont affichées localement, sans messagerie ni texte d'API.
+Le [guide](../../exploitation/SERVICE_IA.md) précise les procédures et les
+six contrats physiques réservés à 13.6. Les fichiers et SQLite réels des
+tests temporaires ne qualifient aucun fournisseur ou compte.
